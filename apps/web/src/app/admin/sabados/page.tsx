@@ -151,7 +151,8 @@ function nextSaturdayDefaults(): FormState {
     ),
   );
 
-  const currentDay = weekdayIndex[values.weekday] ?? 0;
+  const weekday = values.weekday ?? "Sun";
+  const currentDay = weekdayIndex[weekday] ?? 0;
   const daysUntilSaturday = (6 - currentDay + 7) % 7 || 7;
   base.setUTCDate(base.getUTCDate() + daysUntilSaturday);
 
