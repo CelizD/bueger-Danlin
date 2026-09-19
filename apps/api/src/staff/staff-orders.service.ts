@@ -1,8 +1,11 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from "@nestjs/common";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../database/prisma.service.js";
 
 const detailInclude = {
@@ -92,6 +95,121 @@ export class StaffOrdersService {
       userId,
       "Pedido entregado al cliente.",
     );
+  }
+
+  async deliverFromQr(qrPayloadInput: string, userId: string) {
+    const qrPayload = qrPayloadInput.trim();
+    const parts = qrPayload.split(":");
+
+    if (parts.length !== 3 || parts[0] !== "BD1") {
+      throw new BadRequestException("El QR no pertenece a Burger Danlin.");
+    }
+
+    const orderCode = parts[1]?.trim().toUpperCase();
+    const verificationToken = parts[2]?.trim();
+
+    if (
+      !orderCode ||
+      !/^H-[A-F0-9]{8}$/.test(orderCode) ||
+      !verificationToken ||
+      verificationToken.length < 32 ||
+      verificationToken.length > 128
+    ) {
+      throw new BadRequestException("El QR tiene un formato inválido.");
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const locked = await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT "id"
+        FROM "Order"
+        WHERE "orderCode" = ${orderCode}
+        FOR UPDATE
+      `;
+
+      if (locked.length === 0) {
+        throw new NotFoundException("El pedido del QR no existe.");
+      }
+
+      const order = await tx.order.findUnique({
+        where: { orderCode },
+        include: detailInclude,
+      });
+
+      if (!order) {
+        throw new NotFoundException("El pedido del QR no existe.");
+      }
+
+      this.assertQrToken(order.verificationTokenHash, verificationToken);
+
+      if (order.paymentStatus !== "PAID") {
+        throw new ConflictException("El pedido todavía no está pagado.");
+      }
+
+      if (order.status === "DELIVERED") {
+        return {
+          ...order,
+          alreadyDelivered: true,
+        };
+      }
+
+      if (order.status !== "READY") {
+        throw new ConflictException(
+          `El pedido está en estado ${order.status}; todavía no está listo para entrega.`,
+        );
+      }
+
+      const now = new Date();
+
+      const updated = await tx.order.update({
+        where: { id: order.id },
+        data: {
+          status: "DELIVERED",
+          deliveredAt: now,
+        },
+        include: detailInclude,
+      });
+
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId: order.id,
+          from: "READY",
+          to: "DELIVERED",
+          note: "Pedido entregado mediante QR validado.",
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: "ORDER_QR_DELIVERED",
+          entityType: "Order",
+          entityId: order.id,
+          before: { status: "READY" },
+          after: { status: "DELIVERED", method: "QR" },
+        },
+      });
+
+      return {
+        ...updated,
+        alreadyDelivered: false,
+      };
+    });
+  }
+
+  private assertQrToken(expectedHash: string, verificationToken: string) {
+    const actualHash = createHash("sha256")
+      .update(verificationToken)
+      .digest("hex");
+
+    const expected = Buffer.from(expectedHash, "hex");
+    const actual = Buffer.from(actualHash, "hex");
+
+    if (
+      expected.length !== actual.length ||
+      !timingSafeEqual(expected, actual)
+    ) {
+      throw new UnauthorizedException("El QR no es válido para este pedido.");
+    }
   }
 
   private async transition(
