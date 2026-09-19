@@ -1,0 +1,74 @@
+import { Type } from "class-transformer";
+import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
+  IsEmail,
+  IsInt,
+  IsOptional,
+  IsString,
+  Matches,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+  ValidateNested,
+} from "class-validator";
+
+export class CreateOrderCustomerDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  name!: string;
+
+  @IsString()
+  @Matches(/^\+52\d{10}$/, {
+    message: "phone debe estar en formato +52 seguido de 10 dígitos",
+  })
+  phone!: string;
+
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(160)
+  email?: string;
+}
+
+export class CreateOrderItemDto {
+  @IsString()
+  @MinLength(1)
+  productId!: string;
+
+  @IsInt()
+  @Min(1)
+  @Max(20)
+  quantity!: number;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  removedModifierOptionIds: string[] = [];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  extraModifierOptionIds: string[] = [];
+}
+
+export class CreateOrderDto {
+  @IsString()
+  @MinLength(1)
+  pickupEventId!: string;
+
+  @ValidateNested()
+  @Type(() => CreateOrderCustomerDto)
+  customer!: CreateOrderCustomerDto;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(30)
+  @ValidateNested({ each: true })
+  @Type(() => CreateOrderItemDto)
+  items!: CreateOrderItemDto[];
+}
