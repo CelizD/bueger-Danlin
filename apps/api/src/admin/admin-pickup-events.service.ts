@@ -37,7 +37,7 @@ export class AdminPickupEventsService {
       },
     });
 
-    return events.map((event) => {
+    return Promise.all(events.map(async (event) => {
       const paidCombos = event.orders
         .filter((order) =>
           CAPACITY_STATUSES.includes(
@@ -57,6 +57,25 @@ export class AdminPickupEventsService {
 
       const reservedCombos = paidCombos + pendingReservedCombos;
 
+      let normalizedStatus = event.status;
+
+      if (event.status === "OPEN" || event.status === "SOLD_OUT") {
+        if (event.closesAt <= now) {
+          normalizedStatus = "CLOSED";
+        } else if (reservedCombos >= event.maxCombos) {
+          normalizedStatus = "SOLD_OUT";
+        } else {
+          normalizedStatus = "OPEN";
+        }
+
+        if (normalizedStatus !== event.status) {
+          await this.prisma.pickupEvent.update({
+            where: { id: event.id },
+            data: { status: normalizedStatus },
+          });
+        }
+      }
+
       return {
         id: event.id,
         code: event.code,
@@ -66,7 +85,7 @@ export class AdminPickupEventsService {
         startsAt: event.startsAt,
         closesAt: event.closesAt,
         maxCombos: event.maxCombos,
-        status: event.status,
+        status: normalizedStatus,
         paidCombos,
         pendingReservedCombos,
         reservedCombos,
@@ -75,7 +94,7 @@ export class AdminPickupEventsService {
         createdAt: event.createdAt,
         updatedAt: event.updatedAt,
       };
-    });
+    }));
   }
 
   async create(dto: CreatePickupEventDto, userId: string) {
