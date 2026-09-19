@@ -1,0 +1,260 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  KITCHEN
+  DELIVERY
+}
+
+enum ProductType {
+  COMBO
+  BEVERAGE
+  ADD_ON
+}
+
+enum ModifierKind {
+  REMOVABLE
+  EXTRA
+  ADD_ON
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
+  REFUNDED
+  NO_SHOW
+}
+
+enum PaymentProvider {
+  MOCK
+  STRIPE
+  MERCADOPAGO
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PickupEventStatus {
+  DRAFT
+  OPEN
+  SOLD_OUT
+  CLOSED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         UserRole @default(ADMIN)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  auditLogs    AuditLog[]
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+
+  @@index([phone])
+}
+
+model Product {
+  id            String      @id @default(cuid())
+  name          String
+  description   String?
+  type          ProductType
+  priceCents    Int
+  active        Boolean     @default(true)
+  trackStock    Boolean     @default(false)
+  stockQuantity Int?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  modifierGroups ProductModifierGroup[]
+  orderItems     OrderItem[]
+}
+
+model ModifierGroup {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  minSelect   Int      @default(0)
+  maxSelect   Int?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  options     ModifierOption[]
+  products    ProductModifierGroup[]
+}
+
+model ModifierOption {
+  id              String       @id @default(cuid())
+  groupId         String
+  name            String
+  kind            ModifierKind
+  priceDeltaCents Int          @default(0)
+  defaultSelected Boolean      @default(false)
+  active          Boolean      @default(true)
+  sortOrder       Int          @default(0)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  group           ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  orderItems      OrderItemModifier[]
+
+  @@index([groupId, sortOrder])
+}
+
+model ProductModifierGroup {
+  productId       String
+  modifierGroupId String
+  sortOrder       Int @default(0)
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  modifierGroup   ModifierGroup @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+
+  @@id([productId, modifierGroupId])
+}
+
+model PickupEvent {
+  id            String            @id @default(cuid())
+  name          String
+  locationLabel String
+  timezone      String            @default("America/Tijuana")
+  startsAt      DateTime
+  closesAt      DateTime
+  maxCombos     Int               @default(50)
+  status        PickupEventStatus @default(DRAFT)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  orders        Order[]
+
+  @@index([startsAt])
+  @@index([status])
+}
+
+model Order {
+  id                    String        @id @default(cuid())
+  orderCode             String        @unique
+  customerId            String
+  pickupEventId         String
+  status                OrderStatus   @default(PENDING_PAYMENT)
+  paymentStatus         PaymentStatus @default(PENDING)
+  currency              String        @default("MXN")
+  subtotalCents         Int
+  totalCents            Int
+  comboQuantity         Int
+  verificationTokenHash String        @unique
+  cancelledAt           DateTime?
+  deliveredAt           DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  customer              Customer      @relation(fields: [customerId], references: [id])
+  pickupEvent           PickupEvent   @relation(fields: [pickupEventId], references: [id])
+  items                 OrderItem[]
+  payments              Payment[]
+  statusHistory         OrderStatusHistory[]
+
+  @@index([pickupEventId, status])
+  @@index([customerId])
+}
+
+model OrderItem {
+  id             String @id @default(cuid())
+  orderId        String
+  productId      String
+  productName    String
+  unitPriceCents Int
+  quantity       Int    @default(1)
+  lineTotalCents Int
+  order          Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product        Product @relation(fields: [productId], references: [id])
+  modifiers      OrderItemModifier[]
+
+  @@index([orderId])
+}
+
+model OrderItemModifier {
+  id               String @id @default(cuid())
+  orderItemId      String
+  modifierOptionId String
+  optionName       String
+  priceDeltaCents  Int
+  quantity         Int @default(1)
+  orderItem        OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  modifierOption   ModifierOption @relation(fields: [modifierOptionId], references: [id])
+
+  @@index([orderItemId])
+}
+
+model Payment {
+  id             String          @id @default(cuid())
+  orderId        String
+  provider       PaymentProvider
+  status         PaymentStatus   @default(PENDING)
+  amountCents    Int
+  currency       String          @default("MXN")
+  externalId     String?
+  idempotencyKey String          @unique
+  metadata       Json?
+  paidAt         DateTime?
+  refundedAt     DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  order          Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, status])
+  @@index([provider, externalId])
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  from      OrderStatus?
+  to        OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  before     Json?
+  after      Json?
+  createdAt  DateTime @default(now())
+  user       User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}

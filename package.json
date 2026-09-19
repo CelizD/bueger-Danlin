@@ -1,0 +1,22 @@
+{
+  "name": "burger-danlin",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.17.1",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @burger/web --filter @burger/api dev",
+    "build": "pnpm --recursive --filter @burger/types --filter @burger/api --filter @burger/web build",
+    "lint": "pnpm --recursive lint",
+    "test": "pnpm --recursive test",
+    "db:generate": "prisma generate --schema database/prisma/schema.prisma",
+    "db:migrate": "prisma migrate dev --schema database/prisma/schema.prisma",
+    "db:studio": "prisma studio --schema database/prisma/schema.prisma",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down"
+  },
+  "devDependencies": {
+    "prisma": "7.10.0",
+    "typescript": "^5.9.2"
+  }
+}
