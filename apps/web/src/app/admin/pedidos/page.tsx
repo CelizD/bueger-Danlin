@@ -63,6 +63,13 @@ type AdminOrder = {
     timezone: string;
   };
   items: OrderItem[];
+  statusHistory: Array<{
+    id: string;
+    from: string | null;
+    to: string;
+    note: string | null;
+    createdAt: string;
+  }>;
   payments: Array<{
     provider: string;
     status: string;
@@ -309,6 +316,8 @@ export default function AdminOrdersPage() {
               <option value="PREPARING">Preparando</option>
               <option value="READY">Listos</option>
               <option value="DELIVERED">Entregados</option>
+              <option value="CANCELLED">Cancelados</option>
+              <option value="REFUNDED">Reembolsados</option>
             </select>
           </div>
 
@@ -425,6 +434,28 @@ export default function AdminOrdersPage() {
                             </div>
                           ))}
                         </div>
+
+                        {order.statusHistory.length > 0 && (
+                          <div className="admin-history">
+                            <span className="admin-history-title">Historial</span>
+                            {order.statusHistory.map((entry) => (
+                              <div className="admin-history-row" key={entry.id}>
+                                <span>
+                                  {entry.from ? statusLabel[entry.from] ?? entry.from : "Creado"}
+                                  {" → "}
+                                  {statusLabel[entry.to] ?? entry.to}
+                                </span>
+                                <small>{entry.note || "Cambio de estado"}</small>
+                                <time>
+                                  {new Date(entry.createdAt).toLocaleString("es-MX", {
+                                    dateStyle: "short",
+                                    timeStyle: "short",
+                                  })}
+                                </time>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </article>
