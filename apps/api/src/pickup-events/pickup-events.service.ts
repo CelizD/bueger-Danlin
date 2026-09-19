@@ -43,6 +43,19 @@ export class PickupEventsService {
     });
 
     const reservedCombos = capacity._sum.comboQuantity ?? 0;
+    const soldOut = reservedCombos >= event.maxCombos;
+
+    if (event.status === "SOLD_OUT" && !soldOut) {
+      await this.prisma.pickupEvent.update({
+        where: { id: event.id },
+        data: { status: "OPEN" },
+      });
+    } else if (event.status === "OPEN" && soldOut) {
+      await this.prisma.pickupEvent.update({
+        where: { id: event.id },
+        data: { status: "SOLD_OUT" },
+      });
+    }
 
     return {
       id: event.id,
@@ -55,7 +68,7 @@ export class PickupEventsService {
       maxCombos: event.maxCombos,
       reservedCombos,
       remainingCombos: Math.max(0, event.maxCombos - reservedCombos),
-      status: reservedCombos >= event.maxCombos ? "SOLD_OUT" : event.status,
+      status: soldOut ? "SOLD_OUT" : "OPEN",
     };
   }
 }
