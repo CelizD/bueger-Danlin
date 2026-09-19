@@ -158,3 +158,45 @@ Este endpoint funciona únicamente fuera de producción y permite probar el fluj
 - Cancelaciones/reembolsos.
 - Stripe.
 - Mercado Pago.
+
+
+## Solución de problemas en Windows
+
+### Corepack: Cannot find matching keyid
+
+Node.js 22.13.1 puede incluir una versión antigua de Corepack que no reconoce las firmas actuales de pnpm.
+
+```powershell
+npm install -g corepack@latest
+corepack enable
+corepack prepare pnpm@10.17.1 --activate
+pnpm --version
+```
+
+Después:
+
+```powershell
+pnpm install
+```
+
+### Docker: dockerDesktopLinuxEngine pipe not found
+
+Abre Docker Desktop y espera a que el motor esté ejecutándose. Verifica:
+
+```powershell
+docker version
+```
+
+Debe aparecer tanto Client como Server. Si el Server no aparece, verifica WSL:
+
+```powershell
+wsl --version
+wsl -l -v
+wsl --update
+```
+
+Luego reinicia Docker Desktop y vuelve a ejecutar:
+
+```powershell
+docker compose up -d
+```
