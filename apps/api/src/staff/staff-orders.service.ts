@@ -8,7 +8,17 @@ import {
 import { createHash, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../database/prisma.service.js";
 
-const detailInclude = {
+const staffOrderSelect = {
+  id: true,
+  orderCode: true,
+  status: true,
+  paymentStatus: true,
+  currency: true,
+  totalCents: true,
+  comboQuantity: true,
+  createdAt: true,
+  updatedAt: true,
+  deliveredAt: true,
   customer: {
     select: {
       name: true,
@@ -27,13 +37,25 @@ const detailInclude = {
   },
   items: {
     orderBy: { id: "asc" as const },
-    include: {
+    select: {
+      id: true,
+      productName: true,
+      unitPriceCents: true,
+      quantity: true,
+      lineTotalCents: true,
       modifiers: {
         orderBy: { id: "asc" as const },
+        select: {
+          id: true,
+          optionName: true,
+          priceDeltaCents: true,
+          quantity: true,
+          removed: true,
+        },
       },
     },
   },
-};
+} as const;
 
 @Injectable()
 export class StaffOrdersService {
@@ -49,7 +71,7 @@ export class StaffOrdersService {
       },
       orderBy: [{ status: "asc" }, { createdAt: "asc" }],
       take: 100,
-      include: detailInclude,
+      select: staffOrderSelect,
     });
   }
 
@@ -63,7 +85,7 @@ export class StaffOrdersService {
       },
       orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
       take: 100,
-      include: detailInclude,
+      select: staffOrderSelect,
     });
   }
 
@@ -132,7 +154,10 @@ export class StaffOrdersService {
 
       const order = await tx.order.findUnique({
         where: { orderCode },
-        include: detailInclude,
+        select: {
+          ...staffOrderSelect,
+          verificationTokenHash: true,
+        },
       });
 
       if (!order) {
@@ -140,6 +165,7 @@ export class StaffOrdersService {
       }
 
       this.assertQrToken(order.verificationTokenHash, verificationToken);
+      const { verificationTokenHash: _hiddenHash, ...safeOrder } = order;
 
       if (order.paymentStatus !== "PAID") {
         throw new ConflictException("El pedido todavía no está pagado.");
@@ -147,7 +173,7 @@ export class StaffOrdersService {
 
       if (order.status === "DELIVERED") {
         return {
-          ...order,
+          ...safeOrder,
           alreadyDelivered: true,
         };
       }
@@ -166,7 +192,7 @@ export class StaffOrdersService {
           status: "DELIVERED",
           deliveredAt: now,
         },
-        include: detailInclude,
+        select: staffOrderSelect,
       });
 
       await tx.orderStatusHistory.create({
@@ -235,7 +261,7 @@ export class StaffOrdersService {
 
       const order = await tx.order.findUnique({
         where: { orderCode },
-        include: detailInclude,
+        select: staffOrderSelect,
       });
 
       if (!order) {
@@ -264,7 +290,7 @@ export class StaffOrdersService {
           status: to,
           deliveredAt: to === "DELIVERED" ? now : order.deliveredAt,
         },
-        include: detailInclude,
+        select: staffOrderSelect,
       });
 
       await tx.orderStatusHistory.create({
