@@ -32,5 +32,5 @@ pnpm dev
 ```
 
 Web: http://localhost:3000  
-API: http://localhost:4000/api/v1  
+API: http://localhost:4000/api/v1  \nCatálogo: http://localhost:4000/api/v1/catalog  
 Mailpit: http://localhost:8025
