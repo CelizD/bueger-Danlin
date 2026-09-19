@@ -10,7 +10,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - burger_postgres_data:/var/lib/postgresql/data
+      - burger_postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-burger} -d ${POSTGRES_DB:-burger_danlin}"]
       interval: 5s
