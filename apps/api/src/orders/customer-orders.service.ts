@@ -104,11 +104,17 @@ export class CustomerOrdersService {
       this.assertVerificationToken(order.verificationTokenHash, verificationToken);
 
       if (order.status === "CANCELLED" || order.status === "REFUNDED") {
+        const latestPayment = order.payments[0] ?? null;
         return {
           orderCode: order.orderCode,
           status: order.status,
           paymentStatus: order.paymentStatus,
-          refundStatus: order.status === "REFUNDED" ? "REFUNDED" : null,
+          refundStatus:
+            order.status === "REFUNDED"
+              ? "REFUNDED"
+              : this.hasRefundRequest(latestPayment?.metadata)
+                ? "PENDING"
+                : null,
           alreadyCancelled: true,
         };
       }
@@ -125,6 +131,12 @@ export class CustomerOrdersService {
 
       const fromStatus = order.status;
       const paidPayment = order.payments.find((payment) => payment.status === "PAID");
+
+      if (order.paymentStatus === "PAID" && !paidPayment) {
+        throw new ConflictException(
+          "El pedido está marcado como pagado pero no se encontró el registro del pago.",
+        );
+      }
 
       if (!paidPayment) {
         await tx.payment.updateMany({
@@ -320,7 +332,11 @@ export class CustomerOrdersService {
     );
   }
 
-  private withRefundMetadata(metadata: unknown, now: Date, status: "requested" | "completed") {
+  private withRefundMetadata(
+    metadata: unknown,
+    now: Date,
+    status: "requested" | "completed",
+  ): any {
     const base =
       metadata && typeof metadata === "object" && !Array.isArray(metadata)
         ? (metadata as Record<string, unknown>)
