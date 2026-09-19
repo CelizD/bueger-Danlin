@@ -35,6 +35,17 @@ export class AdminOrdersService {
             },
           },
         },
+        statusHistory: {
+          orderBy: { createdAt: "desc" },
+          take: 12,
+          select: {
+            id: true,
+            from: true,
+            to: true,
+            note: true,
+            createdAt: true,
+          },
+        },
         payments: {
           orderBy: { createdAt: "desc" },
           select: {
