@@ -109,19 +109,27 @@ export function OrderApp() {
           fetch(`${API_URL}/pickup-events/current`, { cache: "no-store" }),
         ]);
 
-        if (!catalogResponse.ok || !eventResponse.ok) {
+        if (!catalogResponse.ok) {
           throw new Error("No se pudo cargar el menú.");
         }
 
-        const [catalogData, eventData] = await Promise.all([
-          catalogResponse.json() as Promise<CatalogProduct[]>,
-          eventResponse.json() as Promise<PickupEvent>,
-        ]);
+        if (!eventResponse.ok && eventResponse.status !== 404) {
+          throw new Error("No se pudo consultar la fecha de entrega.");
+        }
+
+        const catalogData =
+          (await catalogResponse.json()) as CatalogProduct[];
+        const eventData =
+          eventResponse.status === 404
+            ? null
+            : ((await eventResponse.json()) as PickupEvent);
 
         if (!cancelled) {
           setCatalog(catalogData);
           setEvent(eventData);
-          setBurgers(eventData.remainingCombos > 0 ? [newBurger()] : []);
+          setBurgers(
+            eventData && eventData.remainingCombos > 0 ? [newBurger()] : [],
+          );
         }
       } catch {
         if (!cancelled) {
@@ -444,9 +452,17 @@ export function OrderApp() {
 
       {error && <div className="alert">{error}</div>}
 
-      {!event || event.status === "SOLD_OUT" ? (
+      {!event ? (
         <section className="sold-out">
           <p className="eyebrow">Pedidos cerrados</p>
+          <h2>Por ahora no hay una fecha de entrega abierta.</h2>
+          <p className="lead">
+            Cuando abramos el siguiente sábado podrás hacer tu pedido desde aquí.
+          </p>
+        </section>
+      ) : event.status === "SOLD_OUT" ? (
+        <section className="sold-out">
+          <p className="eyebrow">Agotado</p>
           <h2>Se agotaron los combos de este sábado.</h2>
         </section>
       ) : (
