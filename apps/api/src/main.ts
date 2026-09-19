@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import "./config/load-env.js";
+import cookieParser from "cookie-parser";
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module.js";
@@ -10,6 +11,7 @@ async function bootstrap() {
   const prefix = process.env.API_PREFIX ?? "api/v1";
 
   app.setGlobalPrefix(prefix);
+  app.use(cookieParser());
   app.enableCors({
     origin: ["http://localhost:3000"],
     credentials: true,
