@@ -83,6 +83,7 @@ export class AdminPickupEventsService {
     const closesAt = new Date(dto.closesAt);
 
     this.assertDates(startsAt, closesAt);
+    this.assertSaturday(startsAt);
 
     if (startsAt <= new Date()) {
       throw new BadRequestException(
@@ -156,6 +157,18 @@ export class AdminPickupEventsService {
       const closesAt = dto.closesAt ? new Date(dto.closesAt) : event.closesAt;
 
       this.assertDates(startsAt, closesAt);
+      this.assertSaturday(startsAt);
+
+      const now = new Date();
+
+      if (
+        (event.status === "OPEN" || event.status === "SOLD_OUT") &&
+        (closesAt <= now || startsAt <= now)
+      ) {
+        throw new ConflictException(
+          "Una entrega abierta debe mantener su cierre y entrega en el futuro.",
+        );
+      }
 
       const capacity = await tx.order.aggregate({
         where: {
@@ -164,7 +177,7 @@ export class AdminPickupEventsService {
             { status: { in: [...CAPACITY_STATUSES] } },
             {
               status: "PENDING_PAYMENT",
-              reservationExpiresAt: { gt: new Date() },
+              reservationExpiresAt: { gt: now },
             },
           ],
         },
@@ -370,6 +383,19 @@ export class AdminPickupEventsService {
     if (closesAt >= startsAt) {
       throw new BadRequestException(
         "El cierre de pedidos debe ser antes de la hora de entrega.",
+      );
+    }
+  }
+
+  private assertSaturday(startsAt: Date) {
+    const weekday = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Tijuana",
+      weekday: "short",
+    }).format(startsAt);
+
+    if (weekday !== "Sat") {
+      throw new BadRequestException(
+        "La fecha de entrega debe ser un sábado.",
       );
     }
   }
