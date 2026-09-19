@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CalendarDays,
   Camera,
   CheckCircle2,
   ChefHat,
@@ -326,6 +327,12 @@ export default function DeliveryPage() {
               <Truck size={18} strokeWidth={1.8} />
               Entrega
             </a>
+            {user?.role === "ADMIN" && (
+              <a href="/admin/sabados">
+                <CalendarDays size={18} strokeWidth={1.8} />
+                Sábados
+              </a>
+            )}
           </nav>
         </div>
 
