@@ -73,6 +73,17 @@ const money = new Intl.NumberFormat("es-MX", {
   maximumFractionDigits: 0,
 });
 
+function formatPickup(event: PickupEvent) {
+  return new Intl.DateTimeFormat("es-MX", {
+    timeZone: event.timezone,
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(event.startsAt));
+}
+
 function pickupQrPayload(order: CreatedOrder) {
   return `BD1:${order.orderCode}:${order.verificationToken}`;
 }
@@ -366,6 +377,15 @@ export function OrderApp() {
             <div>
               <span>Entrega</span>
               <strong>{createdOrder.pickup.locationLabel}</strong>
+              <small>
+                {new Intl.DateTimeFormat("es-MX", {
+                  timeZone: createdOrder.pickup.timezone,
+                  day: "numeric",
+                  month: "short",
+                  hour: "numeric",
+                  minute: "2-digit",
+                }).format(new Date(createdOrder.pickup.startsAt))}
+              </small>
             </div>
           </div>
 
@@ -445,8 +465,16 @@ export function OrderApp() {
         <p className="eyebrow">Hamburguesa + papas</p>
         <h1>Arma tu pedido.</h1>
         <p className="lead">
-          Combo desde <strong>{money.format((combo?.priceCents ?? 13000) / 100)}</strong>.
-          Entrega el sábado a las 9:30 a. m. en Universidad.
+          Combo desde{" "}
+          <strong>{money.format((combo?.priceCents ?? 13000) / 100)}</strong>.
+          {event ? (
+            <>
+              {" "}Entrega {formatPickup(event)} en{" "}
+              <strong>{event.locationLabel}</strong>.
+            </>
+          ) : (
+            <> Próxima fecha por anunciar.</>
+          )}
         </p>
       </section>
 
