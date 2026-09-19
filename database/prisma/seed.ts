@@ -223,28 +223,7 @@ async function main() {
     },
   });
 
-  await prisma.pickupEvent.upsert({
-    where: { code: "SAT-2026-09-26" },
-    update: {
-      name: "Entrega sábado 26 de septiembre",
-      locationLabel: "Universidad",
-      timezone: "America/Tijuana",
-      startsAt: new Date("2026-09-26T09:30:00-07:00"),
-      closesAt: new Date("2026-09-25T21:00:00-07:00"),
-      maxCombos: 50,
-      status: "OPEN",
-    },
-    create: {
-      code: "SAT-2026-09-26",
-      name: "Entrega sábado 26 de septiembre",
-      locationLabel: "Universidad",
-      timezone: "America/Tijuana",
-      startsAt: new Date("2026-09-26T09:30:00-07:00"),
-      closesAt: new Date("2026-09-25T21:00:00-07:00"),
-      maxCombos: 50,
-      status: "OPEN",
-    },
-  });
+
 }
 
 main()
