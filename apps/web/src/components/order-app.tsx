@@ -90,6 +90,7 @@ export function OrderApp() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [paying, setPaying] = useState(false);
   const [error, setError] = useState("");
   const [createdOrder, setCreatedOrder] = useState<CreatedOrder | null>(null);
 
