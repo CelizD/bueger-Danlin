@@ -7,6 +7,7 @@ import { HealthController } from "./health/health.controller.js";
 import { OrdersModule } from "./orders/orders.module.js";
 import { PaymentsModule } from "./payments/payments.module.js";
 import { PickupEventsModule } from "./pickup-events/pickup-events.module.js";
+import { StaffModule } from "./staff/staff.module.js";
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { PickupEventsModule } from "./pickup-events/pickup-events.module.js";
     PickupEventsModule,
     OrdersModule,
     PaymentsModule,
+    StaffModule,
   ],
   controllers: [HealthController],
 })
