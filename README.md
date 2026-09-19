@@ -240,3 +240,17 @@ Después vuelve a ejecutar:
 ```
 
 El seed crea o actualiza la cuenta ADMIN y almacena únicamente el hash Argon2id de la contraseña.
+
+
+## Entrega por QR
+
+Flujo local:
+
+1. El cliente crea y paga el pedido.
+2. Después del pago aparece un QR de retiro sin datos personales.
+3. Cocina mueve el pedido de `PAID` a `PREPARING` y luego a `READY`.
+4. En `/admin/entrega`, personal autorizado abre la cámara y escanea el QR.
+5. El API valida el token contra el hash almacenado y, solo si el pedido está pagado y `READY`, lo mueve a `DELIVERED`.
+6. Un segundo escaneo del mismo QR no genera una segunda entrega.
+
+El escáner usa la cámara del navegador. En desarrollo funciona en `localhost`; para usar la cámara desde otro dispositivo por red local se recomienda servir la aplicación mediante HTTPS, ya que `getUserMedia()` requiere un contexto seguro.
