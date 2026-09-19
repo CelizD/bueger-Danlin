@@ -63,44 +63,120 @@ type FormState = {
   maxCombos: string;
 };
 
+const TIJUANA_TIMEZONE = "America/Tijuana";
+
 function two(value: number) {
   return String(value).padStart(2, "0");
 }
 
-function localParts(iso: string) {
-  const date = new Date(iso);
+function tijuanaParts(iso: string) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: TIJUANA_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date(iso));
+
+  const values = Object.fromEntries(
+    parts.map((part) => [part.type, part.value]),
+  );
+
   return {
-    date: date.getFullYear() + "-" + two(date.getMonth() + 1) + "-" + two(date.getDate()),
-    time: two(date.getHours()) + ":" + two(date.getMinutes()),
+    date: values.year + "-" + values.month + "-" + values.day,
+    time: values.hour + ":" + values.minute,
   };
 }
 
-function nextSaturdayDefaults(): FormState {
-  const now = new Date();
-  const pickup = new Date(now);
-  const daysUntilSaturday = (6 - pickup.getDay() + 7) % 7 || 7;
-  pickup.setDate(pickup.getDate() + daysUntilSaturday);
-  pickup.setHours(9, 30, 0, 0);
+function tijuanaOffset(date: string) {
+  const probe = new Date(date + "T12:00:00Z");
+  const zoneName = new Intl.DateTimeFormat("en-US", {
+    timeZone: TIJUANA_TIMEZONE,
+    timeZoneName: "shortOffset",
+    hour: "2-digit",
+  })
+    .formatToParts(probe)
+    .find((part) => part.type === "timeZoneName")?.value;
 
-  const close = new Date(pickup);
-  close.setDate(close.getDate() - 1);
-  close.setHours(21, 0, 0, 0);
+  const match = zoneName?.match(/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/);
+
+  if (!match) {
+    throw new Error("No se pudo determinar la zona horaria de Tijuana.");
+  }
+
+  const sign = match[1];
+  const hours = two(Number(match[2]));
+  const minutes = two(Number(match[3] ?? "0"));
+
+  return sign + hours + ":" + minutes;
+}
+
+function tijuanaIso(date: string, time: string) {
+  return new Date(
+    date + "T" + time + ":00" + tijuanaOffset(date),
+  ).toISOString();
+}
+
+function nextSaturdayDefaults(): FormState {
+  const nowParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: TIJUANA_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "short",
+  }).formatToParts(new Date());
+
+  const values = Object.fromEntries(
+    nowParts.map((part) => [part.type, part.value]),
+  );
+
+  const weekdayIndex: Record<string, number> = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+  };
+
+  const base = new Date(
+    Date.UTC(
+      Number(values.year),
+      Number(values.month) - 1,
+      Number(values.day),
+      12,
+    ),
+  );
+
+  const currentDay = weekdayIndex[values.weekday] ?? 0;
+  const daysUntilSaturday = (6 - currentDay + 7) % 7 || 7;
+  base.setUTCDate(base.getUTCDate() + daysUntilSaturday);
+
+  const close = new Date(base);
+  close.setUTCDate(close.getUTCDate() - 1);
+
+  const pickupDate =
+    base.getUTCFullYear() +
+    "-" +
+    two(base.getUTCMonth() + 1) +
+    "-" +
+    two(base.getUTCDate());
+
+  const closeDate =
+    close.getUTCFullYear() +
+    "-" +
+    two(close.getUTCMonth() + 1) +
+    "-" +
+    two(close.getUTCDate());
 
   return {
     locationLabel: "Universidad",
-    pickupDate:
-      pickup.getFullYear() +
-      "-" +
-      two(pickup.getMonth() + 1) +
-      "-" +
-      two(pickup.getDate()),
+    pickupDate,
     pickupTime: "09:30",
-    closeDate:
-      close.getFullYear() +
-      "-" +
-      two(close.getMonth() + 1) +
-      "-" +
-      two(close.getDate()),
+    closeDate,
     closeTime: "21:00",
     maxCombos: "50",
   };
@@ -120,6 +196,7 @@ function statusText(status: PickupEvent["status"]) {
 
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat("es-MX", {
+    timeZone: TIJUANA_TIMEZONE,
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -209,8 +286,8 @@ export default function SaturdaysPage() {
   }
 
   function openEdit(event: PickupEvent) {
-    const pickup = localParts(event.startsAt);
-    const close = localParts(event.closesAt);
+    const pickup = tijuanaParts(event.startsAt);
+    const close = tijuanaParts(event.closesAt);
 
     setEditingId(event.id);
     setForm({
@@ -239,8 +316,10 @@ export default function SaturdaysPage() {
     setSuccess("");
 
     try {
-      const startsAt = new Date(form.pickupDate + "T" + form.pickupTime + ":00");
-      const closesAt = new Date(form.closeDate + "T" + form.closeTime + ":00");
+      const startsAtIso = tijuanaIso(form.pickupDate, form.pickupTime);
+      const closesAtIso = tijuanaIso(form.closeDate, form.closeTime);
+      const startsAt = new Date(startsAtIso);
+      const closesAt = new Date(closesAtIso);
       const maxCombos = Number(form.maxCombos);
 
       if (
@@ -263,8 +342,8 @@ export default function SaturdaysPage() {
           },
           body: JSON.stringify({
             locationLabel: form.locationLabel.trim(),
-            startsAt: startsAt.toISOString(),
-            closesAt: closesAt.toISOString(),
+            startsAt: startsAtIso,
+            closesAt: closesAtIso,
             maxCombos,
           }),
         },
@@ -462,6 +541,7 @@ export default function SaturdaysPage() {
             <strong>
               {activeEvent
                 ? new Intl.DateTimeFormat("es-MX", {
+                    timeZone: TIJUANA_TIMEZONE,
                     day: "numeric",
                     month: "short",
                     hour: "numeric",
@@ -588,8 +668,9 @@ export default function SaturdaysPage() {
               </label>
 
               <div className="saturday-form-note">
-                Los horarios se guardan con la hora local del dispositivo y la
-                operación usa la zona <strong>America/Tijuana</strong>.
+                Los horarios se interpretan directamente en la zona{" "}
+                <strong>America/Tijuana</strong>, aunque abras el panel desde
+                otro dispositivo.
               </div>
 
               <div className="saturday-form-actions">
@@ -652,6 +733,7 @@ export default function SaturdaysPage() {
                     <div className="saturday-card-date">
                       <span>
                         {new Intl.DateTimeFormat("es-MX", {
+                          timeZone: TIJUANA_TIMEZONE,
                           month: "short",
                         })
                           .format(new Date(event.startsAt))
@@ -660,6 +742,7 @@ export default function SaturdaysPage() {
                       </span>
                       <strong>
                         {new Intl.DateTimeFormat("es-MX", {
+                          timeZone: TIJUANA_TIMEZONE,
                           day: "2-digit",
                         }).format(new Date(event.startsAt))}
                       </strong>
@@ -717,6 +800,7 @@ export default function SaturdaysPage() {
                           Cierre:{" "}
                           <b>
                             {new Intl.DateTimeFormat("es-MX", {
+                              timeZone: TIJUANA_TIMEZONE,
                               day: "numeric",
                               month: "short",
                               hour: "numeric",
