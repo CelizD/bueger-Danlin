@@ -1,4 +1,5 @@
-import "reflect-metadata";\nimport "./config/load-env.js";
+import "reflect-metadata";
+import "./config/load-env.js";
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module.js";
