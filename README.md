@@ -200,3 +200,43 @@ Luego reinicia Docker Desktop y vuelve a ejecutar:
 ```powershell
 docker compose up -d
 ```
+
+
+## Panel administrativo
+
+Rutas:
+
+- Login: http://localhost:3000/admin/login
+- Pedidos: http://localhost:3000/admin/pedidos
+
+El acceso de personal usa:
+
+- contraseñas almacenadas con Argon2id;
+- parámetros Argon2id: 19 MiB de memoria, 2 iteraciones y paralelismo 1;
+- JWT de sesión de 8 horas;
+- JWT almacenado en cookie HttpOnly;
+- cookie SameSite=Lax;
+- cookie Secure en producción;
+- verificación en servidor de que el usuario sigue activo;
+- autorización por rol ADMIN para consultar pedidos.
+
+### Crear el administrador local
+
+No se guardan contraseñas en Git.
+
+Agrega en tu archivo `.env`:
+
+```text
+AUTH_JWT_SECRET=<secreto-aleatorio-de-al-menos-32-caracteres>
+ADMIN_SEED_EMAIL=<tu-correo-admin>
+ADMIN_SEED_PASSWORD=<tu-contraseña-de-al-menos-12-caracteres>
+ADMIN_SEED_NAME=<tu-nombre>
+```
+
+Después vuelve a ejecutar:
+
+```powershell
+& "$env:APPDATA\npm\pnpm.cmd" db:seed
+```
+
+El seed crea o actualiza la cuenta ADMIN y almacena únicamente el hash Argon2id de la contraseña.
