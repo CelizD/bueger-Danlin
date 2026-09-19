@@ -107,11 +107,9 @@ export class OrdersService {
 
         const now = new Date();
 
-        if (event.status !== "OPEN") {
+        if (!["OPEN", "SOLD_OUT"].includes(event.status)) {
           throw new ConflictException(
-            event.status === "SOLD_OUT"
-              ? "Los 50 combos de este evento ya se agotaron."
-              : "Este evento no está abierto para pedidos.",
+            "Este evento no está abierto para pedidos.",
           );
         }
 
@@ -299,12 +297,26 @@ export class OrdersService {
         const reservedCombos = capacity._sum.comboQuantity ?? 0;
 
         if (reservedCombos + comboQuantity > event.maxCombos) {
+          if (event.status !== "SOLD_OUT" && reservedCombos >= event.maxCombos) {
+            await tx.pickupEvent.update({
+              where: { id: event.id },
+              data: { status: "SOLD_OUT" },
+            });
+          }
+
           const remaining = Math.max(0, event.maxCombos - reservedCombos);
           throw new ConflictException(
             remaining === 0
               ? "Los combos de este sábado ya están agotados."
               : `Solo quedan ${remaining} combo(s) disponibles.`,
           );
+        }
+
+        if (event.status === "SOLD_OUT" && reservedCombos < event.maxCombos) {
+          await tx.pickupEvent.update({
+            where: { id: event.id },
+            data: { status: "OPEN" },
+          });
         }
 
         const customer = await tx.customer.create({
