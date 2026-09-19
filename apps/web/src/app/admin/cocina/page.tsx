@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CalendarDays,
   CheckCircle2,
   ChefHat,
   Clock3,
@@ -272,6 +273,12 @@ export default function KitchenPage() {
               <a href="/admin/entrega">
                 <Truck size={18} strokeWidth={1.8} />
                 Entrega
+              </a>
+            )}
+            {user?.role === "ADMIN" && (
+              <a href="/admin/sabados">
+                <CalendarDays size={18} strokeWidth={1.8} />
+                Sábados
               </a>
             )}
           </nav>
