@@ -434,12 +434,24 @@ export function OrderApp() {
     return (
       <main className="shell">
         <section className="confirmation">
-          <p className="eyebrow">{isPaid ? "Pago confirmado" : "Pedido reservado"}</p>
+          <p className="eyebrow">
+            {isCancelled
+              ? createdOrder.status === "REFUNDED"
+                ? "Pedido reembolsado"
+                : "Pedido cancelado"
+              : isPaid
+                ? "Pago confirmado"
+                : "Pedido reservado"}
+          </p>
           <h1>{createdOrder.orderCode}</h1>
           <p className="lead">
-            {isPaid
-              ? "Tu pedido local quedó pagado y confirmado para continuar con cocina y entrega."
-              : `Reservamos ${createdOrder.comboQuantity} combo(s) durante 15 minutos mientras completas el pago.`}
+            {isCancelled
+              ? createdOrder.status === "REFUNDED"
+                ? "Tu pedido fue cancelado y el reembolso local quedó completado."
+                : "Tu pedido fue cancelado y el cupo quedó liberado."
+              : isPaid
+                ? "Tu pedido local quedó pagado y confirmado para continuar con cocina y entrega."
+                : `Reservamos ${createdOrder.comboQuantity} combo(s) durante 15 minutos mientras completas el pago.`}
           </p>
 
           {error && <div className="alert">{error}</div>}
@@ -525,7 +537,11 @@ export function OrderApp() {
                 onClick={cancelCreatedOrder}
                 disabled={canceling}
               >
-                {canceling ? "Cancelando…" : "Cancelar pedido"}
+                {canceling
+                  ? "Cancelando…"
+                  : isPaid
+                    ? "Cancelar e iniciar reembolso"
+                    : "Cancelar pedido"}
               </button>
             )}
 
