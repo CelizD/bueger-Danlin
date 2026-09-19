@@ -13,4 +13,4 @@ Thumbs.db
 .idea
 .vscode/*
 !.vscode/extensions.json
-apps/api/src/generated/prisma\n
+apps/api/src/generated/prisma/
