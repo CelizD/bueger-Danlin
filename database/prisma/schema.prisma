@@ -1,10 +1,11 @@
 generator client {
-  provider = "prisma-client-js"
+  provider     = "prisma-client"
+  output       = "../../apps/api/src/generated/prisma"
+  moduleFormat = "esm"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum UserRole {
@@ -71,7 +72,8 @@ model User {
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  auditLogs    AuditLog[]
+
+  auditLogs AuditLog[]
 }
 
 model Customer {
@@ -81,13 +83,16 @@ model Customer {
   email     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  orders    Order[]
+
+  orders Order[]
 
   @@index([phone])
+  @@index([email])
 }
 
 model Product {
   id            String      @id @default(cuid())
+  slug          String      @unique
   name          String
   description   String?
   type          ProductType
@@ -97,12 +102,14 @@ model Product {
   stockQuantity Int?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+
   modifierGroups ProductModifierGroup[]
   orderItems     OrderItem[]
 }
 
 model ModifierGroup {
   id          String   @id @default(cuid())
+  key         String   @unique
   name        String
   description String?
   minSelect   Int      @default(0)
@@ -110,12 +117,14 @@ model ModifierGroup {
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  options     ModifierOption[]
-  products    ProductModifierGroup[]
+
+  options  ModifierOption[]
+  products ProductModifierGroup[]
 }
 
 model ModifierOption {
   id              String       @id @default(cuid())
+  key             String       @unique
   groupId         String
   name            String
   kind            ModifierKind
@@ -125,8 +134,9 @@ model ModifierOption {
   sortOrder       Int          @default(0)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
-  group           ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  orderItems      OrderItemModifier[]
+
+  group      ModifierGroup      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  orderItems OrderItemModifier[]
 
   @@index([groupId, sortOrder])
 }
@@ -134,15 +144,17 @@ model ModifierOption {
 model ProductModifierGroup {
   productId       String
   modifierGroupId String
-  sortOrder       Int @default(0)
-  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
-  modifierGroup   ModifierGroup @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+  sortOrder       Int    @default(0)
+
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  modifierGroup ModifierGroup @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
 
   @@id([productId, modifierGroupId])
 }
 
 model PickupEvent {
   id            String            @id @default(cuid())
+  code          String            @unique
   name          String
   locationLabel String
   timezone      String            @default("America/Tijuana")
@@ -152,15 +164,18 @@ model PickupEvent {
   status        PickupEventStatus @default(DRAFT)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
-  orders        Order[]
+
+  orders Order[]
 
   @@index([startsAt])
-  @@index([status])
+  @@index([status, closesAt])
 }
 
 model Order {
   id                    String        @id @default(cuid())
   orderCode             String        @unique
+  requestKey            String        @unique
+  requestHash           String
   customerId            String
   pickupEventId         String
   status                OrderStatus   @default(PENDING_PAYMENT)
@@ -170,18 +185,22 @@ model Order {
   totalCents            Int
   comboQuantity         Int
   verificationTokenHash String        @unique
+  reservationExpiresAt  DateTime?
   cancelledAt           DateTime?
   deliveredAt           DateTime?
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
-  customer              Customer      @relation(fields: [customerId], references: [id])
-  pickupEvent           PickupEvent   @relation(fields: [pickupEventId], references: [id])
-  items                 OrderItem[]
-  payments              Payment[]
-  statusHistory         OrderStatusHistory[]
+
+  customer      Customer            @relation(fields: [customerId], references: [id])
+  pickupEvent   PickupEvent         @relation(fields: [pickupEventId], references: [id])
+  items         OrderItem[]
+  payments      Payment[]
+  statusHistory OrderStatusHistory[]
 
   @@index([pickupEventId, status])
+  @@index([pickupEventId, reservationExpiresAt])
   @@index([customerId])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -192,22 +211,25 @@ model OrderItem {
   unitPriceCents Int
   quantity       Int    @default(1)
   lineTotalCents Int
-  order          Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product        Product @relation(fields: [productId], references: [id])
-  modifiers      OrderItemModifier[]
+
+  order     Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product             @relation(fields: [productId], references: [id])
+  modifiers OrderItemModifier[]
 
   @@index([orderId])
 }
 
 model OrderItemModifier {
-  id               String @id @default(cuid())
+  id               String  @id @default(cuid())
   orderItemId      String
   modifierOptionId String
   optionName       String
   priceDeltaCents  Int
-  quantity         Int @default(1)
-  orderItem        OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
-  modifierOption   ModifierOption @relation(fields: [modifierOptionId], references: [id])
+  quantity         Int     @default(1)
+  removed          Boolean @default(false)
+
+  orderItem      OrderItem      @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  modifierOption ModifierOption @relation(fields: [modifierOptionId], references: [id])
 
   @@index([orderItemId])
 }
@@ -226,20 +248,22 @@ model Payment {
   refundedAt     DateTime?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
-  order          Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId, status])
   @@index([provider, externalId])
 }
 
 model OrderStatusHistory {
-  id        String      @id @default(cuid())
+  id        String       @id @default(cuid())
   orderId   String
   from      OrderStatus?
   to        OrderStatus
   note      String?
-  createdAt DateTime    @default(now())
-  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId, createdAt])
 }
@@ -253,7 +277,8 @@ model AuditLog {
   before     Json?
   after      Json?
   createdAt  DateTime @default(now())
-  user       User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([entityType, entityId])
   @@index([createdAt])
