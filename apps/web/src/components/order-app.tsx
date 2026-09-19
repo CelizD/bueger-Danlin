@@ -60,6 +60,7 @@ type CreatedOrder = {
   pickup: {
     locationLabel: string;
     startsAt: string;
+    closesAt: string;
     timezone: string;
   };
 };
@@ -107,7 +108,9 @@ export function OrderApp() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [canceling, setCanceling] = useState(false);
   const [error, setError] = useState("");
+  const [cancelMessage, setCancelMessage] = useState("");
   const [createdOrder, setCreatedOrder] = useState<CreatedOrder | null>(null);
 
   useEffect(() => {
@@ -290,7 +293,12 @@ export function OrderApp() {
         throw new Error(message || "No se pudo crear el pedido.");
       }
 
-      setCreatedOrder(data as CreatedOrder);
+      const orderData = data as CreatedOrder;
+      setCreatedOrder(orderData);
+      window.localStorage.setItem(
+        `burger-danlin:order-token:${orderData.orderCode}`,
+        orderData.verificationToken,
+      );
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -299,6 +307,69 @@ export function OrderApp() {
       );
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function cancelCreatedOrder() {
+    if (!createdOrder) return;
+
+    const confirmed = window.confirm(
+      createdOrder.paymentStatus === "PAID"
+        ? "¿Cancelar este pedido? También se iniciará el reembolso."
+        : "¿Cancelar este pedido? Se liberará el cupo reservado.",
+    );
+
+    if (!confirmed) return;
+
+    setCanceling(true);
+    setError("");
+    setCancelMessage("");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/orders/${encodeURIComponent(createdOrder.orderCode)}/cancel`,
+        {
+          method: "POST",
+          headers: {
+            "x-order-token": createdOrder.verificationToken,
+          },
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const message = Array.isArray(data.message)
+          ? data.message.join(" ")
+          : data.message;
+        throw new Error(message || "No se pudo cancelar el pedido.");
+      }
+
+      setCreatedOrder((current) =>
+        current
+          ? {
+              ...current,
+              status: data.status,
+              paymentStatus: data.paymentStatus,
+            }
+          : current,
+      );
+
+      setCancelMessage(
+        data.refundStatus === "REFUNDED"
+          ? "Pedido cancelado y reembolso local completado."
+          : data.refundStatus === "PENDING"
+            ? "Pedido cancelado. El reembolso está en proceso."
+            : "Pedido cancelado y cupo liberado.",
+      );
+    } catch (cancelError) {
+      setError(
+        cancelError instanceof Error
+          ? cancelError.message
+          : "No se pudo cancelar el pedido.",
+      );
+    } finally {
+      setCanceling(false);
     }
   }
 
@@ -355,6 +426,10 @@ export function OrderApp() {
 
   if (createdOrder) {
     const isPaid = createdOrder.paymentStatus === "PAID";
+    const isCancelled =
+      createdOrder.status === "CANCELLED" || createdOrder.status === "REFUNDED";
+    const cancellationOpen =
+      !isCancelled && new Date() < new Date(createdOrder.pickup.closesAt);
 
     return (
       <main className="shell">
@@ -368,6 +443,9 @@ export function OrderApp() {
           </p>
 
           {error && <div className="alert">{error}</div>}
+          {cancelMessage && (
+            <div className="customer-cancel-success">{cancelMessage}</div>
+          )}
 
           <div className="confirmation-grid">
             <div>
@@ -389,7 +467,7 @@ export function OrderApp() {
             </div>
           </div>
 
-          {!isPaid && (
+          {!isPaid && !isCancelled && (
             <button
               className="primary-button payment-button"
               type="button"
@@ -400,7 +478,7 @@ export function OrderApp() {
             </button>
           )}
 
-          {isPaid && (
+          {isPaid && !isCancelled && (
             <>
               <div className="paid-badge">
                 Pago local aprobado
@@ -439,8 +517,40 @@ export function OrderApp() {
             </>
           )}
 
+          <div className="customer-order-actions">
+            {!isCancelled && cancellationOpen && (
+              <button
+                className="customer-cancel-button"
+                type="button"
+                onClick={cancelCreatedOrder}
+                disabled={canceling}
+              >
+                {canceling ? "Cancelando…" : "Cancelar pedido"}
+              </button>
+            )}
+
+            <a
+              className="customer-manage-link"
+              href={`/pedido/${encodeURIComponent(createdOrder.orderCode)}#token=${encodeURIComponent(createdOrder.verificationToken)}`}
+            >
+              Administrar mi pedido
+            </a>
+          </div>
+
           <p className="technical-note">
             Estado: {createdOrder.status} · Pago: {createdOrder.paymentStatus}
+            {!isCancelled && (
+              <>
+                {" "}· Cancelaciones hasta{" "}
+                {new Intl.DateTimeFormat("es-MX", {
+                  timeZone: createdOrder.pickup.timezone,
+                  day: "numeric",
+                  month: "short",
+                  hour: "numeric",
+                  minute: "2-digit",
+                }).format(new Date(createdOrder.pickup.closesAt))}
+              </>
+            )}
           </p>
         </section>
       </main>
