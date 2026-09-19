@@ -285,3 +285,25 @@ Reglas:
 - el cliente obtiene fecha, hora, lugar y disponibilidad directamente del evento activo.
 
 El seed sigue sirviendo para catálogo y creación/actualización del administrador local, pero no crea ni modifica `PickupEvent`.
+
+
+## Cancelaciones de clientes
+
+El cliente puede administrar su pedido desde el enlace seguro generado después de crear la orden:
+
+- `/pedido/:orderCode#token=...`
+
+El token viaja en el fragmento de URL, no en la query string, y se guarda localmente en el navegador después de abrir el enlace. El API siempre vuelve a validar el token contra el hash guardado en la orden.
+
+Reglas:
+
+- la cancelación solo se permite antes de `PickupEvent.closesAt` (normalmente viernes 9:00 p. m.);
+- cancelar una orden pendiente libera inmediatamente su reserva de capacidad;
+- cancelar una orden pagada también libera el cupo;
+- con `MOCK`, el reembolso se completa inmediatamente y la orden termina en `REFUNDED`;
+- para Stripe/Mercado Pago, mientras no estén integrados, se persiste una solicitud de reembolso en los metadatos del pago y la orden queda `CANCELLED` con reembolso pendiente;
+- repetir la misma cancelación es idempotente y no crea un segundo reembolso;
+- si un evento estaba `SOLD_OUT` y una cancelación libera espacio antes del cierre, vuelve a `OPEN`;
+- cada cancelación/reembolso crea registros en `OrderStatusHistory` y `AuditLog`.
+
+El panel `/admin/pedidos` incluye filtros de cancelados/reembolsados y muestra el historial de estados de cada pedido.
