@@ -1,16 +1,20 @@
 "use client";
 
 import {
+  Camera,
   CheckCircle2,
   ChefHat,
   LogOut,
   PackageCheck,
   RefreshCw,
+  ScanLine,
   Search,
   ShoppingBag,
   Truck,
+  X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { BrowserQRCodeReader } from "@zxing/browser";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
@@ -45,6 +49,10 @@ type DeliveryOrder = {
   }>;
 };
 
+type ScanResult = DeliveryOrder & {
+  alreadyDelivered: boolean;
+};
+
 const money = new Intl.NumberFormat("es-MX", {
   style: "currency",
   currency: "MXN",
@@ -58,6 +66,15 @@ export default function DeliveryPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [busyCode, setBusyCode] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scanStatus, setScanStatus] = useState<
+    | { kind: "success" | "warning"; message: string; orderCode: string }
+    | null
+  >(null);
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const scannerControlsRef = useRef<{ stop: () => void } | null>(null);
+  const processingScanRef = useRef(false);
 
   async function load(showRefresh = false) {
     if (showRefresh) setRefreshing(true);
@@ -116,6 +133,54 @@ export default function DeliveryPage() {
     return () => window.clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (!scannerOpen || !videoRef.current) return;
+
+    let disposed = false;
+    const reader = new BrowserQRCodeReader();
+
+    void reader
+      .decodeFromVideoDevice(
+        undefined,
+        videoRef.current,
+        (result, _error, controls) => {
+          if (!result || disposed || processingScanRef.current) return;
+
+          processingScanRef.current = true;
+          controls.stop();
+          setScannerOpen(false);
+
+          void processQr(result.getText()).finally(() => {
+            processingScanRef.current = false;
+          });
+        },
+      )
+      .then((controls) => {
+        if (disposed) {
+          controls.stop();
+          return;
+        }
+
+        scannerControlsRef.current = controls;
+      })
+      .catch((cameraError) => {
+        if (disposed) return;
+
+        setScannerOpen(false);
+        setError(
+          cameraError instanceof Error
+            ? `No se pudo abrir la cámara: ${cameraError.message}`
+            : "No se pudo abrir la cámara.",
+        );
+      });
+
+    return () => {
+      disposed = true;
+      scannerControlsRef.current?.stop();
+      scannerControlsRef.current = null;
+    };
+  }, [scannerOpen]);
+
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
 
@@ -132,9 +197,54 @@ export default function DeliveryPage() {
   const ready = filtered.filter((order) => order.status === "READY");
   const delivered = filtered.filter((order) => order.status === "DELIVERED");
 
+  async function processQr(qrPayload: string) {
+    setError("");
+    setScanStatus(null);
+
+    try {
+      const response = await fetch(`${API_URL}/staff/delivery/scan`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ qrPayload }),
+      });
+
+      const data = (await response.json()) as ScanResult & {
+        message?: string | string[];
+      };
+
+      if (!response.ok) {
+        const message = Array.isArray(data.message)
+          ? data.message.join(" ")
+          : data.message;
+        throw new Error(message || "No se pudo validar el QR.");
+      }
+
+      setScanStatus({
+        kind: data.alreadyDelivered ? "warning" : "success",
+        orderCode: data.orderCode,
+        message: data.alreadyDelivered
+          ? "Este QR ya había sido utilizado. El pedido ya está entregado."
+          : `Entrega confirmada para ${data.customer.name}.`,
+      });
+
+      setQuery(data.orderCode);
+      await load();
+    } catch (scanError) {
+      setError(
+        scanError instanceof Error
+          ? scanError.message
+          : "No se pudo validar el QR.",
+      );
+    }
+  }
+
   async function markDelivered(order: DeliveryOrder) {
     setBusyCode(order.orderCode);
     setError("");
+    setScanStatus(null);
 
     try {
       const response = await fetch(
@@ -151,6 +261,11 @@ export default function DeliveryPage() {
         throw new Error(data.message || "No se pudo marcar como entregado.");
       }
 
+      setScanStatus({
+        kind: "success",
+        orderCode: order.orderCode,
+        message: `Entrega manual confirmada para ${order.customer.name}.`,
+      });
       await load();
     } catch (deliveryError) {
       setError(
@@ -163,7 +278,14 @@ export default function DeliveryPage() {
     }
   }
 
+  function closeScanner() {
+    scannerControlsRef.current?.stop();
+    scannerControlsRef.current = null;
+    setScannerOpen(false);
+  }
+
   async function logout() {
+    closeScanner();
     await fetch(`${API_URL}/auth/logout`, {
       method: "POST",
       credentials: "include",
@@ -223,7 +345,7 @@ export default function DeliveryPage() {
           <div>
             <p className="admin-kicker">Punto de entrega</p>
             <h1>Entrega</h1>
-            <p>Busca el pedido y confirma la entrega al cliente.</p>
+            <p>Escanea el QR del cliente o busca el pedido manualmente.</p>
           </div>
 
           <button
@@ -242,11 +364,38 @@ export default function DeliveryPage() {
 
         {error && <div className="admin-error-banner">{error}</div>}
 
+        {scanStatus && (
+          <div className={`delivery-scan-result ${scanStatus.kind}`}>
+            <CheckCircle2 size={20} />
+            <div>
+              <strong>{scanStatus.orderCode}</strong>
+              <span>{scanStatus.message}</span>
+            </div>
+          </div>
+        )}
+
+        <section className="delivery-scan-card">
+          <div>
+            <div className="delivery-scan-icon">
+              <ScanLine size={25} />
+            </div>
+            <div>
+              <strong>Escanear QR de entrega</strong>
+              <span>
+                La cámara valida el QR directamente contra el pedido guardado.
+              </span>
+            </div>
+          </div>
+          <button type="button" onClick={() => setScannerOpen(true)}>
+            <Camera size={18} />
+            Abrir cámara
+          </button>
+        </section>
+
         <section className="delivery-search-card">
           <div className="delivery-search-input">
             <Search size={21} />
             <input
-              autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Código H-..., nombre o teléfono"
@@ -270,7 +419,9 @@ export default function DeliveryPage() {
           <div className="delivery-grid">
             {ready.length === 0 ? (
               <div className="delivery-empty">
-                {query ? "No encontramos un pedido listo con esa búsqueda." : "No hay pedidos listos todavía."}
+                {query
+                  ? "No encontramos un pedido listo con esa búsqueda."
+                  : "No hay pedidos listos todavía."}
               </div>
             ) : (
               ready.map((order) => (
@@ -308,7 +459,7 @@ export default function DeliveryPage() {
                     <CheckCircle2 size={18} />
                     {busyCode === order.orderCode
                       ? "Confirmando…"
-                      : "Confirmar entrega"}
+                      : "Entrega manual"}
                   </button>
                 </article>
               ))
@@ -337,6 +488,37 @@ export default function DeliveryPage() {
           </div>
         </section>
       </section>
+
+      {scannerOpen && (
+        <div className="qr-scanner-overlay" role="dialog" aria-modal="true">
+          <div className="qr-scanner-modal">
+            <div className="qr-scanner-head">
+              <div>
+                <p className="admin-kicker">Entrega segura</p>
+                <h2>Escanea el QR</h2>
+              </div>
+              <button type="button" onClick={closeScanner} aria-label="Cerrar cámara">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="qr-camera-frame">
+              <video ref={videoRef} muted playsInline />
+              <div className="qr-camera-guide">
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
+
+            <p className="qr-scanner-help">
+              Coloca el QR del cliente dentro del recuadro. Se validará
+              automáticamente cuando la cámara pueda leerlo.
+            </p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
