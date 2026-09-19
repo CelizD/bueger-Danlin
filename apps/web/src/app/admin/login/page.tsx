@@ -6,6 +6,12 @@ import { ArrowRight, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
 
+function routeForRole(role: "ADMIN" | "KITCHEN" | "DELIVERY") {
+  if (role === "KITCHEN") return "/admin/cocina";
+  if (role === "DELIVERY") return "/admin/entrega";
+  return "/admin/pedidos";
+}
+
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +27,8 @@ export default function AdminLoginPage() {
         });
 
         if (response.ok) {
-          window.location.replace("/admin/pedidos");
+          const data = await response.json();
+          window.location.replace(routeForRole(data.user.role));
           return;
         }
       } finally {
@@ -56,7 +63,7 @@ export default function AdminLoginPage() {
         throw new Error(message || "No fue posible iniciar sesión.");
       }
 
-      window.location.replace("/admin/pedidos");
+      window.location.replace(routeForRole(data.user.role));
     } catch (loginError) {
       setError(
         loginError instanceof Error
