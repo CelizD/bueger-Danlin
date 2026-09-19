@@ -254,3 +254,34 @@ Flujo local:
 6. Un segundo escaneo del mismo QR no genera una segunda entrega.
 
 El escáner usa la cámara del navegador. En desarrollo funciona en `localhost`; para usar la cámara desde otro dispositivo por red local se recomienda servir la aplicación mediante HTTPS, ya que `getUserMedia()` requiere un contexto seguro.
+
+
+## Administración de sábados
+
+El calendario de entregas ya no se administra desde `seed.ts`.
+
+Panel:
+
+- `/admin/sabados`
+
+Desde esa pantalla un usuario `ADMIN` puede:
+
+- crear una nueva entrega de sábado como borrador;
+- cambiar lugar, fecha, hora de entrega y hora límite;
+- cambiar el límite de combos;
+- abrir o cerrar pedidos;
+- ver combos pagados, reservas pendientes y cupo restante;
+- reabrir una fecha cerrada mientras su cierre y entrega sigan en el futuro.
+
+Reglas:
+
+- solo puede existir una fecha `OPEN` / `SOLD_OUT` activa para clientes;
+- al abrir otra fecha, la anterior se cierra;
+- no se permite bajar el límite por debajo de los combos ya reservados/pagados;
+- las fechas se interpretan en `America/Tijuana`;
+- la fecha de entrega debe ser sábado;
+- al vencer la hora límite, el evento se normaliza a `CLOSED`;
+- si expiran reservas pendientes y vuelve a haber cupo, `SOLD_OUT` vuelve a `OPEN`;
+- el cliente obtiene fecha, hora, lugar y disponibilidad directamente del evento activo.
+
+El seed sigue sirviendo para catálogo y creación/actualización del administrador local, pero no crea ni modifica `PickupEvent`.
