@@ -482,3 +482,20 @@ h2 {
     flex-direction: column;
   }
 }
+
+.payment-button {
+  width: 100%;
+  margin-top: 18px;
+}
+
+.paid-badge {
+  margin-top: 18px;
+  padding: 13px 15px;
+  border: 1px solid #9eb49a;
+  border-radius: 13px;
+  background: #f0f7ee;
+  color: #31502d;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
