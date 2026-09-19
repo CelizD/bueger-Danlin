@@ -277,6 +277,49 @@ export function OrderApp() {
     }
   }
 
+  async function confirmMockPayment() {
+    if (!createdOrder || createdOrder.paymentStatus === "PAID") return;
+
+    setPaying(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/payments/mock/${createdOrder.orderCode}/confirm`,
+        {
+          method: "POST",
+          headers: {
+            "x-order-token": createdOrder.verificationToken,
+          },
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "No se pudo confirmar el pago local.");
+      }
+
+      setCreatedOrder((current) =>
+        current
+          ? {
+              ...current,
+              status: data.status,
+              paymentStatus: data.paymentStatus,
+            }
+          : current,
+      );
+    } catch (paymentError) {
+      setError(
+        paymentError instanceof Error
+          ? paymentError.message
+          : "No se pudo confirmar el pago local.",
+      );
+    } finally {
+      setPaying(false);
+    }
+  }
+
   if (loading) {
     return (
       <main className="shell">
@@ -286,15 +329,20 @@ export function OrderApp() {
   }
 
   if (createdOrder) {
+    const isPaid = createdOrder.paymentStatus === "PAID";
+
     return (
       <main className="shell">
         <section className="confirmation">
-          <p className="eyebrow">Pedido reservado</p>
+          <p className="eyebrow">{isPaid ? "Pago confirmado" : "Pedido reservado"}</p>
           <h1>{createdOrder.orderCode}</h1>
           <p className="lead">
-            Reservamos {createdOrder.comboQuantity} combo(s) durante 15 minutos.
-            El siguiente paso será conectar el pago.
+            {isPaid
+              ? "Tu pedido local quedó pagado y confirmado para continuar con cocina y entrega."
+              : `Reservamos ${createdOrder.comboQuantity} combo(s) durante 15 minutos mientras completas el pago.`}
           </p>
+
+          {error && <div className="alert">{error}</div>}
 
           <div className="confirmation-grid">
             <div>
@@ -306,6 +354,23 @@ export function OrderApp() {
               <strong>{createdOrder.pickup.locationLabel}</strong>
             </div>
           </div>
+
+          {!isPaid && (
+            <button
+              className="primary-button payment-button"
+              type="button"
+              onClick={confirmMockPayment}
+              disabled={paying}
+            >
+              {paying ? "Confirmando pago…" : "Simular pago local"}
+            </button>
+          )}
+
+          {isPaid && (
+            <div className="paid-badge">
+              Pago local aprobado
+            </div>
+          )}
 
           <p className="technical-note">
             Estado: {createdOrder.status} · Pago: {createdOrder.paymentStatus}
