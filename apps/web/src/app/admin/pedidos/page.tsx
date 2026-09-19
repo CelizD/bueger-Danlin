@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CalendarDays,
   ChevronDown,
   ChefHat,
   CircleDollarSign,
@@ -223,6 +224,10 @@ export default function AdminOrdersPage() {
             <a href="/admin/entrega">
               <Truck size={18} strokeWidth={1.8} />
               Entrega
+            </a>
+            <a href="/admin/sabados">
+              <CalendarDays size={18} strokeWidth={1.8} />
+              Sábados
             </a>
           </nav>
         </div>
