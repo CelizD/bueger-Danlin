@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 
 type ModifierOption = {
   id: string;
@@ -71,6 +72,10 @@ const money = new Intl.NumberFormat("es-MX", {
   currency: "MXN",
   maximumFractionDigits: 0,
 });
+
+function pickupQrPayload(order: CreatedOrder) {
+  return `BD1:${order.orderCode}:${order.verificationToken}`;
+}
 
 function newBurger(): BurgerSelection {
   return {
@@ -368,9 +373,42 @@ export function OrderApp() {
           )}
 
           {isPaid && (
-            <div className="paid-badge">
-              Pago local aprobado
-            </div>
+            <>
+              <div className="paid-badge">
+                Pago local aprobado
+              </div>
+
+              <div className="customer-qr-card">
+                <div className="customer-qr-copy">
+                  <p className="eyebrow">Código de entrega</p>
+                  <h2>Presenta este QR</h2>
+                  <p>
+                    Muéstralo al momento de recoger tu pedido. El personal lo
+                    escaneará para confirmar la entrega.
+                  </p>
+                </div>
+
+                <div className="customer-qr-frame" aria-label="QR de entrega">
+                  <QRCodeSVG
+                    value={pickupQrPayload(createdOrder)}
+                    size={220}
+                    level="H"
+                    marginSize={2}
+                    title={`Pedido ${createdOrder.orderCode}`}
+                  />
+                </div>
+
+                <div className="customer-qr-code">
+                  <span>Pedido</span>
+                  <strong>{createdOrder.orderCode}</strong>
+                </div>
+
+                <p className="customer-qr-warning">
+                  No compartas este QR públicamente. Funciona como comprobante
+                  para retirar tu pedido.
+                </p>
+              </div>
+            </>
           )}
 
           <p className="technical-note">
