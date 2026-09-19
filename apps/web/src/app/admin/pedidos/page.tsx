@@ -2,12 +2,14 @@
 
 import {
   ChevronDown,
+  ChefHat,
   CircleDollarSign,
   LogOut,
   Package,
   RefreshCw,
   Search,
   ShoppingBag,
+  Truck,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -214,10 +216,14 @@ export default function AdminOrdersPage() {
               <ShoppingBag size={18} strokeWidth={1.8} />
               Pedidos
             </a>
-            <span>
-              <Package size={18} strokeWidth={1.8} />
-              Cocina · Próximamente
-            </span>
+            <a href="/admin/cocina">
+              <ChefHat size={18} strokeWidth={1.8} />
+              Cocina
+            </a>
+            <a href="/admin/entrega">
+              <Truck size={18} strokeWidth={1.8} />
+              Entrega
+            </a>
           </nav>
         </div>
 
