@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../apps/api/src/generated/prisma/client.js";
+import * as argon2 from "argon2";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is required");
@@ -10,6 +11,44 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
+  const adminEmail = process.env.ADMIN_SEED_EMAIL?.trim().toLowerCase();
+  const adminPassword = process.env.ADMIN_SEED_PASSWORD;
+  const adminName = process.env.ADMIN_SEED_NAME?.trim() || "Administrador";
+
+  if (adminEmail && adminPassword) {
+    if (adminPassword.length < 12) {
+      throw new Error("ADMIN_SEED_PASSWORD must contain at least 12 characters");
+    }
+
+    const passwordHash = await argon2.hash(adminPassword, {
+      type: argon2.argon2id,
+      memoryCost: 19456,
+      timeCost: 2,
+      parallelism: 1,
+    });
+
+    await prisma.user.upsert({
+      where: { email: adminEmail },
+      update: {
+        name: adminName,
+        role: "ADMIN",
+        active: true,
+        passwordHash,
+      },
+      create: {
+        email: adminEmail,
+        name: adminName,
+        role: "ADMIN",
+        active: true,
+        passwordHash,
+      },
+    });
+
+    console.log(`Admin local actualizado: ${adminEmail}`);
+  } else {
+    console.log("Admin seed omitido: define ADMIN_SEED_EMAIL y ADMIN_SEED_PASSWORD en .env");
+  }
+
   const combo = await prisma.product.upsert({
     where: { slug: "combo-hamburguesa-papas" },
     update: {
