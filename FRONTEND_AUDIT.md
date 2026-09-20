@@ -31,8 +31,8 @@ Evolucionar el frontend actual sin sobrearquitectura. Burger Danlin sigue siendo
 | Core Web Vitals | 🟡 | arquitectura Next ayuda, pero todavía no existe RUM |
 | Lighthouse/bundle budgets | 🔴 | pendiente |
 | Testing frontend real | 🟡 | Vitest cubre reglas y render de componentes críticos; faltan Testing Library/E2E/axe |
-| E2E | 🔴 | pendiente Playwright |
-| Accessibility automation | 🔴 | pendiente axe |
+| E2E | ✅ base | Playwright validado localmente: pedido/pago/QR, login/MFA, error de credenciales y teclado |
+| Accessibility automation | ✅ base | axe + Playwright validado localmente sin violaciones serious/critical en home |
 | Storybook | 🔴 | pendiente cuando se formalice design system |
 | Observabilidad frontend | 🔴 | pendiente errores + RUM + Web Vitals |
 | CI de tipos/build | ✅ | GitHub Actions ejecuta typecheck/test/build |
@@ -127,14 +127,20 @@ Implementado:
 - render tests de bebida agotada;
 - render tests de ingredientes/extras agotados;
 - render tests del sidebar por rol;
-- Vitest configurado con alias `@/`.
+- Vitest configurado con alias `@/`;
+- Playwright + axe ejecutados correctamente en Chromium;
+- flujo E2E cliente: menú -> pedido -> pago mock -> QR;
+- login -> MFA;
+- error de credenciales accesible;
+- skip-link/teclado;
+- axe WCAG A/AA bloqueando impactos serious/critical.
 
 Siguiente subfase:
 
-- Testing Library;
-- jsdom;
-- Playwright;
-- axe;
+- Testing Library para interacción DOM más granular;
+- E2E integrado contra API/PostgreSQL reales;
+- ampliar axe a login, admin, cocina y entrega;
+- decidir si ejecutar Playwright en CI según costo/tiempo de pipeline.
 - pruebas de keyboard;
 - smoke tests de roles/permisos;
 - E2E de pedido, login/MFA, cocina y entrega;
