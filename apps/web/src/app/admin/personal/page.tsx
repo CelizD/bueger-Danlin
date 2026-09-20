@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Search,
   Shield,
+  ShieldCheck,
   ShoppingBag,
   ToggleLeft,
   ToggleRight,
@@ -41,6 +42,8 @@ type StaffUser = {
   email: string;
   role: StaffRole;
   active: boolean;
+  mfaEnabled: boolean;
+  mfaEnrolledAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -272,6 +275,59 @@ export default function StaffPage() {
         updateError instanceof Error
           ? updateError.message
           : "No se pudo actualizar la cuenta.",
+      );
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function resetMfa(staff: StaffUser) {
+    if (
+      staff.role !== "ADMIN" ||
+      staff.id === sessionUser?.sub
+    ) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Restablecer el MFA de ${staff.name}? Su sesión administrativa dejará de funcionar y tendrá que configurar un nuevo autenticador al iniciar sesión.`,
+    );
+
+    if (!confirmed) return;
+
+    setBusyId(staff.id);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/admin/staff/${encodeURIComponent(staff.id)}/mfa/reset`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const message = Array.isArray(data.message)
+          ? data.message.join(" ")
+          : data.message;
+        throw new Error(
+          message || "No se pudo restablecer el MFA.",
+        );
+      }
+
+      setSuccess(
+        `MFA de ${staff.name} restablecido. Deberá configurarlo de nuevo en su próximo inicio de sesión.`,
+      );
+      await load();
+    } catch (mfaError) {
+      setError(
+        mfaError instanceof Error
+          ? mfaError.message
+          : "No se pudo restablecer el MFA.",
       );
     } finally {
       setBusyId(null);
@@ -619,6 +675,21 @@ export default function StaffPage() {
                         {isSelf && <em>Tú</em>}
                       </strong>
                       <span>{staff.email}</span>
+                      {staff.role === "ADMIN" && (
+                        <span
+                          className={
+                            "staff-mfa-state " +
+                            (staff.mfaEnabled
+                              ? "enabled"
+                              : "pending")
+                          }
+                        >
+                          <ShieldCheck size={12} />
+                          {staff.mfaEnabled
+                            ? "MFA activo"
+                            : "MFA pendiente"}
+                        </span>
+                      )}
                     </div>
                     <span
                       className={
@@ -662,6 +733,22 @@ export default function StaffPage() {
                       <KeyRound size={16} />
                       Contraseña
                     </button>
+
+                    {staff.role === "ADMIN" &&
+                      staff.mfaEnabled &&
+                      !isSelf && (
+                        <button
+                          type="button"
+                          className="staff-password-button"
+                          onClick={() =>
+                            void resetMfa(staff)
+                          }
+                          disabled={busyId === staff.id}
+                        >
+                          <ShieldCheck size={16} />
+                          Restablecer MFA
+                        </button>
+                      )}
 
                     <button
                       type="button"
