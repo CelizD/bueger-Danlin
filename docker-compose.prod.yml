@@ -160,6 +160,7 @@ services:
         max-file: "5"
 
   backup:
+    image: burger-danlin-backup:local
     build:
       context: .
       dockerfile: deploy/backup/Dockerfile
@@ -205,6 +206,7 @@ services:
       - restore
 
   restore-drill:
+    image: burger-danlin-backup:local
     build:
       context: .
       dockerfile: deploy/backup/Dockerfile
