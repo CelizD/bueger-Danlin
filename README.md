@@ -713,3 +713,36 @@ Un cambio no debería considerarse listo para producción mientras estén fallan
 - SAST.
 
 El SBOM es informativo y forma parte de la trazabilidad del release.
+
+
+## Docker de producción y recuperación
+
+Hay dos Compose con propósitos distintos:
+
+- `docker-compose.yml`: **solo desarrollo local**. Publica PostgreSQL, Redis y Mailpit para facilitar el desarrollo.
+- `docker-compose.prod.yml`: **producción**. PostgreSQL y Redis no publican puertos al host.
+
+El Compose de producción incluye:
+
+- API y Web construidos con Dockerfiles multi-stage;
+- procesos Node ejecutados como usuario `node`, no root;
+- `no-new-privileges` y capabilities eliminadas para API/Web;
+- API y Web expuestos únicamente en `127.0.0.1` para Nginx del host;
+- red de datos Docker marcada como `internal`;
+- PostgreSQL con SCRAM-SHA-256;
+- Redis protegido con contraseña y usado solo como caché;
+- healthchecks;
+- migraciones mediante `prisma migrate deploy`;
+- rotación básica de logs Docker;
+- backup PostgreSQL cifrado con `age`;
+- checksum SHA-256 del backup cifrado;
+- retención configurable;
+- restore drill contra PostgreSQL temporal;
+- timers systemd de backup y restore drill.
+
+Guía completa:
+
+- `deploy/PRODUCTION.md`
+- `deploy/DR.md`
+
+Importante: el backup local cifrado todavía debe replicarse a almacenamiento independiente/offsite antes del lanzamiento. RPO y RTO permanecen pendientes de aprobación según impacto del negocio.
