@@ -76,10 +76,15 @@ model User {
   name         String
   role                UserRole @default(ADMIN)
   active              Boolean  @default(true)
-  failedLoginAttempts Int      @default(0)
-  lockedUntil         DateTime?
-  lastLoginAt         DateTime?
-  createdAt           DateTime @default(now())
+  failedLoginAttempts    Int      @default(0)
+  lockedUntil            DateTime?
+  lastLoginAt            DateTime?
+  mfaEnabled             Boolean  @default(false)
+  mfaSecretEncrypted     String?
+  mfaRecoveryCodeHashes  Json?
+  mfaLastUsedStep        Int?
+  mfaEnrolledAt          DateTime?
+  createdAt              DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   auditLogs AuditLog[]
