@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminSidebar } from "@/features/staff/components/admin-sidebar";
-import { API_URL } from "@/lib/api/browser";
+import { API_URL, apiFetch } from "@/lib/api/browser";
 import {
   Boxes,
   BarChart3,
@@ -122,7 +122,7 @@ export default function AdminOrdersPage() {
     if (showRefreshing) setRefreshing(true);
 
     try {
-      const meResponse = await fetch(`${API_URL}/auth/me`, {
+      const meResponse = await apiFetch(`${API_URL}/auth/me`, {
         credentials: "include",
         cache: "no-store",
       });
@@ -139,7 +139,7 @@ export default function AdminOrdersPage() {
       const meData = await meResponse.json();
       setUser(meData.user);
 
-      const ordersResponse = await fetch(`${API_URL}/admin/orders`, {
+      const ordersResponse = await apiFetch(`${API_URL}/admin/orders`, {
         credentials: "include",
         cache: "no-store",
       });
@@ -193,7 +193,7 @@ export default function AdminOrdersPage() {
   }, [data, query, status]);
 
   async function logout() {
-    await fetch(`${API_URL}/auth/logout`, {
+    await apiFetch(`${API_URL}/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
