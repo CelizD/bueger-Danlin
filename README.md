@@ -582,3 +582,20 @@ Endpoints operativos del API:
 `/health/ready` devuelve HTTP `503` cuando PostgreSQL no está disponible, para que un reverse proxy, monitor o futuro orquestador pueda retirar la instancia del tráfico sin confundir “proceso vivo” con “aplicación lista”.
 
 Los health checks llevan `Cache-Control: no-store` y no consumen la cuota global de rate limiting.
+
+
+## Formato de errores del API
+
+Las excepciones HTTP pasan por un filtro global. La respuesta pública usa un formato consistente:
+
+```json
+{
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "Mensaje seguro para el cliente",
+    "requestId": "..."
+  }
+}
+```
+
+Los errores `5xx` nunca exponen el mensaje técnico de la excepción, stack trace, SQL ni rutas internas. El detalle mínimo de diagnóstico se envía al log del servidor asociado al mismo `requestId`.
