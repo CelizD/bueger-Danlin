@@ -63,6 +63,12 @@ enum PickupEventStatus {
   CANCELLED
 }
 
+enum InventoryAllocationStatus {
+  RESERVED
+  COMMITTED
+  RELEASED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -105,6 +111,7 @@ model Product {
 
   modifierGroups ProductModifierGroup[]
   orderItems     OrderItem[]
+  inventoryUsages InventoryUsage[]
 }
 
 model ModifierGroup {
@@ -135,8 +142,9 @@ model ModifierOption {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
-  group      ModifierGroup      @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  orderItems OrderItemModifier[]
+  group           ModifierGroup      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  orderItems      OrderItemModifier[]
+  inventoryUsages InventoryUsage[]
 
   @@index([groupId, sortOrder])
 }
@@ -195,7 +203,8 @@ model Order {
   pickupEvent   PickupEvent         @relation(fields: [pickupEventId], references: [id])
   items         OrderItem[]
   payments      Payment[]
-  statusHistory OrderStatusHistory[]
+  statusHistory       OrderStatusHistory[]
+  inventoryAllocations InventoryAllocation[]
 
   @@index([pickupEventId, status])
   @@index([pickupEventId, reservationExpiresAt])
@@ -266,6 +275,57 @@ model OrderStatusHistory {
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId, createdAt])
+}
+
+
+model InventoryItem {
+  id                String   @id @default(cuid())
+  key               String   @unique
+  name              String
+  unit              String
+  stockQuantity     Int      @default(0)
+  lowStockThreshold Int      @default(5)
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  usages      InventoryUsage[]
+  allocations InventoryAllocation[]
+}
+
+model InventoryUsage {
+  id               String @id @default(cuid())
+  key              String @unique
+  inventoryItemId  String
+  productId        String
+  modifierOptionId String?
+  quantity         Int    @default(1)
+
+  inventoryItem  InventoryItem  @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  product        Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  modifierOption ModifierOption? @relation(fields: [modifierOptionId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryItemId])
+  @@index([productId])
+  @@index([modifierOptionId])
+}
+
+model InventoryAllocation {
+  id              String                    @id @default(cuid())
+  orderId         String
+  inventoryItemId String
+  quantity        Int
+  status          InventoryAllocationStatus @default(RESERVED)
+  releasedAt      DateTime?
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, inventoryItemId])
+  @@index([inventoryItemId, status])
+  @@index([status, createdAt])
 }
 
 model AuditLog {
