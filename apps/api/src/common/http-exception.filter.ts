@@ -37,6 +37,10 @@ function errorCode(status: number) {
 }
 
 function publicMessage(exception: unknown, status: number) {
+  if (status >= 500) {
+    return "Ocurrió un error interno.";
+  }
+
   if (!(exception instanceof HttpException)) {
     return "Ocurrió un error interno.";
   }
@@ -65,10 +69,6 @@ function publicMessage(exception: unknown, status: number) {
     ) {
       return message;
     }
-  }
-
-  if (status >= 500) {
-    return "Ocurrió un error interno.";
   }
 
   return exception.message;
