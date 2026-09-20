@@ -11,6 +11,7 @@ import {
   Search,
   ShoppingBag,
   Truck,
+  Users,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -235,6 +236,10 @@ export default function AdminOrdersPage() {
             <a href="/admin/sabados">
               <CalendarDays size={18} strokeWidth={1.8} />
               Sábados
+            </a>
+            <a href="/admin/personal">
+              <Users size={18} strokeWidth={1.8} />
+              Personal
             </a>
           </nav>
         </div>
