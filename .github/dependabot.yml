@@ -9,8 +9,6 @@ updates:
       time: "09:00"
       timezone: "America/Tijuana"
     open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -20,9 +18,6 @@ updates:
       time: "09:15"
       timezone: "America/Tijuana"
     open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "github-actions"
 
   - package-ecosystem: "docker-compose"
     directory: "/"
@@ -31,6 +26,3 @@ updates:
       time: "09:30"
       timezone: "America/Tijuana"
     open-pull-requests-limit: 3
-    labels:
-      - "dependencies"
-      - "docker"
