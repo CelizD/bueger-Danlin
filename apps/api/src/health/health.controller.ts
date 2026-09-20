@@ -9,16 +9,17 @@ import { PrismaService } from "../database/prisma.service.js";
 
 @Controller("health")
 @SkipThrottle()
-@Header("Cache-Control", "no-store")
 export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get()
+  @Header("Cache-Control", "no-store")
   check() {
     return this.live();
   }
 
   @Get("live")
+  @Header("Cache-Control", "no-store")
   live() {
     return {
       status: "ok",
@@ -30,6 +31,7 @@ export class HealthController {
   }
 
   @Get("ready")
+  @Header("Cache-Control", "no-store")
   async ready() {
     const startedAt = process.hrtime.bigint();
 
