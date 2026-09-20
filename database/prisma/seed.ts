@@ -34,6 +34,8 @@ async function main() {
         role: "ADMIN",
         active: true,
         passwordHash,
+        failedLoginAttempts: 0,
+        lockedUntil: null,
       },
       create: {
         email: adminEmail,
