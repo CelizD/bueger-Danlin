@@ -4,10 +4,13 @@ import {
   Query,
   UseGuards,
 } from "@nestjs/common";
-import { AdminGuard } from "../auth/admin.guard.js";
+
+import { ApiCookieAuth, ApiTags } from "@nestjs/swagger";import { AdminGuard } from "../auth/admin.guard.js";
 import { StaffAuthGuard } from "../auth/staff-auth.guard.js";
 import { AdminDashboardService } from "./admin-dashboard.service.js";
 
+@ApiTags("Admin dashboard")
+@ApiCookieAuth("burger_staff_session")
 @Controller("admin/dashboard")
 @UseGuards(StaffAuthGuard, AdminGuard)
 export class AdminDashboardController {
