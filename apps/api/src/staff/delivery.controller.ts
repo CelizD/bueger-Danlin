@@ -8,13 +8,16 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
-import { RolesGuard } from "../auth/roles.guard.js";
+
+import { ApiCookieAuth, ApiTags } from "@nestjs/swagger";import { RolesGuard } from "../auth/roles.guard.js";
 import { StaffRoles } from "../auth/roles.decorator.js";
 import { StaffAuthGuard } from "../auth/staff-auth.guard.js";
 import type { StaffRequest } from "../auth/auth.types.js";
 import { ScanDeliveryDto } from "./dto/scan-delivery.dto.js";
 import { StaffOrdersService } from "./staff-orders.service.js";
 
+@ApiTags("Delivery")
+@ApiCookieAuth("burger_staff_session")
 @Controller("staff/delivery")
 @UseGuards(StaffAuthGuard, RolesGuard)
 @StaffRoles("ADMIN", "DELIVERY")
