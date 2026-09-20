@@ -3,6 +3,7 @@ import { JwtService } from "@nestjs/jwt";
 import * as argon2 from "argon2";
 import { PrismaService } from "../database/prisma.service.js";
 import type { StaffSession } from "./auth.types.js";
+import { credentialVersion } from "./credential-version.js";
 
 const ARGON2_OPTIONS = {
   type: argon2.argon2id,
@@ -50,6 +51,7 @@ export class AuthService {
       email: user.email,
       name: user.name,
       role: user.role,
+      credentialVersion: credentialVersion(user.passwordHash),
     };
 
     const token = await this.jwtService.signAsync(session);
