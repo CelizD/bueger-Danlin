@@ -87,8 +87,8 @@ Leyenda:
 |---|---|---|
 | Logs estructurados + request ID | ✅ | requestId, método, path, status, duración, IP, UA |
 | Audit log | 🟡 | cubre múltiples acciones administrativas/auth; falta matriz de cobertura formal |
-| Health check | 🟡 | /health existe pero hoy solo confirma proceso vivo |
-| Readiness check | 🔴 | falta comprobar DB/dependencias críticas |
+| Health check | ✅ | /health y /health/live confirman liveness sin depender de servicios externos |
+| Readiness check | ✅ | /health/ready ejecuta SELECT 1 contra PostgreSQL y devuelve 503 si DB no está disponible |
 | Backups automáticos | 🔴 | no implementados para Burger Danlin |
 | Restore probado | 🔴 | no existe restore drill |
 | RPO/RTO | 🔴 | no definidos |
@@ -192,4 +192,4 @@ Leyenda:
 
 ## Próximo control
 
-**Health/readiness real**: el endpoint actual solo prueba que Node/Nest está vivo. Readiness debe comprobar que PostgreSQL acepta consultas antes de anunciar que la instancia está lista para recibir tráfico.
+**Error handling consistente con requestId**: health/readiness ya quedó cubierto; el siguiente P0 es estandarizar errores públicos sin detalles internos y correlacionarlos con X-Request-Id.
