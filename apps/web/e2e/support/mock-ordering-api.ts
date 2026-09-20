@@ -5,7 +5,7 @@ const corsHeaders = {
   "access-control-allow-credentials": "true",
   "access-control-allow-methods": "GET,POST,PATCH,OPTIONS",
   "access-control-allow-headers":
-    "content-type,idempotency-key,x-order-token",
+    "content-type,idempotency-key,x-order-token,x-request-id",
 };
 
 async function json(
