@@ -255,10 +255,22 @@ export function OrderApp() {
   }, [burgers, combo, coke, cokes, extraOptions]);
 
   function toggleRemoved(burgerId: string, optionId: string) {
-    const unavailable = inventory?.modifierLimits[optionId] === 0;
+    const limit = inventory?.modifierLimits[optionId];
     const burger = burgers.find((item) => item.localId === burgerId);
+    const tryingToInclude = burger?.removedIds.includes(optionId) ?? false;
 
-    if (unavailable && burger?.removedIds.includes(optionId)) return;
+    if (tryingToInclude && limit !== undefined) {
+      const includedElsewhere = burgers.filter(
+        (item) =>
+          item.localId !== burgerId &&
+          !item.removedIds.includes(optionId),
+      ).length;
+
+      if (includedElsewhere >= limit) {
+        setError("Ese ingrediente ya no tiene inventario disponible.");
+        return;
+      }
+    }
 
     setBurgers((current) =>
       current.map((burger) =>
@@ -303,9 +315,24 @@ export function OrderApp() {
 
   function addBurger() {
     if (!event || burgers.length >= maxCombosAvailable) return;
+
+    const removedForNewBurger = removableOptions
+      .filter((option) => {
+        const limit = inventory?.modifierLimits[option.id];
+
+        if (limit === undefined) return false;
+
+        const currentlyIncluded = burgers.filter(
+          (burger) => !burger.removedIds.includes(option.id),
+        ).length;
+
+        return currentlyIncluded >= limit;
+      })
+      .map((option) => option.id);
+
     setBurgers((current) => [
       ...current,
-      newBurger(unavailableIncludedIds),
+      newBurger(removedForNewBurger),
     ]);
   }
 
