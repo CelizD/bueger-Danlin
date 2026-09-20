@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BarChart3,
   CalendarDays,
   Camera,
   CheckCircle2,
@@ -312,6 +313,10 @@ export default function DeliveryPage() {
           </div>
 
           <nav className="admin-nav">
+            <a href="/admin/dashboard">
+              <BarChart3 size={18} strokeWidth={1.8} />
+              Dashboard
+            </a>
             {user?.role === "ADMIN" && (
               <a href="/admin/pedidos">
                 <ShoppingBag size={18} strokeWidth={1.8} />
