@@ -43,6 +43,14 @@ export class AdminStaffController {
     return this.staff.update(id, dto, request.user!.sub);
   }
 
+  @Post(":id/mfa/reset")
+  resetMfa(
+    @Param("id") id: string,
+    @Req() request: StaffRequest,
+  ) {
+    return this.staff.resetMfa(id, request.user!.sub);
+  }
+
   @Post(":id/password")
   resetPassword(
     @Param("id") id: string,
