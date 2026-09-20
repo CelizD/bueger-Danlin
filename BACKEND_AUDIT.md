@@ -77,8 +77,8 @@ Leyenda:
 | Headers de seguridad | ✅ | Helmet + headers Next |
 | Cookies Secure | ✅ | producción |
 | Logs sin secretos/bodies | ✅ | middleware HTTP no registra cuerpos ni cookies |
-| DB no pública en producción | 🔴 | docker-compose local publica 5432; falta manifiesto de producción privado |
-| Redis no público en producción | 🔴 | docker-compose local publica 6379; falta red privada producción |
+| DB no pública en producción | 🟡 | compose de producción no publica PostgreSQL y usa red Docker internal; pendiente validar en VPS |
+| Redis no público en producción | 🟡 | compose de producción no publica Redis, usa red internal y requiere contraseña; pendiente validar en VPS |
 | Encryption at rest | 🟡 | depende del proveedor; MFA secret sí usa AES-256-GCM |
 
 ## P0 — Operación y recuperación
@@ -89,8 +89,8 @@ Leyenda:
 | Audit log | 🟡 | cubre múltiples acciones administrativas/auth; falta matriz de cobertura formal |
 | Health check | ✅ | /health y /health/live confirman liveness sin depender de servicios externos |
 | Readiness check | ✅ | /health/ready ejecuta SELECT 1 contra PostgreSQL y devuelve 503 si DB no está disponible |
-| Backups automáticos | 🔴 | no implementados para Burger Danlin |
-| Restore probado | 🔴 | no existe restore drill |
+| Backups automáticos | 🟡 | pg_dump cifrado con age + timer cada 6h implementados; pendiente ejecución real y copia offsite/inmutable |
+| Restore probado | 🟡 | restore drill aislado y timer mensual implementados; pendiente ejecutar y medir primer drill real |
 | RPO/RTO | 🔴 | no definidos |
 | Runbook incidente crítico | 🔴 | no existe |
 | Alertas | 🔴 | no existe canal/reglas de alerting |
@@ -110,9 +110,9 @@ Leyenda:
 | Secret scanning en pipeline | 🟡 | Gitleaks v3 configurado contra historial Git; pendiente primer workflow verde |
 | SAST | 🟡 | Semgrep OSS 1.177.0 configurado; pendiente primer workflow verde |
 | Build reproducible | 🟡 | CI usa pnpm frozen lockfile y build; falta imagen/artefacto productivo reproducible |
-| Docker app non-root | 🔴 | no hay Dockerfiles de producción de web/API |
+| Docker app non-root | 🟡 | Dockerfiles multi-stage API/Web ejecutan como usuario node; pendiente build/ejecución real |
 | Container scan | 🔴 | no configurado |
-| Deploy reproducible | 🔴 | Nginx ejemplo existe, pero falta procedimiento/artefacto automatizado |
+| Deploy reproducible | 🟡 | docker-compose.prod.yml + Dockerfiles + migración + runbook versionados; pendiente validar build/deploy real |
 
 ## P1 — Fiabilidad y observabilidad
 
