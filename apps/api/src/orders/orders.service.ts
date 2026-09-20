@@ -11,6 +11,7 @@ import {
   randomUUID,
 } from "node:crypto";
 import { PrismaService } from "../database/prisma.service.js";
+import { InventoryService } from "../inventory/inventory.service.js";
 import { CreateOrderDto } from "./dto/create-order.dto.js";
 
 const CAPACITY_STATUSES = [
@@ -27,7 +28,10 @@ const RESERVATION_MINUTES = 15;
 export class OrdersService {
   private readonly qrSecret: string;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly inventory: InventoryService,
+  ) {
     const secret = process.env.QR_TOKEN_SECRET;
 
     if (!secret) {
@@ -355,6 +359,8 @@ export class OrdersService {
             reservationExpiresAt,
           },
         });
+
+        await this.inventory.reserveForOrder(tx, order.id, preparedItems);
 
         for (const item of preparedItems) {
           const orderItem = await tx.orderItem.create({
