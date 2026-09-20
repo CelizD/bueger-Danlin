@@ -12,6 +12,7 @@ import {
   Search,
   ShoppingBag,
   Truck,
+  Users,
   X,
 } from "lucide-react";
 import { BrowserQRCodeReader } from "@zxing/browser";
@@ -331,6 +332,12 @@ export default function DeliveryPage() {
               <a href="/admin/sabados">
                 <CalendarDays size={18} strokeWidth={1.8} />
                 Sábados
+              </a>
+            )}
+            {user?.role === "ADMIN" && (
+              <a href="/admin/personal">
+                <Users size={18} strokeWidth={1.8} />
+                Personal
               </a>
             )}
           </nav>
