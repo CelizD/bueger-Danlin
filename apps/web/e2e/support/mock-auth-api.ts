@@ -4,7 +4,7 @@ const corsHeaders = {
   "access-control-allow-origin": "http://localhost:3100",
   "access-control-allow-credentials": "true",
   "access-control-allow-methods": "GET,POST,OPTIONS",
-  "access-control-allow-headers": "content-type",
+  "access-control-allow-headers": "content-type,x-request-id",
 };
 
 async function json(
