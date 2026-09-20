@@ -113,16 +113,6 @@ export function OrderApp() {
     ? Math.min(event.remainingCombos, comboInventoryLimit)
     : 0;
 
-  const unavailableIncludedIds =
-    combo?.modifierGroups
-      .flatMap((group) => group.modifierGroup.options)
-      .filter(
-        (option) =>
-          option.kind === "REMOVABLE" &&
-          inventory?.modifierLimits[option.id] === 0,
-      )
-      .map((option) => option.id) ?? [];
-
   const removableOptions = useMemo(
     () =>
       combo?.modifierGroups
