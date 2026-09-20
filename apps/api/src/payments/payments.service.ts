@@ -6,10 +6,14 @@ import {
 } from "@nestjs/common";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../database/prisma.service.js";
+import { InventoryService } from "../inventory/inventory.service.js";
 
 @Injectable()
 export class PaymentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly inventory: InventoryService,
+  ) {}
 
   async confirmMockPayment(orderCode: string, verificationToken: string) {
     if (process.env.NODE_ENV === "production") {
@@ -113,6 +117,8 @@ export class PaymentsService {
           reservationExpiresAt: null,
         },
       });
+
+      await this.inventory.commitOrder(tx, order.id);
 
       await tx.orderStatusHistory.create({
         data: {
