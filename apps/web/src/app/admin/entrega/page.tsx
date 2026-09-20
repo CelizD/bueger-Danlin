@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminSidebar } from "@/features/staff/components/admin-sidebar";
-import { API_URL } from "@/lib/api/browser";
+import { API_URL, apiFetch } from "@/lib/api/browser";
 import {
   Boxes,
   BarChart3,
@@ -83,7 +83,7 @@ export default function DeliveryPage() {
     if (showRefresh) setRefreshing(true);
 
     try {
-      const me = await fetch(`${API_URL}/auth/me`, {
+      const me = await apiFetch(`${API_URL}/auth/me`, {
         credentials: "include",
         cache: "no-store",
       });
@@ -102,7 +102,7 @@ export default function DeliveryPage() {
 
       setUser(meData.user);
 
-      const response = await fetch(`${API_URL}/staff/delivery/orders`, {
+      const response = await apiFetch(`${API_URL}/staff/delivery/orders`, {
         credentials: "include",
         cache: "no-store",
       });
@@ -205,7 +205,7 @@ export default function DeliveryPage() {
     setScanStatus(null);
 
     try {
-      const response = await fetch(`${API_URL}/staff/delivery/scan`, {
+      const response = await apiFetch(`${API_URL}/staff/delivery/scan`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -250,7 +250,7 @@ export default function DeliveryPage() {
     setScanStatus(null);
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${API_URL}/staff/delivery/orders/${encodeURIComponent(order.orderCode)}/delivered`,
         {
           method: "PATCH",
@@ -289,7 +289,7 @@ export default function DeliveryPage() {
 
   async function logout() {
     closeScanner();
-    await fetch(`${API_URL}/auth/logout`, {
+    await apiFetch(`${API_URL}/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
