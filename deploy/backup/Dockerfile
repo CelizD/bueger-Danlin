@@ -3,6 +3,7 @@ FROM postgres:18-alpine
 RUN apk add --no-cache age aws-cli ca-certificates tzdata
 
 COPY deploy/backup/backup.sh /opt/backup/backup.sh
+COPY deploy/backup/backup-cycle.sh /opt/backup/backup-cycle.sh
 COPY deploy/backup/restore.sh /opt/backup/restore.sh
 COPY deploy/backup/restore-drill.sh /opt/backup/restore-drill.sh
 COPY deploy/backup/offsite-verify.sh /opt/backup/offsite-verify.sh
