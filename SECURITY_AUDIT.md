@@ -44,9 +44,9 @@ Leyenda:
 | CI con review obligatorio | 🔴 | No hay evidencia de pipeline/branch protection en el repo |
 | SCA dependencias | 🟡 | pnpm audit de producción + Dependabot configurados; pendiente primer workflow verde |
 | Secret scanning | 🟡 | Gitleaks v3 escanea historial en push/PR/schedule; pendiente primer workflow verde |
-| Backups automáticos cifrados | 🟡 | pg_dump + age + checksum ejecutados correctamente; systemd timer implementado; falta copia offsite/inmutable |
+| Backups automáticos cifrados | 🟡 | backup cifrado local validado; upload S3 con verificación de Versioning/Object Lock y timer horario implementados; falta prueba contra bucket real |
 | Restore test real | ✅ | drill aislado contra PostgreSQL temporal ejecutado correctamente |
-| RPO/RTO acordados | 🔴 | No definidos |
+| RPO/RTO acordados | 🟡 | objetivos técnicos iniciales RPO <= 1h y RTO <= 4h documentados; falta simulacro completo y aprobación operativa |
 | WAF / DDoS edge | 🔴 | No configurado |
 | Pentest prelaunch | 🔴 | No realizado |
 | Hallazgos críticos abiertos = 0 | 🔴 | Requiere pentest/DAST/SCA/SAST y proceso de cierre |
