@@ -16,7 +16,9 @@
     "db:studio": "prisma studio",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "ci": "pnpm lint && pnpm test && pnpm build"
   },
   "devDependencies": {
     "dotenv": "^17.2.2",
