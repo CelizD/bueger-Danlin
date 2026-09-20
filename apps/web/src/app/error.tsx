@@ -1,11 +1,23 @@
 "use client";
 
+import { reportClientError } from "@/lib/observability/client-errors";
+import { useEffect } from "react";
+
 export default function GlobalError({
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    reportClientError({
+      kind: "route-boundary",
+      errorName: error.name,
+      digest: error.digest,
+    });
+  }, [error]);
+
   return (
     <main className="route-state-shell">
       <section className="route-state-card" role="alert">
