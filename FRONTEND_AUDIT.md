@@ -28,13 +28,13 @@ Evolucionar el frontend actual sin sobrearquitectura. Burger Danlin sigue siendo
 | Secretos frontend | ✅ diseño | secretos privados permanecen server-side |
 | SEO público | 🟡 | metadata base + Open Graph; sitemap/canonical esperan dominio real |
 | Rutas privadas indexables | ✅ | admin y pedido tienen noindex/nofollow + robots disallow |
-| Core Web Vitals | 🟡 | arquitectura Next ayuda, pero todavía no existe RUM |
-| Lighthouse/bundle budgets | 🔴 | pendiente |
+| Core Web Vitals | 🟡 | RUM implementado; falta medir p75 con tráfico real |
+| Lighthouse/bundle budgets | 🟡 | reporte de bundle implementado; budgets estrictos pendientes de baseline |
 | Testing frontend real | 🟡 | Vitest cubre reglas y render de componentes críticos; faltan Testing Library/E2E/axe |
 | E2E | ✅ base | Playwright validado localmente: pedido/pago/QR, login/MFA, error de credenciales y teclado |
 | Accessibility automation | ✅ base | axe + Playwright validado localmente sin violaciones serious/critical en home |
 | Storybook | 🔴 | pendiente cuando se formalice design system |
-| Observabilidad frontend | 🔴 | pendiente errores + RUM + Web Vitals |
+| Observabilidad frontend | 🟡 | Web Vitals, client errors y request correlation implementados; falta operación/alertas reales |
 | CI de tipos/build | ✅ | GitHub Actions ejecuta typecheck/test/build |
 | Security scanning | ✅ | audit, Gitleaks, Semgrep y SBOM existentes |
 
@@ -149,6 +149,31 @@ Siguiente subfase:
 No buscar 100% de coverage. Proteger rutas de dinero, permisos y confianza.
 
 ## Fase 4 — Rendimiento y observabilidad
+
+Estado: 🟡 en progreso.
+
+Implementado:
+
+- RUM con Next `useReportWebVitals`;
+- ingesta API para LCP, INP, CLS, FCP y TTFB;
+- rutas RUM normalizadas para no enviar códigos de pedido;
+- `X-Request-Id` generado en navegador y propagado al API;
+- backend ya devuelve y registra `X-Request-Id`;
+- captura global de errores/rejections sin mensaje libre, PII ni stack;
+- reporte de error boundary con nombre técnico + digest;
+- lazy-load de `qrcode.react` hasta la confirmación;
+- lazy-load de `@zxing/browser` hasta abrir cámara;
+- reporte de chunks JS raw/gzip sin dependencias externas;
+- tests de correlación de requests.
+
+Pendiente:
+
+- medir baseline real de bundle tras build;
+- fijar budgets de chunk/total a partir del baseline;
+- medir Core Web Vitals en tráfico real de producción;
+- dashboard/alertas sobre logs RUM;
+- ampliar correlación de errores mostrados al usuario;
+- evaluar proveedor de error tracking cuando exista producción real.
 
 Objetivos iniciales:
 
