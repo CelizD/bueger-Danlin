@@ -9,7 +9,7 @@ const API_URL =
 function routeForRole(role: "ADMIN" | "KITCHEN" | "DELIVERY") {
   if (role === "KITCHEN") return "/admin/cocina";
   if (role === "DELIVERY") return "/admin/entrega";
-  return "/admin/pedidos";
+  return "/admin/dashboard";
 }
 
 export default function AdminLoginPage() {
