@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminSidebar } from "@/features/staff/components/admin-sidebar";
-import { API_URL } from "@/lib/api/browser";
+import { API_URL, apiFetch } from "@/lib/api/browser";
 import {
   Boxes,
   BarChart3,
@@ -101,7 +101,7 @@ export default function DashboardPage() {
     if (showRefresh) setRefreshing(true);
 
     try {
-      const me = await fetch(`${API_URL}/auth/me`, {
+      const me = await apiFetch(`${API_URL}/auth/me`, {
         credentials: "include",
         cache: "no-store",
       });
@@ -125,7 +125,7 @@ export default function DashboardPage() {
           ? ""
           : `?pickupEventId=${encodeURIComponent(pickupEventId)}`;
 
-      const response = await fetch(`${API_URL}/admin/dashboard${query}`, {
+      const response = await apiFetch(`${API_URL}/admin/dashboard${query}`, {
         credentials: "include",
         cache: "no-store",
       });
@@ -173,7 +173,7 @@ export default function DashboardPage() {
   }
 
   async function logout() {
-    await fetch(`${API_URL}/auth/logout`, {
+    await apiFetch(`${API_URL}/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
