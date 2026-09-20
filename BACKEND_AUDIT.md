@@ -38,10 +38,10 @@ Leyenda:
 | Control | Estado | Evaluación |
 |---|---|---|
 | REST versionada | ✅ | prefijo /api/v1 |
-| OpenAPI como contrato | 🔴 | No hay @nestjs/swagger ni spec OpenAPI |
+| OpenAPI como contrato | 🟡 | Swagger/OpenAPI + plugin DTO implementados; pendiente actualizar lockfile y validar build |
 | Validación mediante schemas/DTO | ✅ | ValidationPipe whitelist + forbidNonWhitelisted + class-validator |
 | Validación semántica | ✅ | Productos/modificadores, capacidad, fechas, estados e inventario se revalidan server-side |
-| Request size limit explícito | 🔴 | No hay límite JSON/body documentado/configurado |
+| Request size limit explícito | ✅ | JSON 256kb y urlencoded 64kb configurados explícitamente antes de DTO validation |
 | Error responses sin detalles internos | ✅ | filtro global normaliza errores, oculta mensajes internos 5xx e incluye requestId |
 | Idempotency-Key en POST sensible | ✅ | Creación de pedido |
 | Rate limit login/API crítica | ✅ | throttler global + login reforzado + lockout persistente |
@@ -103,13 +103,13 @@ Leyenda:
 | Lint/typecheck | ✅ | scripts disponibles |
 | Unit tests | 🟡 | Vitest configurado; cobertura insuficiente/no existe suite P0 completa |
 | Integration tests | 🔴 | falta suite DB/flujo reproducible en CI |
-| Authorization negative tests | 🔴 | faltan |
-| Concurrency tests | 🔴 | faltan para capacidad/inventario/pago |
-| CI automatizado | 🔴 | no hay workflows versionados |
+| Authorization negative tests | 🟡 | tests de AdminGuard/RolesGuard agregados; pendiente ejecución local/CI |
+| Concurrency tests | 🟡 | carreras PostgreSQL agregadas para último combo e inventario compartido; falta ampliar a pago y validar CI |
+| CI automatizado | 🟡 | GitHub Actions versionado con PostgreSQL, migrate deploy, lint, test y build; pendiente primer run verde |
 | Dependency scanning | 🔴 | no hay Dependabot/SCA |
 | Secret scanning en pipeline | 🔴 | no hay pipeline |
 | SAST | 🔴 | no configurado |
-| Build reproducible | 🟡 | lockfile versionado; falta pipeline + imagen/artefacto reproducible |
+| Build reproducible | 🟡 | CI usa pnpm frozen lockfile y build; falta imagen/artefacto productivo reproducible |
 | Docker app non-root | 🔴 | no hay Dockerfiles de producción de web/API |
 | Container scan | 🔴 | no configurado |
 | Deploy reproducible | 🔴 | Nginx ejemplo existe, pero falta procedimiento/artefacto automatizado |
@@ -192,4 +192,4 @@ Leyenda:
 
 ## Próximo control
 
-**Request body size limit explícito**: health/readiness y error handling ya quedaron cubiertos. El siguiente P0 de API es fijar límites de payload antes del parser.
+**Dependency + secret scanning**: payload limits, OpenAPI, tests base y CI ya están implementados pendientes de validación. El siguiente P0 es automatizar SCA/Dependabot y secret scanning.
