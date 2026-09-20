@@ -89,9 +89,9 @@ Leyenda:
 | Audit log | 🟡 | cubre múltiples acciones administrativas/auth; falta matriz de cobertura formal |
 | Health check | ✅ | /health y /health/live confirman liveness sin depender de servicios externos |
 | Readiness check | ✅ | /health/ready ejecuta SELECT 1 contra PostgreSQL y devuelve 503 si DB no está disponible |
-| Backups automáticos | 🟡 | pg_dump cifrado con age validado y timer cada 6h implementado; pendiente copia offsite/inmutable |
+| Backups automáticos | 🟡 | pg_dump + age + checksum validados; timer horario y flujo S3/Object Lock implementados; pendiente verificar bucket offsite real |
 | Restore probado | ✅ | restore drill aislado ejecutado correctamente contra PostgreSQL temporal; timer mensual implementado |
-| RPO/RTO | 🔴 | no definidos |
+| RPO/RTO | 🟡 | objetivos técnicos definidos: RPO <= 1h y RTO <= 4h; pendiente validar RTO con simulacro de pérdida total del VPS |
 | Runbook incidente crítico | 🔴 | no existe |
 | Alertas | 🔴 | no existe canal/reglas de alerting |
 | SLO/SLI | 🔴 | no definidos |
