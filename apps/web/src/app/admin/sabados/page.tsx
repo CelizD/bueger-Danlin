@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BarChart3,
   CalendarDays,
   ChefHat,
   Clock3,
@@ -454,6 +455,10 @@ export default function SaturdaysPage() {
           </div>
 
           <nav className="admin-nav">
+            <a href="/admin/dashboard">
+              <BarChart3 size={18} strokeWidth={1.8} />
+              Dashboard
+            </a>
             <a href="/admin/pedidos">
               <ShoppingBag size={18} strokeWidth={1.8} />
               Pedidos
