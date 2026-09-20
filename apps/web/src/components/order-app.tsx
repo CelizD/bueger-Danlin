@@ -400,7 +400,7 @@ export function OrderApp() {
 
       const orderData = data as CreatedOrder;
       setCreatedOrder(orderData);
-      window.localStorage.setItem(
+      window.sessionStorage.setItem(
         `burger-danlin:order-token:${orderData.orderCode}`,
         orderData.verificationToken,
       );
@@ -524,7 +524,7 @@ export function OrderApp() {
   if (loading) {
     return (
       <main className="shell">
-        <p className="status-text">Cargando menú local…</p>
+        <p className="status-text" role="status" aria-live="polite">Cargando menú local…</p>
       </main>
     );
   }
@@ -559,9 +559,15 @@ export function OrderApp() {
                 : `Reservamos ${createdOrder.comboQuantity} combo(s) durante 15 minutos mientras completas el pago.`}
           </p>
 
-          {error && <div className="alert">{error}</div>}
+          {error && (
+            <div className="alert" role="alert" aria-live="assertive">
+              {error}
+            </div>
+          )}
           {cancelMessage && (
-            <div className="customer-cancel-success">{cancelMessage}</div>
+            <div className="customer-cancel-success" role="status" aria-live="polite">
+              {cancelMessage}
+            </div>
           )}
 
           <div className="confirmation-grid">
@@ -709,7 +715,11 @@ export function OrderApp() {
         </p>
       </section>
 
-      {error && <div className="alert">{error}</div>}
+      {error && (
+            <div className="alert" role="alert" aria-live="assertive">
+              {error}
+            </div>
+          )}
 
       {!event ? (
         <section className="sold-out">
@@ -729,7 +739,7 @@ export function OrderApp() {
           </h2>
         </section>
       ) : (
-        <form onSubmit={submitOrder}>
+        <form onSubmit={submitOrder} aria-busy={submitting}>
           <section className="section">
             <div className="section-heading">
               <div>
@@ -880,6 +890,7 @@ export function OrderApp() {
                   minLength={2}
                   maxLength={100}
                   value={name}
+                  autoComplete="name"
                   onChange={(input) => setName(input.target.value)}
                   placeholder="Tu nombre"
                 />
@@ -892,6 +903,7 @@ export function OrderApp() {
                   <input
                     required
                     inputMode="numeric"
+                    autoComplete="tel-national"
                     maxLength={10}
                     value={phone}
                     onChange={(input) => setPhone(input.target.value.replace(/\D/g, ""))}
@@ -904,6 +916,7 @@ export function OrderApp() {
                 <span>Correo (opcional)</span>
                 <input
                   type="email"
+                  autoComplete="email"
                   maxLength={160}
                   value={email}
                   onChange={(input) => setEmail(input.target.value)}
