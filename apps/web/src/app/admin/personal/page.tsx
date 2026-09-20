@@ -58,6 +58,7 @@ const ROLE_DESCRIPTIONS: Record<
     title: "Administrador",
     description: "Control completo de la operación.",
     permissions: [
+      "Ver Dashboard de ventas",
       "Ver todos los pedidos",
       "Operar Cocina y Entrega",
       "Administrar sábados",
