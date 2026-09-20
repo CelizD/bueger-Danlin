@@ -1,10 +1,9 @@
 [Unit]
-Description=Schedule Burger Danlin encrypted PostgreSQL backups
+Description=Schedule hourly Burger Danlin encrypted offsite backups
 
 [Timer]
-OnCalendar=*-*-* 00,06,12,18:17:00
+OnCalendar=*-*-* *:17:00
 Persistent=true
-RandomizedDelaySec=5m
 Unit=burger-danlin-backup.service
 
 [Install]
