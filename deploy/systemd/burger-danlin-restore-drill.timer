@@ -1,0 +1,11 @@
+[Unit]
+Description=Schedule monthly Burger Danlin restore drill
+
+[Timer]
+OnCalendar=Sun *-*-01..07 04:30:00
+Persistent=true
+RandomizedDelaySec=15m
+Unit=burger-danlin-restore-drill.service
+
+[Install]
+WantedBy=timers.target
