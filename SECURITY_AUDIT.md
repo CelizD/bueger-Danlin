@@ -29,8 +29,8 @@ Leyenda:
 | Secret Manager / Vault | 🔴 | Producción todavía usa variables de entorno; falta gestor de secretos |
 | KMS para claves sensibles | 🔴 | No implementado |
 | TLS 1.2/1.3 | 🟡 | Nginx de referencia preparado; requiere desplegar certificados/configuración real |
-| DB no pública | 🔴 | No existe manifiesto/config producción que demuestre red privada; docker-compose local publica 5432 |
-| Redis no público | 🔴 | docker-compose local publica 6379; producción debe usar red privada |
+| DB no pública | 🟡 | docker-compose.prod.yml mantiene PostgreSQL sin host ports en red internal; pendiente despliegue/verificación VPS |
+| Redis no público | 🟡 | docker-compose.prod.yml mantiene Redis sin host ports, red internal y password; pendiente despliegue/verificación VPS |
 | Cifrado en reposo | 🟡 | Depende del proveedor de DB/backups; no hay evidencia/configuración en repo |
 | Input validation server-side | ✅ | ValidationPipe whitelist + forbidNonWhitelisted + DTOs |
 | SQL parametrizado | 🟡 | Prisma domina el acceso; existen algunos raw queries parametrizados que deben mantenerse auditados |
@@ -44,8 +44,8 @@ Leyenda:
 | CI con review obligatorio | 🔴 | No hay evidencia de pipeline/branch protection en el repo |
 | SCA dependencias | 🟡 | pnpm audit de producción + Dependabot configurados; pendiente primer workflow verde |
 | Secret scanning | 🟡 | Gitleaks v3 escanea historial en push/PR/schedule; pendiente primer workflow verde |
-| Backups automáticos cifrados | 🔴 | No implementado/documentado para Burger Danlin |
-| Restore test real | 🔴 | No existe restore drill |
+| Backups automáticos cifrados | 🟡 | pg_dump + age + checksum + systemd timer implementados; falta primer backup real y copia offsite/inmutable |
+| Restore test real | 🟡 | drill aislado contra PostgreSQL temporal implementado; falta ejecutar y registrar duración real |
 | RPO/RTO acordados | 🔴 | No definidos |
 | WAF / DDoS edge | 🔴 | No configurado |
 | Pentest prelaunch | 🔴 | No realizado |
@@ -90,7 +90,7 @@ Leyenda:
 | IaC scanning | 🔵 | Aplicará cuando haya IaC de producción |
 | SBOM por release | 🟡 | CycloneDX generado automáticamente en push a main y ejecución manual; falta asociarlo a releases formales |
 | Artifact signing | 🔴 | No implementado |
-| Docker app non-root | 🔴 | No hay Dockerfile de producción de API/Web |
+| Docker app non-root | 🟡 | API/Web usan USER node, no-new-privileges y cap_drop en compose; pendiente build/run real |
 | Image scan | 🔴 | No configurado |
 | Imagen por digest | 🔴 | No existe imagen de aplicación de producción |
 | DAST staging | 🔴 | No configurado |
