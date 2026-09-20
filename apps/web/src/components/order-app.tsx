@@ -1,5 +1,6 @@
 "use client";
 
+import { API_URL } from "@/lib/api/browser";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -77,9 +78,6 @@ type CreatedOrder = {
     timezone: string;
   };
 };
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
 
 const money = new Intl.NumberFormat("es-MX", {
   style: "currency",
