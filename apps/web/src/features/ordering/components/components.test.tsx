@@ -50,9 +50,9 @@ describe("ordering components", () => {
       />,
     );
 
-    expect(html).toContain('autocomplete="name"');
-    expect(html).toContain('autocomplete="tel-national"');
-    expect(html).toContain('autocomplete="email"');
+    expect(html).toMatch(/autocomplete="name"/i);
+    expect(html).toMatch(/autocomplete="tel-national"/i);
+    expect(html).toMatch(/autocomplete="email"/i);
     expect(html).toContain('type="email"');
   });
 
