@@ -21,3 +21,8 @@ backups/
 deploy/production.env
 deploy/*.key
 deploy/backup/*.key
+
+# Playwright
+apps/web/playwright-report/
+apps/web/test-results/
+apps/web/blob-report/
