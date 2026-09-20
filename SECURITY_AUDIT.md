@@ -42,8 +42,8 @@ Leyenda:
 | HTTPS obligatorio | 🟡 | FORCE_HTTPS y ejemplo Nginx listos; falta infraestructura/certificados reales |
 | Error handling central | 🟡 | Nest no expone stack 500 por defecto; falta exception filter propio + códigos consistentes |
 | CI con review obligatorio | 🔴 | No hay evidencia de pipeline/branch protection en el repo |
-| SCA dependencias | 🔴 | No hay Dependabot/SCA configurado |
-| Secret scanning | 🔴 | No hay configuración verificable en repo |
+| SCA dependencias | 🟡 | pnpm audit de producción + Dependabot configurados; pendiente primer workflow verde |
+| Secret scanning | 🟡 | Gitleaks v3 escanea historial en push/PR/schedule; pendiente primer workflow verde |
 | Backups automáticos cifrados | 🔴 | No implementado/documentado para Burger Danlin |
 | Restore test real | 🔴 | No existe restore drill |
 | RPO/RTO acordados | 🔴 | No definidos |
@@ -84,11 +84,11 @@ Leyenda:
 | Control | Estado | Evidencia actual / brecha |
 |---|---|---|
 | Lockfile | ✅ | pnpm-lock.yaml versionado |
-| SAST en PR | 🔴 | No configurado |
-| SCA en PR | 🔴 | No configurado |
-| Dependabot/equivalente | 🔴 | No configurado |
+| SAST en PR | 🟡 | Semgrep OSS 1.177.0 configurado en push/PR/schedule; pendiente primer workflow verde |
+| SCA en PR | 🟡 | pnpm audit --prod --audit-level=high configurado; pendiente primer workflow verde |
+| Dependabot/equivalente | ✅ | monitorea pnpm, GitHub Actions y Docker Compose |
 | IaC scanning | 🔵 | Aplicará cuando haya IaC de producción |
-| SBOM por release | 🔴 | No generado |
+| SBOM por release | 🟡 | CycloneDX generado automáticamente en push a main y ejecución manual; falta asociarlo a releases formales |
 | Artifact signing | 🔴 | No implementado |
 | Docker app non-root | 🔴 | No hay Dockerfile de producción de API/Web |
 | Image scan | 🔴 | No configurado |
