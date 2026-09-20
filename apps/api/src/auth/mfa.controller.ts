@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   HttpCode,
   Post,
   Req,
@@ -51,6 +52,7 @@ export class MfaController {
   constructor(private readonly mfaService: MfaService) {}
 
   @Get("setup")
+  @Header("Cache-Control", "no-store")
   setup(@Req() request: StaffRequest) {
     const challengeToken =
       request.cookies?.[MFA_CHALLENGE_COOKIE];
@@ -65,6 +67,7 @@ export class MfaController {
   }
 
   @Post("verify")
+  @Header("Cache-Control", "no-store")
   @Throttle({
     default: {
       limit: 10,
