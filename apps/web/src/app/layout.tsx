@@ -1,3 +1,4 @@
+import { WebVitals } from "@/components/observability/web-vitals";
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -27,6 +28,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
+        <WebVitals />
         <a className="skip-link" href="#main-content">
           Saltar al contenido
         </a>
