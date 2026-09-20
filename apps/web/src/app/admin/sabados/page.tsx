@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminSidebar } from "@/features/staff/components/admin-sidebar";
-import { API_URL } from "@/lib/api/browser";
+import { API_URL, apiFetch } from "@/lib/api/browser";
 import {
   Boxes,
   BarChart3,
@@ -226,7 +226,7 @@ export default function SaturdaysPage() {
     if (showRefresh) setRefreshing(true);
 
     try {
-      const me = await fetch(API_URL + "/auth/me", {
+      const me = await apiFetch(API_URL + "/auth/me", {
         credentials: "include",
         cache: "no-store",
       });
@@ -245,7 +245,7 @@ export default function SaturdaysPage() {
 
       setUser(meData.user);
 
-      const response = await fetch(API_URL + "/admin/pickup-events", {
+      const response = await apiFetch(API_URL + "/admin/pickup-events", {
         credentials: "include",
         cache: "no-store",
       });
@@ -333,7 +333,7 @@ export default function SaturdaysPage() {
         throw new Error("Revisa la fecha, hora y límite de combos.");
       }
 
-      const response = await fetch(
+      const response = await apiFetch(
         editingId
           ? API_URL + "/admin/pickup-events/" + editingId
           : API_URL + "/admin/pickup-events",
@@ -388,7 +388,7 @@ export default function SaturdaysPage() {
     setSuccess("");
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         API_URL +
           "/admin/pickup-events/" +
           event.id +
@@ -431,7 +431,7 @@ export default function SaturdaysPage() {
   }
 
   async function logout() {
-    await fetch(API_URL + "/auth/logout", {
+    await apiFetch(API_URL + "/auth/logout", {
       method: "POST",
       credentials: "include",
     });
