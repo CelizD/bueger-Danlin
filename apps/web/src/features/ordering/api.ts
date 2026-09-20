@@ -12,9 +12,9 @@ import type {
 export async function loadOrderingData() {
   const [catalogResponse, eventResponse, inventoryResponse] =
     await Promise.all([
-      fetch(`${API_URL}/catalog`, { cache: "no-store" }),
-      fetch(`${API_URL}/pickup-events/current`, { cache: "no-store" }),
-      fetch(`${API_URL}/inventory/availability`, { cache: "no-store" }),
+      apiFetch("/catalog", { cache: "no-store" }),
+      apiFetch("/pickup-events/current", { cache: "no-store" }),
+      apiFetch("/inventory/availability", { cache: "no-store" }),
     ]);
 
   if (!catalogResponse.ok || !inventoryResponse.ok) {
@@ -41,7 +41,7 @@ export async function loadOrderingData() {
 }
 
 export async function createOrder(input: CreateOrderInput) {
-  const response = await fetch(`${API_URL}/orders`, {
+  const response = await apiFetch("/orders", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -65,8 +65,8 @@ export async function cancelOrder(
   orderCode: string,
   verificationToken: string,
 ) {
-  const response = await fetch(
-    `${API_URL}/orders/${encodeURIComponent(orderCode)}/cancel`,
+  const response = await apiFetch(
+    `/orders/${encodeURIComponent(orderCode)}/cancel`,
     {
       method: "POST",
       headers: {
@@ -90,8 +90,8 @@ export async function confirmMockOrderPayment(
   orderCode: string,
   verificationToken: string,
 ) {
-  const response = await fetch(
-    `${API_URL}/payments/mock/${encodeURIComponent(orderCode)}/confirm`,
+  const response = await apiFetch(
+    `/payments/mock/${encodeURIComponent(orderCode)}/confirm`,
     {
       method: "POST",
       headers: {
