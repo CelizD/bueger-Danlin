@@ -4,14 +4,14 @@ Este documento describe el estado operativo de backup/restore. No define por sí
 
 ## Objetivos RPO/RTO
 
-Pendientes de aprobación según impacto real del negocio:
+Objetivos técnicos iniciales para lanzamiento:
 
-- **RPO objetivo:** TODO
-- **RTO objetivo:** TODO
+- **RPO objetivo:** <= 1 hora para PostgreSQL.
+- **RTO objetivo:** <= 4 horas para recuperar el servicio completo en un VPS nuevo.
 
-La configuración incluida hace un backup cada 6 horas como baseline operativo inicial. Eso no equivale por sí solo a prometer un RPO de 6 horas: el RPO real depende de que el timer, almacenamiento, cifrado, copia externa y restore funcionen correctamente.
+El timer inicia un ciclo de backup cada hora. Cada ciclo crea primero el backup local cifrado y después intenta copiarlo al almacenamiento offsite. El RPO solo se considera cumplido cuando la copia offsite termina correctamente.
 
-El restore drill mensual mide si el backup puede descifrarse y restaurarse correctamente, pero el RTO formal debe medirse y aprobarse con una prueba completa de recuperación del servicio.
+Estos son objetivos operativos, no garantías contractuales. Deben validarse con evidencia real. El restore drill mensual valida la integridad del dump; el RTO de 4 horas requiere además un simulacro de recuperación completa del VPS, incluyendo infraestructura, secretos, base de datos, aplicación, Nginx, TLS y DNS.
 
 ## Backup
 
@@ -58,15 +58,19 @@ No debe ejecutarse contra producción sin:
 - verificación del destino;
 - plan de rollback/forward recovery.
 
-## Gap pendiente: copia aislada/offsite
+## Copia aislada/offsite
 
-Los backups locales cifrados protegen contra lectura accidental del archivo, pero no bastan frente a:
+El repositorio incluye un flujo S3-compatible pensado para IONOS Object Storage:
 
-- pérdida completa del VPS;
-- borrado administrativo;
-- ransomware que alcance el mismo host/disco.
+1. el bucket debe tener Versioning habilitado;
+2. Object Lock debe estar habilitado;
+3. debe existir una retención por defecto en modo GOVERNANCE o COMPLIANCE;
+4. `offsite-upload` se niega a subir si esas condiciones no se cumplen;
+5. se suben el `.dump.age` y su `.sha256`;
+6. se valida el tamaño del objeto remoto;
+7. `offsite-fetch` permite recuperar la copia cifrada si el VPS local se pierde.
 
-Antes de lanzamiento debe configurarse una segunda copia cifrada en almacenamiento independiente, idealmente con versionado/retención inmutable.
+El bucket, claves y retención se configuran fuera de Git. La verificación real del bucket offsite sigue siendo obligatoria antes del lanzamiento.
 
 ## Evidencia que conservar
 
