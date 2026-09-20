@@ -207,9 +207,6 @@ services:
 
   restore-drill:
     image: burger-danlin-backup:local
-    build:
-      context: .
-      dockerfile: deploy/backup/Dockerfile
     profiles:
       - dr
     depends_on:
