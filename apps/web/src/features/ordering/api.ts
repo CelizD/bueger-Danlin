@@ -1,4 +1,4 @@
-import { API_URL, apiErrorMessage } from "@/lib/api/browser";
+import { apiErrorMessage, apiFetch } from "@/lib/api/browser";
 import type {
   CancelOrderResult,
   CatalogProduct,
