@@ -8,7 +8,8 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
-import { AdminGuard } from "../auth/admin.guard.js";
+
+import { ApiCookieAuth, ApiTags } from "@nestjs/swagger";import { AdminGuard } from "../auth/admin.guard.js";
 import { StaffAuthGuard } from "../auth/staff-auth.guard.js";
 import type { StaffRequest } from "../auth/auth.types.js";
 import { AdminStaffService } from "./admin-staff.service.js";
@@ -16,6 +17,8 @@ import { CreateStaffUserDto } from "./dto/create-staff-user.dto.js";
 import { ResetStaffPasswordDto } from "./dto/reset-staff-password.dto.js";
 import { UpdateStaffUserDto } from "./dto/update-staff-user.dto.js";
 
+@ApiTags("Admin staff")
+@ApiCookieAuth("burger_staff_session")
 @Controller("admin/staff")
 @UseGuards(StaffAuthGuard, AdminGuard)
 export class AdminStaffController {
