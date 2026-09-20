@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "tsc --noEmit",
-    "test": "echo \"Web tests pending\""
+    "test": "vitest run"
   },
   "dependencies": {
     "@burger/types": "workspace:*",
@@ -22,6 +22,7 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.0"
   }
 }
