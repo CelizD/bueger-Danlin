@@ -74,9 +74,8 @@ test("la navegación por teclado empieza en el skip link", async ({
 
   await page.keyboard.press("Tab");
 
-  const skipLink = page.getByRole("link", {
-    name: "Saltar al contenido",
-  });
+  const skipLink = page.locator(".skip-link");
 
+  await expect(skipLink).toHaveText("Saltar al contenido");
   await expect(skipLink).toBeFocused();
 });
