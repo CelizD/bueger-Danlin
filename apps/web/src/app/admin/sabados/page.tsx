@@ -470,6 +470,10 @@ export default function SaturdaysPage() {
               <CalendarDays size={18} strokeWidth={1.8} />
               Sábados
             </a>
+            <a href="/admin/personal">
+              <Users size={18} strokeWidth={1.8} />
+              Personal
+            </a>
           </nav>
         </div>
 
