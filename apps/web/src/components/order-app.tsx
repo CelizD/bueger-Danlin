@@ -16,6 +16,13 @@ import {
   newBurger,
   orderTokenStorageKey,
 } from "@/features/ordering/formatters";
+import {
+  availableComboLimit,
+  calculatePreviewTotal,
+  modifierOptions,
+  productInventoryLimit,
+  unavailableIncludedModifierIds,
+} from "@/features/ordering/selectors";
 import type {
   BurgerSelection,
   CatalogProduct,
@@ -57,18 +64,14 @@ export function OrderApp() {
           (product) => product.type === "COMBO",
         );
         const unavailableIncludedIds =
-          comboData?.modifierGroups
-            .flatMap((group) => group.modifierGroup.options)
-            .filter(
-              (option) =>
-                option.kind === "REMOVABLE" &&
-                inventoryData.modifierLimits[option.id] === 0,
-            )
-            .map((option) => option.id) ?? [];
-        const comboInventoryLimit = comboData
-          ? (inventoryData.productLimits[comboData.id] ??
-            Number.MAX_SAFE_INTEGER)
-          : 0;
+          unavailableIncludedModifierIds(
+            comboData,
+            inventoryData,
+          );
+        const comboInventoryLimit = productInventoryLimit(
+          comboData,
+          inventoryData,
+        );
 
         if (!cancelled) {
           setCatalog(catalogData);
@@ -103,45 +106,40 @@ export function OrderApp() {
   const combo = catalog.find((product) => product.type === "COMBO");
   const coke = catalog.find((product) => product.slug === "coca-cola-lata");
 
-  const comboInventoryLimit = combo
-    ? (inventory?.productLimits[combo.id] ?? Number.MAX_SAFE_INTEGER)
-    : 0;
-  const cokeInventoryLimit = coke
-    ? (inventory?.productLimits[coke.id] ?? Number.MAX_SAFE_INTEGER)
-    : 0;
-  const maxCombosAvailable = event
-    ? Math.min(event.remainingCombos, comboInventoryLimit)
-    : 0;
+  const comboInventoryLimit = productInventoryLimit(
+    combo,
+    inventory,
+  );
+  const cokeInventoryLimit = productInventoryLimit(
+    coke,
+    inventory,
+  );
+  const maxCombosAvailable = availableComboLimit(
+    event,
+    comboInventoryLimit,
+  );
 
   const removableOptions = useMemo(
-    () =>
-      combo?.modifierGroups
-        .flatMap((group) => group.modifierGroup.options)
-        .filter((option) => option.kind === "REMOVABLE") ?? [],
+    () => modifierOptions(combo, "REMOVABLE"),
     [combo],
   );
 
   const extraOptions = useMemo(
-    () =>
-      combo?.modifierGroups
-        .flatMap((group) => group.modifierGroup.options)
-        .filter((option) => option.kind === "EXTRA") ?? [],
+    () => modifierOptions(combo, "EXTRA"),
     [combo],
   );
 
-  const previewTotal = useMemo(() => {
-    if (!combo) return 0;
-
-    const burgersTotal = burgers.reduce((sum, burger) => {
-      const extras = extraOptions
-        .filter((option) => burger.extraIds.includes(option.id))
-        .reduce((extraSum, option) => extraSum + option.priceDeltaCents, 0);
-
-      return sum + combo.priceCents + extras;
-    }, 0);
-
-    return burgersTotal + (coke?.priceCents ?? 0) * cokes;
-  }, [burgers, combo, coke, cokes, extraOptions]);
+  const previewTotal = useMemo(
+    () =>
+      calculatePreviewTotal(
+        burgers,
+        combo,
+        coke,
+        cokes,
+        extraOptions,
+      ),
+    [burgers, combo, coke, cokes, extraOptions],
+  );
 
   function toggleRemoved(burgerId: string, optionId: string) {
     const limit = inventory?.modifierLimits[optionId];
