@@ -42,6 +42,19 @@ type PickupEvent = {
   status: "OPEN" | "SOLD_OUT";
 };
 
+type InventoryAvailability = {
+  items: Array<{
+    key: string;
+    name: string;
+    unit: string;
+    available: number;
+    lowStock: boolean;
+    outOfStock: boolean;
+  }>;
+  productLimits: Record<string, number>;
+  modifierLimits: Record<string, number>;
+};
+
 type BurgerSelection = {
   localId: string;
   removedIds: string[];
@@ -89,10 +102,10 @@ function pickupQrPayload(order: CreatedOrder) {
   return `BD1:${order.orderCode}:${order.verificationToken}`;
 }
 
-function newBurger(): BurgerSelection {
+function newBurger(removedIds: string[] = []): BurgerSelection {
   return {
     localId: crypto.randomUUID(),
-    removedIds: [],
+    removedIds,
     extraIds: [],
   };
 }
@@ -100,6 +113,7 @@ function newBurger(): BurgerSelection {
 export function OrderApp() {
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
   const [event, setEvent] = useState<PickupEvent | null>(null);
+  const [inventory, setInventory] = useState<InventoryAvailability | null>(null);
   const [burgers, setBurgers] = useState<BurgerSelection[]>([]);
   const [cokes, setCokes] = useState(0);
   const [name, setName] = useState("");
@@ -118,12 +132,14 @@ export function OrderApp() {
 
     async function load() {
       try {
-        const [catalogResponse, eventResponse] = await Promise.all([
-          fetch(`${API_URL}/catalog`, { cache: "no-store" }),
-          fetch(`${API_URL}/pickup-events/current`, { cache: "no-store" }),
-        ]);
+        const [catalogResponse, eventResponse, inventoryResponse] =
+          await Promise.all([
+            fetch(`${API_URL}/catalog`, { cache: "no-store" }),
+            fetch(`${API_URL}/pickup-events/current`, { cache: "no-store" }),
+            fetch(`${API_URL}/inventory/availability`, { cache: "no-store" }),
+          ]);
 
-        if (!catalogResponse.ok) {
+        if (!catalogResponse.ok || !inventoryResponse.ok) {
           throw new Error("No se pudo cargar el menú.");
         }
 
@@ -137,12 +153,34 @@ export function OrderApp() {
           eventResponse.status === 404
             ? null
             : ((await eventResponse.json()) as PickupEvent);
+        const inventoryData =
+          (await inventoryResponse.json()) as InventoryAvailability;
+        const comboData = catalogData.find(
+          (product) => product.type === "COMBO",
+        );
+        const unavailableIncludedIds =
+          comboData?.modifierGroups
+            .flatMap((group) => group.modifierGroup.options)
+            .filter(
+              (option) =>
+                option.kind === "REMOVABLE" &&
+                inventoryData.modifierLimits[option.id] === 0,
+            )
+            .map((option) => option.id) ?? [];
+        const comboInventoryLimit = comboData
+          ? (inventoryData.productLimits[comboData.id] ?? Number.MAX_SAFE_INTEGER)
+          : 0;
 
         if (!cancelled) {
           setCatalog(catalogData);
+          setInventory(inventoryData);
           setEvent(eventData);
           setBurgers(
-            eventData && eventData.remainingCombos > 0 ? [newBurger()] : [],
+            eventData &&
+              eventData.remainingCombos > 0 &&
+              comboInventoryLimit > 0
+              ? [newBurger(unavailableIncludedIds)]
+              : [],
           );
         }
       } catch {
@@ -165,6 +203,26 @@ export function OrderApp() {
 
   const combo = catalog.find((product) => product.type === "COMBO");
   const coke = catalog.find((product) => product.slug === "coca-cola-lata");
+
+  const comboInventoryLimit = combo
+    ? (inventory?.productLimits[combo.id] ?? Number.MAX_SAFE_INTEGER)
+    : 0;
+  const cokeInventoryLimit = coke
+    ? (inventory?.productLimits[coke.id] ?? Number.MAX_SAFE_INTEGER)
+    : 0;
+  const maxCombosAvailable = event
+    ? Math.min(event.remainingCombos, comboInventoryLimit)
+    : 0;
+
+  const unavailableIncludedIds =
+    combo?.modifierGroups
+      .flatMap((group) => group.modifierGroup.options)
+      .filter(
+        (option) =>
+          option.kind === "REMOVABLE" &&
+          inventory?.modifierLimits[option.id] === 0,
+      )
+      .map((option) => option.id) ?? [];
 
   const removableOptions = useMemo(
     () =>
@@ -197,6 +255,11 @@ export function OrderApp() {
   }, [burgers, combo, coke, cokes, extraOptions]);
 
   function toggleRemoved(burgerId: string, optionId: string) {
+    const unavailable = inventory?.modifierLimits[optionId] === 0;
+    const burger = burgers.find((item) => item.localId === burgerId);
+
+    if (unavailable && burger?.removedIds.includes(optionId)) return;
+
     setBurgers((current) =>
       current.map((burger) =>
         burger.localId === burgerId
@@ -212,6 +275,18 @@ export function OrderApp() {
   }
 
   function toggleExtra(burgerId: string, optionId: string) {
+    const limit = inventory?.modifierLimits[optionId];
+    const selectedCount = burgers.filter((burger) =>
+      burger.extraIds.includes(optionId),
+    ).length;
+    const burger = burgers.find((item) => item.localId === burgerId);
+    const alreadySelected = burger?.extraIds.includes(optionId) ?? false;
+
+    if (!alreadySelected && limit !== undefined && selectedCount >= limit) {
+      setError("Ese extra ya no tiene inventario disponible.");
+      return;
+    }
+
     setBurgers((current) =>
       current.map((burger) =>
         burger.localId === burgerId
@@ -227,8 +302,11 @@ export function OrderApp() {
   }
 
   function addBurger() {
-    if (!event || burgers.length >= event.remainingCombos) return;
-    setBurgers((current) => [...current, newBurger()]);
+    if (!event || burgers.length >= maxCombosAvailable) return;
+    setBurgers((current) => [
+      ...current,
+      newBurger(unavailableIncludedIds),
+    ]);
   }
 
   function removeBurger(localId: string) {
@@ -614,10 +692,14 @@ export function OrderApp() {
             Cuando abramos el siguiente sábado podrás hacer tu pedido desde aquí.
           </p>
         </section>
-      ) : event.status === "SOLD_OUT" ? (
+      ) : event.status === "SOLD_OUT" || comboInventoryLimit <= 0 ? (
         <section className="sold-out">
           <p className="eyebrow">Agotado</p>
-          <h2>Se agotaron los combos de este sábado.</h2>
+          <h2>
+            {event.status === "SOLD_OUT"
+              ? "Se agotaron los combos de este sábado."
+              : "Por ahora no hay inventario suficiente para preparar más combos."}
+          </h2>
         </section>
       ) : (
         <form onSubmit={submitOrder}>
@@ -631,7 +713,7 @@ export function OrderApp() {
                 className="secondary-button"
                 type="button"
                 onClick={addBurger}
-                disabled={burgers.length >= event.remainingCombos}
+                disabled={burgers.length >= maxCombosAvailable}
               >
                 + Agregar combo
               </button>
@@ -669,7 +751,12 @@ export function OrderApp() {
                               checked={included}
                               onChange={() => toggleRemoved(burger.localId, option.id)}
                             />
-                            <span>{option.name}</span>
+                            <span>
+                              {option.name}
+                              {inventory?.modifierLimits[option.id] === 0
+                                ? " · Agotado"
+                                : ""}
+                            </span>
                           </label>
                         );
                       })}
@@ -684,9 +771,18 @@ export function OrderApp() {
                           <input
                             type="checkbox"
                             checked={burger.extraIds.includes(option.id)}
+                            disabled={
+                              inventory?.modifierLimits[option.id] === 0 &&
+                              !burger.extraIds.includes(option.id)
+                            }
                             onChange={() => toggleExtra(burger.localId, option.id)}
                           />
-                          <span>{option.name}</span>
+                          <span>
+                            {option.name}
+                            {inventory?.modifierLimits[option.id] === 0
+                              ? " · Agotado"
+                              : ""}
+                          </span>
                           <strong>
                             +{money.format(option.priceDeltaCents / 100)}
                           </strong>
@@ -710,7 +806,10 @@ export function OrderApp() {
             <div className="drink-row">
               <div>
                 <strong>Coca-Cola lata</strong>
-                <span>{money.format((coke?.priceCents ?? 3000) / 100)} c/u</span>
+                <span>
+                  {money.format((coke?.priceCents ?? 3000) / 100)} c/u
+                  {cokeInventoryLimit <= 0 ? " · Agotada" : ""}
+                </span>
               </div>
               <div className="quantity">
                 <button
@@ -723,7 +822,12 @@ export function OrderApp() {
                 <span>{cokes}</span>
                 <button
                   type="button"
-                  onClick={() => setCokes((value) => Math.min(20, value + 1))}
+                  onClick={() =>
+                    setCokes((value) =>
+                      Math.min(20, cokeInventoryLimit, value + 1),
+                    )
+                  }
+                  disabled={cokes >= cokeInventoryLimit}
                   aria-label="Agregar Coca-Cola"
                 >
                   +
