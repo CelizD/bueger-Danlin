@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Boxes,
   BarChart3,
   CalendarDays,
   ChefHat,
@@ -216,6 +217,10 @@ export default function DashboardPage() {
             <a href="/admin/sabados">
               <CalendarDays size={18} strokeWidth={1.8} />
               Sábados
+            </a>
+            <a href="/admin/inventario">
+              <Boxes size={18} strokeWidth={1.8} />
+              Inventario
             </a>
             <a href="/admin/personal">
               <Users size={18} strokeWidth={1.8} />
