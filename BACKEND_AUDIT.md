@@ -106,9 +106,9 @@ Leyenda:
 | Authorization negative tests | 🟡 | tests de AdminGuard/RolesGuard agregados; pendiente ejecución local/CI |
 | Concurrency tests | 🟡 | carreras PostgreSQL agregadas para último combo e inventario compartido; falta ampliar a pago y validar CI |
 | CI automatizado | 🟡 | GitHub Actions versionado con PostgreSQL, migrate deploy, lint, test y build; pendiente primer run verde |
-| Dependency scanning | 🔴 | no hay Dependabot/SCA |
-| Secret scanning en pipeline | 🔴 | no hay pipeline |
-| SAST | 🔴 | no configurado |
+| Dependency scanning | 🟡 | Dependabot + pnpm audit configurados; pendiente primer workflow verde |
+| Secret scanning en pipeline | 🟡 | Gitleaks v3 configurado contra historial Git; pendiente primer workflow verde |
+| SAST | 🟡 | Semgrep OSS 1.177.0 configurado; pendiente primer workflow verde |
 | Build reproducible | 🟡 | CI usa pnpm frozen lockfile y build; falta imagen/artefacto productivo reproducible |
 | Docker app non-root | 🔴 | no hay Dockerfiles de producción de web/API |
 | Container scan | 🔴 | no configurado |
