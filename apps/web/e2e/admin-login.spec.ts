@@ -51,6 +51,10 @@ test("login anuncia credenciales inválidas", async ({
     })
     .click();
 
-  const alert = page.getByRole("alert");
+  const alert = page
+    .getByRole("alert")
+    .filter({ hasText: "Credenciales inválidas." });
+
+  await expect(alert).toBeVisible();
   await expect(alert).toContainText("Credenciales inválidas.");
 });
