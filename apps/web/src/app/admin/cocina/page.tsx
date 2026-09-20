@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BarChart3,
   CalendarDays,
   CheckCircle2,
   ChefHat,
@@ -260,6 +261,10 @@ export default function KitchenPage() {
           </div>
 
           <nav className="admin-nav">
+            <a href="/admin/dashboard">
+              <BarChart3 size={18} strokeWidth={1.8} />
+              Dashboard
+            </a>
             {user?.role === "ADMIN" && (
               <a href="/admin/pedidos">
                 <ShoppingBag size={18} strokeWidth={1.8} />
