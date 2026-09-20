@@ -482,7 +482,7 @@ Ejecuta el comando dos veces y usa valores diferentes.
 ### Rate limiting y bloqueo de login
 
 - API general: 120 solicitudes por minuto por IP/proceso.
-- Login: máximo 5 solicitudes por minuto y bloqueo temporal del rate limiter.
+- Login: máximo 5 solicitudes por minuto por IP.
 - Cuenta: después de 5 credenciales incorrectas se guarda `lockedUntil` en PostgreSQL y se bloquea durante 15 minutos.
 - Un login correcto reinicia el contador y registra `lastLoginAt`.
 
