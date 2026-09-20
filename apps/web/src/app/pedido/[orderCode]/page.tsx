@@ -1,6 +1,6 @@
 "use client";
 
-import { API_URL } from "@/lib/api/browser";
+import { API_URL, apiFetch } from "@/lib/api/browser";
 import {
   ArrowLeft,
   CalendarDays,
@@ -109,7 +109,7 @@ export default function CustomerOrderPage() {
     setError("");
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${API_URL}/orders/${encodeURIComponent(orderCode)}`,
         {
           headers: {
@@ -156,7 +156,7 @@ export default function CustomerOrderPage() {
     setNotice("");
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${API_URL}/orders/${encodeURIComponent(order.orderCode)}/cancel`,
         {
           method: "POST",
