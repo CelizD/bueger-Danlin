@@ -42,7 +42,7 @@ Leyenda:
 | Validación mediante schemas/DTO | ✅ | ValidationPipe whitelist + forbidNonWhitelisted + class-validator |
 | Validación semántica | ✅ | Productos/modificadores, capacidad, fechas, estados e inventario se revalidan server-side |
 | Request size limit explícito | 🔴 | No hay límite JSON/body documentado/configurado |
-| Error responses sin detalles internos | 🟡 | Nest oculta stack por defecto, pero falta filtro global con formato consistente y requestId |
+| Error responses sin detalles internos | ✅ | filtro global normaliza errores, oculta mensajes internos 5xx e incluye requestId |
 | Idempotency-Key en POST sensible | ✅ | Creación de pedido |
 | Rate limit login/API crítica | ✅ | throttler global + login reforzado + lockout persistente |
 | CORS allowlist | ✅ | APP_ORIGIN |
@@ -192,4 +192,4 @@ Leyenda:
 
 ## Próximo control
 
-**Error handling consistente con requestId**: health/readiness ya quedó cubierto; el siguiente P0 es estandarizar errores públicos sin detalles internos y correlacionarlos con X-Request-Id.
+**Request body size limit explícito**: health/readiness y error handling ya quedaron cubiertos. El siguiente P0 de API es fijar límites de payload antes del parser.
