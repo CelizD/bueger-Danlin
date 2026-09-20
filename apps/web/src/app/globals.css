@@ -4465,3 +4465,28 @@ h2 {
     grid-template-columns: 1fr;
   }
 }
+
+
+.staff-mfa-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  margin-top: 3px;
+  padding: 4px 6px;
+  border-radius: 999px;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.staff-mfa-state.enabled {
+  background: #e8f1e6;
+  color: #42633f;
+}
+
+.staff-mfa-state.pending {
+  background: #fff0d5;
+  color: #7d5a20;
+}
