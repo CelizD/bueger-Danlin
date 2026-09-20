@@ -31,6 +31,8 @@ export class AdminStaffService {
         name: true,
         role: true,
         active: true,
+        mfaEnabled: true,
+        mfaEnrolledAt: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -70,6 +72,8 @@ export class AdminStaffService {
         name: true,
         role: true,
         active: true,
+        mfaEnabled: true,
+        mfaEnrolledAt: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -160,6 +164,8 @@ export class AdminStaffService {
         name: true,
         role: true,
         active: true,
+        mfaEnabled: true,
+        mfaEnrolledAt: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -187,6 +193,68 @@ export class AdminStaffService {
     });
 
     return updated;
+  }
+
+  async resetMfa(id: string, actorUserId: string) {
+    const target = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        mfaEnabled: true,
+      },
+    });
+
+    if (!target) {
+      throw new NotFoundException("La cuenta de personal no existe.");
+    }
+
+    if (target.role !== "ADMIN") {
+      throw new BadRequestException(
+        "MFA obligatorio solo aplica a cuentas ADMIN.",
+      );
+    }
+
+    if (target.id === actorUserId) {
+      throw new ForbiddenException(
+        "No puedes restablecer tu propio MFA desde una sesión activa. Usa un código de recuperación u otro administrador.",
+      );
+    }
+
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        mfaEnabled: false,
+        mfaSecretEncrypted: null,
+        mfaRecoveryCodeHashes: null,
+        mfaLastUsedStep: null,
+        mfaEnrolledAt: null,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: actorUserId,
+        action: "STAFF_MFA_RESET",
+        entityType: "User",
+        entityId: id,
+        before: {
+          email: target.email,
+          mfaEnabled: target.mfaEnabled,
+        },
+        after: {
+          mfaEnabled: false,
+        },
+      },
+    });
+
+    return {
+      id: target.id,
+      email: target.email,
+      mfaReset: true,
+    };
   }
 
   async resetPassword(
