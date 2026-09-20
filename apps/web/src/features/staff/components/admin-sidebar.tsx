@@ -112,7 +112,10 @@ export function AdminSidebar({
 
         <nav className="admin-nav" aria-label="Navegación de operaciones">
           {navItems.map((item) => {
-            if (!user || !item.roles.includes(user.role as never)) {
+            if (
+              !user ||
+              !(item.roles as readonly string[]).includes(user.role)
+            ) {
               return null;
             }
 
