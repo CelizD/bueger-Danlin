@@ -5,7 +5,7 @@ import {
   type AdminSection,
   type StaffRole,
 } from "@/features/staff/permissions";
-import { API_URL } from "@/lib/api/browser";
+import { API_URL, apiFetch } from "@/lib/api/browser";
 import {
   BarChart3,
   Boxes,
@@ -80,7 +80,7 @@ export function AdminSidebar({
   subtitle = "Operaciones",
 }: AdminSidebarProps) {
   async function logout() {
-    await fetch(`${API_URL}/auth/logout`, {
+    await apiFetch(`${API_URL}/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
