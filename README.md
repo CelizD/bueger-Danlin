@@ -527,3 +527,45 @@ No se registran request bodies, contraseñas, tokens, cookies ni secretos.
 - ambas comparaciones usan `timingSafeEqual`.
 
 Los endpoints reales de Stripe/Mercado Pago todavía no se publican hasta implementar el flujo de pagos. Esto evita aceptar un webhook válido sin procesar correctamente el pago.
+
+
+## MFA de administradores
+
+Las cuentas con rol `ADMIN` requieren segundo factor TOTP antes de recibir una sesión administrativa.
+
+Flujo:
+
+1. correo + contraseña;
+2. el API crea un challenge HttpOnly de 5 minutos;
+3. si es el primer acceso, se muestra un QR `otpauth://`;
+4. el administrador confirma un código TOTP de 6 dígitos;
+5. el API habilita MFA y entrega 8 códigos de recuperación de un solo uso;
+6. solo después de MFA se emite la cookie de sesión administrativa.
+
+Seguridad:
+
+- secreto TOTP aleatorio de 160 bits;
+- secreto almacenado cifrado con AES-256-GCM;
+- `MFA_ENCRYPTION_KEY` separada de `AUTH_JWT_SECRET`;
+- códigos TOTP con periodo de 30 segundos y tolerancia ±1 ventana;
+- el mismo timestep TOTP no puede reutilizarse;
+- códigos de recuperación guardados únicamente como SHA-256;
+- challenge MFA firmado, HttpOnly y con expiración de 5 minutos;
+- respuestas de enrollment MFA llevan `Cache-Control: no-store`;
+- el guard rechaza cualquier sesión `ADMIN` si MFA no está habilitado;
+- otro administrador puede restablecer el MFA desde `/admin/personal`;
+- un administrador no puede restablecer su propio MFA desde una sesión activa.
+
+Para desarrollo genera una clave MFA:
+
+```powershell
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+```
+
+y colócala en:
+
+```text
+MFA_ENCRYPTION_KEY=<resultado>
+```
+
+En producción esta variable es obligatoria y debe mantenerse en el gestor de secretos de la infraestructura.
