@@ -599,3 +599,29 @@ Las excepciones HTTP pasan por un filtro global. La respuesta pública usa un fo
 ```
 
 Los errores `5xx` nunca exponen el mensaje técnico de la excepción, stack trace, SQL ni rutas internas. El detalle mínimo de diagnóstico se envía al log del servidor asociado al mismo `requestId`.
+
+
+## OpenAPI y límites de payload
+
+El API limita explícitamente el tamaño de cuerpos antes de la validación de DTO:
+
+- JSON: `256kb` por defecto.
+- URL encoded: `64kb` por defecto.
+
+Pueden ajustarse con:
+
+```text
+JSON_BODY_LIMIT=256kb
+URLENCODED_BODY_LIMIT=64kb
+```
+
+Nest mantiene `rawBody: true`, por lo que la validación futura de firmas de webhooks sigue teniendo acceso al cuerpo original.
+
+En desarrollo, Swagger/OpenAPI está habilitado por defecto:
+
+- UI: `http://localhost:4000/api/v1/docs`
+- JSON OpenAPI: `http://localhost:4000/api/v1/docs-json`
+
+En producción la documentación queda deshabilitada salvo que se defina explícitamente `ENABLE_API_DOCS=true`.
+
+El plugin de Swagger reutiliza los DTO y decoradores de `class-validator` para generar schemas del contrato HTTP.
