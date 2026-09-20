@@ -83,11 +83,11 @@ export default function CustomerOrderPage() {
       : "";
 
     const storageKey = `burger-danlin:order-token:${orderCode}`;
-    const savedToken = window.localStorage.getItem(storageKey) ?? "";
+    const savedToken = window.sessionStorage.getItem(storageKey) ?? "";
     const resolvedToken = hashToken || savedToken;
 
     if (hashToken) {
-      window.localStorage.setItem(storageKey, hashToken);
+      window.sessionStorage.setItem(storageKey, hashToken);
       window.history.replaceState(null, "", window.location.pathname);
     }
 
@@ -200,7 +200,9 @@ export default function CustomerOrderPage() {
   if (loading) {
     return (
       <main className="customer-order-shell">
-        <div className="customer-order-loading">Consultando pedido…</div>
+        <div className="customer-order-loading" role="status" aria-live="polite">
+          Consultando pedido…
+        </div>
       </main>
     );
   }
@@ -213,7 +215,11 @@ export default function CustomerOrderPage() {
           Volver al menú
         </a>
 
-        {error && <div className="alert">{error}</div>}
+        {error && (
+          <div className="alert" role="alert" aria-live="assertive">
+            {error}
+          </div>
+        )}
 
         {order && (
           <>
@@ -238,8 +244,8 @@ export default function CustomerOrderPage() {
             </header>
 
             {notice && (
-              <div className="customer-cancel-success">
-                <CheckCircle2 size={18} />
+              <div className="customer-cancel-success" role="status" aria-live="polite">
+                <CheckCircle2 size={18} aria-hidden="true" />
                 {notice}
               </div>
             )}
