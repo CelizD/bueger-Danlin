@@ -12,7 +12,7 @@ import { WebVitalsDto } from "./web-vitals.dto.js";
 
 @Controller("telemetry")
 export class TelemetryController {
-  private readonly logger = new Logger("WebVitals");
+  private readonly logger = new Logger("FrontendTelemetry");
 
   @Post("web-vitals")
   @HttpCode(204)
