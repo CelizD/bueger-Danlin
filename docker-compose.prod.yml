@@ -5,9 +5,9 @@ services:
     image: postgres:18-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     command:
       - postgres
@@ -36,7 +36,7 @@ services:
     image: redis:8-alpine
     restart: unless-stopped
     environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
     command:
       [
         "sh",
@@ -72,21 +72,21 @@ services:
       API_PORT: 4000
       API_PREFIX: api/v1
       APP_TIMEZONE: ${APP_TIMEZONE:-America/Tijuana}
-      APP_ORIGIN: ${APP_ORIGIN}
+      APP_ORIGIN: ${APP_ORIGIN:?APP_ORIGIN is required}
       FORCE_HTTPS: "true"
       ENABLE_API_DOCS: "false"
       JSON_BODY_LIMIT: ${JSON_BODY_LIMIT:-256kb}
       URLENCODED_BODY_LIMIT: ${URLENCODED_BODY_LIMIT:-64kb}
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
-      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER}
+      DATABASE_URL: postgresql://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}?schema=public
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:?PAYMENT_PROVIDER is required}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-}
       MERCADOPAGO_WEBHOOK_SECRET: ${MERCADOPAGO_WEBHOOK_SECRET:-}
-      QR_TOKEN_SECRET: ${QR_TOKEN_SECRET}
-      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
-      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY}
+      QR_TOKEN_SECRET: ${QR_TOKEN_SECRET:?QR_TOKEN_SECRET is required}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?AUTH_JWT_SECRET is required}
+      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:?MFA_ENCRYPTION_KEY is required}
     ports:
       - "127.0.0.1:4000:4000"
     networks:
@@ -104,12 +104,41 @@ services:
         max-size: "20m"
         max-file: "5"
 
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    profiles:
+      - ops
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}?schema=public
+    networks:
+      - data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    working_dir: /app
+    command:
+      - node
+      - node_modules/prisma/build/index.js
+      - migrate
+      - deploy
+
+
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL is required}
     restart: unless-stopped
     depends_on:
       api:
@@ -140,8 +169,8 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      BACKUP_AGE_RECIPIENT: ${BACKUP_AGE_RECIPIENT}
+      DATABASE_URL: postgresql://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
+      BACKUP_AGE_RECIPIENT: ${BACKUP_AGE_RECIPIENT:?BACKUP_AGE_RECIPIENT is required}
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
       BACKUP_PREFIX: ${BACKUP_PREFIX:-burger-danlin}
     volumes:
