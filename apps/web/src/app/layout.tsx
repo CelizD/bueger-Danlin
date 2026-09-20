@@ -1,3 +1,4 @@
+import { ClientErrorObserver } from "@/components/observability/client-error-observer";
 import { WebVitals } from "@/components/observability/web-vitals";
 import type { Metadata } from "next";
 import "./globals.css";
@@ -29,6 +30,7 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <WebVitals />
+        <ClientErrorObserver />
         <a className="skip-link" href="#main-content">
           Saltar al contenido
         </a>
