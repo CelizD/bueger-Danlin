@@ -50,7 +50,6 @@ export class AuthController {
     default: {
       limit: 5,
       ttl: 60_000,
-      blockDuration: 5 * 60_000,
     },
   })
   @HttpCode(200)
