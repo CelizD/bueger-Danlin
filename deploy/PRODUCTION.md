@@ -234,10 +234,15 @@ systemctl list-timers 'burger-danlin-*'
 
 Baseline incluido:
 
-- backup cada 6 horas;
+- backup local + copia offsite cada hora;
 - restore drill el primer domingo de cada mes.
 
-Son frecuencias operativas iniciales, no RPO/RTO contractuales.
+Objetivos técnicos iniciales:
+
+- RPO: <= 1 hora para PostgreSQL, sujeto a que la copia offsite finalice correctamente;
+- RTO: <= 4 horas para recuperar el servicio completo, pendiente de validar con un simulacro de pérdida total del VPS.
+
+Son objetivos operativos y deben validarse con evidencia real.
 
 ## 13. Logs
 
@@ -253,16 +258,64 @@ journalctl -u burger-danlin-restore-drill.service
 
 Docker aplica rotación local de logs para evitar crecimiento ilimitado.
 
-## 14. Gap obligatorio antes del lanzamiento
+## 14. Backup offsite inmutable
 
-El backup local cifrado debe replicarse a otro sistema/ubicación antes de considerar DR completo.
+Configura un bucket IONOS Object Storage dedicado con Versioning, Object Lock y retención por defecto.
 
-Opciones válidas incluyen object storage separado con:
+Consulta:
 
-- cifrado;
-- versionado;
-- retención;
-- credenciales de mínimo privilegio;
-- idealmente inmutabilidad/WORM.
+`deploy/OFFSITE_BACKUP.md`
 
-No guardes la única copia de backup en el mismo VPS que ejecuta producción.
+Prueba el upload:
+
+```bash
+docker compose \
+  --env-file /etc/burger-danlin/production.env \
+  -f docker-compose.prod.yml \
+  run --rm offsite-upload
+```
+
+Después prueba la recuperación desde Object Storage:
+
+```bash
+docker compose \
+  --env-file /etc/burger-danlin/production.env \
+  -f docker-compose.prod.yml \
+  --profile dr run --rm offsite-fetch
+```
+
+No consideres DR completo hasta hacer un restore drill con un archivo descargado desde la copia offsite.
+
+## 15. Preflight del VPS
+
+Antes de abrir tráfico:
+
+```bash
+cd /opt/burger-danlin
+
+sudo COMPOSE_FILE=/opt/burger-danlin/docker-compose.prod.yml \
+  ENV_FILE=/etc/burger-danlin/production.env \
+  sh deploy/vps/preflight.sh
+```
+
+El preflight comprueba como mínimo:
+
+- Docker y Compose;
+- configuración Nginx;
+- permisos del archivo de secretos;
+- resolución del Compose de producción;
+- ausencia de PostgreSQL/Redis en interfaces públicas.
+
+## 16. TLS y DNS
+
+Antes de solicitar certificados:
+
+1. apunta los DNS de Web/API al VPS;
+2. confirma que los puertos 80/443 estén accesibles;
+3. instala la configuración Nginx con los dominios reales;
+4. emite certificados con tu cliente ACME/Let's Encrypt;
+5. ejecuta `nginx -t`;
+6. recarga Nginx;
+7. comprueba HTTPS desde una red externa.
+
+No expongas 3000, 4000, 5432 ni 6379 públicamente. Web/API permanecen en loopback y Nginx es el punto de entrada público.
