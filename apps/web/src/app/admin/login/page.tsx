@@ -1,5 +1,6 @@
 "use client";
 
+import { API_URL } from "@/lib/api/browser";
 import {
   ArrowRight,
   Check,
@@ -16,10 +17,6 @@ import {
   useEffect,
   useState,
 } from "react";
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4000/api/v1";
 
 type StaffRole = "ADMIN" | "KITCHEN" | "DELIVERY";
 
