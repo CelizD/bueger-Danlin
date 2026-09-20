@@ -61,7 +61,19 @@ Implementado:
 
 ## Fase 2 — Modularidad por feature
 
-Objetivo:
+Estado: 🟡 en progreso.
+
+Implementado:
+
+- `features/ordering/types.ts`;
+- `features/ordering/api.ts`;
+- `features/ordering/formatters.ts`;
+- componentes separados para burger builder, bebida, datos del cliente y confirmación/QR;
+- `OrderApp` reducido a orquestación de estado/flujo;
+- `AdminSidebar` compartido por todo el panel;
+- navegación activa con `aria-current="page"`.
+
+Pendiente:
 
 ```text
 src/
@@ -88,12 +100,13 @@ src/
 
 Prioridad:
 
-1. dividir `order-app.tsx` en feature + hooks + componentes;
-2. extraer shell/navigation compartidos del panel;
+1. extraer hooks de ordering si la lógica sigue creciendo;
+2. centralizar tipos compartidos de sesión/personal;
 3. eliminar tipos duplicados de API;
-4. normalizar manejo de errores HTTP;
-5. conservar estado local primero;
-6. introducir TanStack Query solo si invalidación/cache del server-state empieza a ser difícil.
+4. normalizar manejo de errores HTTP en el resto del panel;
+5. extraer shell/patterns adicionales solo donde exista duplicación real;
+6. conservar estado local primero;
+7. introducir TanStack Query solo si invalidación/cache del server-state empieza a ser difícil.
 
 ## Fase 3 — Testing y accesibilidad
 
