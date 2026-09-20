@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminSidebar } from "@/features/staff/components/admin-sidebar";
-import { API_URL } from "@/lib/api/browser";
+import { API_URL, apiFetch } from "@/lib/api/browser";
 import {
   AlertTriangle,
   BarChart3,
@@ -73,7 +73,7 @@ export default function InventoryPage() {
     if (showRefresh) setRefreshing(true);
 
     try {
-      const me = await fetch(`${API_URL}/auth/me`, {
+      const me = await apiFetch(`${API_URL}/auth/me`, {
         credentials: "include",
         cache: "no-store",
       });
@@ -92,7 +92,7 @@ export default function InventoryPage() {
 
       setUser(meData.user);
 
-      const response = await fetch(`${API_URL}/admin/inventory`, {
+      const response = await apiFetch(`${API_URL}/admin/inventory`, {
         credentials: "include",
         cache: "no-store",
       });
@@ -175,7 +175,7 @@ export default function InventoryPage() {
     setSuccess("");
 
     try {
-      const response = await fetch(`${API_URL}/admin/inventory`, {
+      const response = await apiFetch(`${API_URL}/admin/inventory`, {
         method: "POST",
         credentials: "include",
         headers: { "content-type": "application/json" },
@@ -239,7 +239,7 @@ export default function InventoryPage() {
     setSuccess("");
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${API_URL}/admin/inventory/${encodeURIComponent(item.id)}`,
         {
           method: "PATCH",
@@ -282,7 +282,7 @@ export default function InventoryPage() {
     setSuccess("");
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${API_URL}/admin/inventory/${encodeURIComponent(item.id)}`,
         {
           method: "PATCH",
@@ -337,7 +337,7 @@ export default function InventoryPage() {
     setSuccess("");
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${API_URL}/admin/inventory/${encodeURIComponent(item.id)}`,
         {
           method: "DELETE",
@@ -368,7 +368,7 @@ export default function InventoryPage() {
   }
 
   async function logout() {
-    await fetch(`${API_URL}/auth/logout`, {
+    await apiFetch(`${API_URL}/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
