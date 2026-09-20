@@ -1,5 +1,5 @@
 [Unit]
-Description=Burger Danlin encrypted PostgreSQL backup and immutable offsite copy
+Description=Burger Danlin encrypted PostgreSQL backup cycle
 Requires=docker.service
 After=docker.service network-online.target
 Wants=network-online.target
@@ -8,5 +8,4 @@ Wants=network-online.target
 Type=oneshot
 WorkingDirectory=/opt/burger-danlin
 TimeoutStartSec=30min
-ExecStart=/usr/bin/docker compose --env-file /etc/burger-danlin/production.env -f /opt/burger-danlin/docker-compose.prod.yml run --rm backup
-ExecStart=/usr/bin/docker compose --env-file /etc/burger-danlin/production.env -f /opt/burger-danlin/docker-compose.prod.yml run --rm offsite-upload
+ExecStart=/usr/bin/docker compose --env-file /etc/burger-danlin/production.env -f /opt/burger-danlin/docker-compose.prod.yml run --rm backup-cycle
