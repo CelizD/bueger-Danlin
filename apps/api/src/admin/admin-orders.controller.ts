@@ -1,8 +1,11 @@
 import { Controller, Get, UseGuards } from "@nestjs/common";
-import { AdminGuard } from "../auth/admin.guard.js";
+
+import { ApiCookieAuth, ApiTags } from "@nestjs/swagger";import { AdminGuard } from "../auth/admin.guard.js";
 import { StaffAuthGuard } from "../auth/staff-auth.guard.js";
 import { AdminOrdersService } from "./admin-orders.service.js";
 
+@ApiTags("Admin orders")
+@ApiCookieAuth("burger_staff_session")
 @Controller("admin/orders")
 @UseGuards(StaffAuthGuard, AdminGuard)
 export class AdminOrdersController {
