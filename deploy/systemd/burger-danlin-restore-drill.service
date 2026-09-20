@@ -1,0 +1,11 @@
+[Unit]
+Description=Burger Danlin isolated PostgreSQL restore drill
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/burger-danlin
+ExecStart=/usr/bin/docker compose --env-file /etc/burger-danlin/production.env -f /opt/burger-danlin/docker-compose.prod.yml --profile dr run --rm restore-drill
+ExecStopPost=-/usr/bin/docker compose --env-file /etc/burger-danlin/production.env -f /opt/burger-danlin/docker-compose.prod.yml --profile dr rm -sf restore-postgres
