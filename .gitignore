@@ -16,3 +16,8 @@ Thumbs.db
 apps/api/src/generated/prisma/
 
 *.tsbuildinfo
+
+backups/
+deploy/production.env
+deploy/*.key
+deploy/backup/*.key
