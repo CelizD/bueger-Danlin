@@ -625,3 +625,26 @@ En desarrollo, Swagger/OpenAPI está habilitado por defecto:
 En producción la documentación queda deshabilitada salvo que se defina explícitamente `ENABLE_API_DOCS=true`.
 
 El plugin de Swagger reutiliza los DTO y decoradores de `class-validator` para generar schemas del contrato HTTP.
+
+
+## CI y tests críticos
+
+El workflow `.github/workflows/ci.yml` se ejecuta en pushes y pull requests hacia `main`.
+
+La verificación crea un PostgreSQL temporal y ejecuta:
+
+1. `pnpm install --frozen-lockfile`
+2. `pnpm db:generate`
+3. `pnpm db:migrate:deploy`
+4. `pnpm lint`
+5. `pnpm test`
+6. `pnpm build`
+
+Tests críticos iniciales:
+
+- `authorization.guard.spec.ts`: comprueba que ADMIN, KITCHEN y DELIVERY no crucen permisos definidos por guards.
+- `orders.concurrency.spec.ts`: lanza operaciones concurrentes reales contra PostgreSQL.
+  - dos clientes compiten por el último combo y solo uno puede reservarlo;
+  - dos eventos distintos compiten por una sola unidad de inventario y solo uno puede venderla.
+
+Los tests de concurrencia usan registros con identificadores únicos y eliminan sus datos al finalizar.
