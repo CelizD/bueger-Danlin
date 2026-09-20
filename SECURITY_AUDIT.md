@@ -18,12 +18,12 @@ Leyenda:
 | Control | Estado | Evidencia actual / brecha |
 |---|---|---|
 | Autenticación de personal | ✅ | Login propio, Argon2id, sesión firmada, cuenta activa validada en cada request |
-| MFA administradores | 🔴 | No existe segundo factor ni passkey/TOTP |
+| MFA administradores | 🟡 | TOTP obligatorio + códigos de recuperación implementados; pendiente aplicar migración y validar flujo local |
 | Cookies seguras | ✅ | HttpOnly; Secure + SameSite=Strict en producción |
 | Argon2id | ✅ | 19 MiB, 2 iteraciones, paralelismo 1 |
 | Benchmark Argon2id en hardware prod | 🔴 | Parámetros cumplen baseline, pero no existe benchmark documentado |
 | Password blocklist | 🔴 | No se contrastan contraseñas comunes/comprometidas |
-| JWT algoritmo/issuer/audience explícitos | 🟡 | Firma y expiración se verifican; faltan algoritmo fijo, issuer y audience explícitos |
+| JWT algoritmo/issuer/audience explícitos | 🟡 | HS256, issuer y audience ya fijados en código; pendiente validación local del build/login |
 | RBAC / least privilege | ✅ | ADMIN, KITCHEN, DELIVERY + guards server-side |
 | Secrets fuera del repo | ✅ | .env ignorado; no se guardan credenciales reales en Git |
 | Secret Manager / Vault | 🔴 | Producción todavía usa variables de entorno; falta gestor de secretos |
@@ -159,4 +159,4 @@ Leyenda:
 
 ## Próximo control
 
-**MFA obligatorio para ADMIN** es el siguiente gap de aplicación con prioridad bloqueante y que puede resolverse directamente en este repositorio.
+**Password blocklist + política de contraseñas** es el siguiente gap de identidad después de validar MFA. Luego siguen exception filter/límites de request y CI security.
