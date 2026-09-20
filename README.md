@@ -429,3 +429,101 @@ Endpoints administrativos:
 - `DELETE /admin/inventory/:id`
 
 Todos requieren rol `ADMIN` y los cambios se registran en `AuditLog`.
+
+
+## Seguridad de producción
+
+El API incluye las siguientes protecciones:
+
+- rate limiting global y límite reforzado para `POST /auth/login`;
+- bloqueo persistente de cuentas después de 5 intentos fallidos durante 15 minutos;
+- contraseña verificada con Argon2id y comparación contra hash dummy para reducir enumeración/timing;
+- cookies de sesión `HttpOnly`, `Secure` y `SameSite=Strict` en producción;
+- invalidación de sesiones antiguas después de cambiar contraseña;
+- protección CSRF para mutaciones del panel mediante origen permitido y Fetch Metadata;
+- CORS restringido a `APP_ORIGIN`;
+- Helmet en el API;
+- headers de seguridad en Next.js y `X-Powered-By` deshabilitado;
+- HSTS en producción;
+- `FORCE_HTTPS` para rechazar/redirigir tráfico inseguro cuando el API está detrás del reverse proxy;
+- validación de secretos al arrancar en `NODE_ENV=production`;
+- logs HTTP estructurados con `X-Request-Id`, método, ruta, estado y duración, sin registrar bodies ni secretos;
+- soporte de raw body para validación de firmas de webhook;
+- verificadores HMAC con comparación en tiempo constante y ventana anti-replay para Stripe y Mercado Pago.
+
+### Variables de producción
+
+Como mínimo:
+
+```text
+NODE_ENV=production
+APP_ORIGIN=https://app.tudominio.com
+FORCE_HTTPS=true
+
+DATABASE_URL=postgresql://...
+AUTH_JWT_SECRET=<secreto aleatorio de 48+ caracteres>
+QR_TOKEN_SECRET=<otro secreto aleatorio de 48+ caracteres>
+
+PAYMENT_PROVIDER=stripe
+STRIPE_SECRET_KEY=...
+STRIPE_WEBHOOK_SECRET=...
+```
+
+`AUTH_JWT_SECRET` y `QR_TOKEN_SECRET` deben ser diferentes. El arranque de producción falla si encuentra valores débiles o placeholders conocidos.
+
+Puedes generar secretos aleatorios desde Node:
+
+```powershell
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+```
+
+Ejecuta el comando dos veces y usa valores diferentes.
+
+### Rate limiting y bloqueo de login
+
+- API general: 120 solicitudes por minuto por IP/proceso.
+- Login: máximo 5 solicitudes por minuto y bloqueo temporal del rate limiter.
+- Cuenta: después de 5 credenciales incorrectas se guarda `lockedUntil` en PostgreSQL y se bloquea durante 15 minutos.
+- Un login correcto reinicia el contador y registra `lastLoginAt`.
+
+El bloqueo de cuenta es persistente y funciona aunque reinicies el API. El rate limiting de IP usa almacenamiento en memoria; si en el futuro ejecutas varias réplicas del API, conviene mover el almacenamiento del throttler a Redis.
+
+### CSRF
+
+Las mutaciones autenticadas del panel y login/logout validan el header `Origin` contra `APP_ORIGIN` y rechazan solicitudes con `Sec-Fetch-Site: cross-site`. Esto se combina con cookies `SameSite=Strict` en producción.
+
+Pedidos públicos, consultas públicas y futuros webhooks de proveedores no dependen de la cookie de personal y no usan esta validación CSRF.
+
+### HTTPS
+
+Nest confía en un único reverse proxy en producción y `FORCE_HTTPS=true` exige HTTPS. El proxy debe enviar `X-Forwarded-Proto: https`.
+
+Existe un ejemplo en:
+
+- `deploy/nginx/burger-danlin.conf.example`
+
+Configura certificados reales (por ejemplo Let's Encrypt) antes de habilitarlo.
+
+### Logs
+
+Cada petición genera un `X-Request-Id` y un log con:
+
+- request ID;
+- método;
+- path sin query string;
+- status HTTP;
+- duración;
+- IP;
+- User-Agent truncado.
+
+No se registran request bodies, contraseñas, tokens, cookies ni secretos.
+
+### Webhooks
+
+`WebhookSecurityService` implementa validación de firma para futuros handlers reales:
+
+- Stripe: valida `Stripe-Signature` sobre el raw body, HMAC-SHA256, timestamp y tolerancia de 5 minutos.
+- Mercado Pago: valida `x-signature`, `x-request-id` y `data.id` con el manifest oficial y HMAC-SHA256.
+- ambas comparaciones usan `timingSafeEqual`.
+
+Los endpoints reales de Stripe/Mercado Pago todavía no se publican hasta implementar el flujo de pagos. Esto evita aceptar un webhook válido sin procesar correctamente el pago.
