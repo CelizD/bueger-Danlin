@@ -6,6 +6,7 @@ import { NestFactory } from "@nestjs/core";
 import helmet from "helmet";
 import { randomUUID } from "node:crypto";
 import { AppModule } from "./app.module.js";
+import { HttpExceptionFilter } from "./common/http-exception.filter.js";
 import { STAFF_SESSION_COOKIE } from "./auth/auth.constants.js";
 import { validateProductionEnvironment } from "./config/validate-production-env.js";
 
@@ -181,6 +182,7 @@ async function bootstrap() {
     exposedHeaders: ["X-Request-Id"],
     maxAge: 600,
   });
+  app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
