@@ -30,7 +30,7 @@ Evolucionar el frontend actual sin sobrearquitectura. Burger Danlin sigue siendo
 | Rutas privadas indexables | ✅ | admin y pedido tienen noindex/nofollow + robots disallow |
 | Core Web Vitals | 🟡 | arquitectura Next ayuda, pero todavía no existe RUM |
 | Lighthouse/bundle budgets | 🔴 | pendiente |
-| Testing frontend real | 🔴 | script actual sigue siendo placeholder |
+| Testing frontend real | 🟡 | Vitest activado con pruebas de reglas de pedidos, helpers y matriz de roles; faltan componentes/E2E |
 | E2E | 🔴 | pendiente Playwright |
 | Accessibility automation | 🔴 | pendiente axe |
 | Storybook | 🔴 | pendiente cuando se formalice design system |
@@ -110,9 +110,22 @@ Prioridad:
 
 ## Fase 3 — Testing y accesibilidad
 
-Agregar cuando se actualice el workspace/lockfile:
+Estado: 🟡 en progreso.
 
-- Vitest;
+Implementado:
+
+- Vitest en el paquete Web;
+- `pnpm test` ya ejecuta pruebas frontend reales;
+- tests de cálculo de total;
+- tests de capacidad evento/inventario;
+- tests de ingredientes agotados;
+- tests de payload QR sin PII;
+- tests de almacenamiento session-scoped por pedido;
+- tests de normalización de errores API;
+- tests de matriz de navegación ADMIN/KITCHEN/DELIVERY.
+
+Siguiente subfase:
+
 - Testing Library;
 - jsdom;
 - Playwright;
