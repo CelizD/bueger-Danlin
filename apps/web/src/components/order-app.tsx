@@ -6,12 +6,15 @@ import {
   createOrder,
   loadOrderingData,
 } from "@/features/ordering/api";
+import { BurgerBuilder } from "@/features/ordering/components/burger-builder";
+import { CustomerFields } from "@/features/ordering/components/customer-fields";
+import { DrinkSelector } from "@/features/ordering/components/drink-selector";
+import { OrderConfirmation } from "@/features/ordering/components/order-confirmation";
 import {
   formatPickup,
   money,
   newBurger,
   orderTokenStorageKey,
-  pickupQrPayload,
 } from "@/features/ordering/formatters";
 import type {
   BurgerSelection,
@@ -21,7 +24,6 @@ import type {
   PickupEvent,
 } from "@/features/ordering/types";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { QRCodeSVG } from "qrcode.react";
 
 export function OrderApp() {
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
@@ -385,157 +387,16 @@ export function OrderApp() {
   }
 
   if (createdOrder) {
-    const isPaid = createdOrder.paymentStatus === "PAID";
-    const isCancelled =
-      createdOrder.status === "CANCELLED" || createdOrder.status === "REFUNDED";
-    const cancellationOpen =
-      !isCancelled && new Date() < new Date(createdOrder.pickup.closesAt);
-
     return (
-      <main className="shell">
-        <section className="confirmation">
-          <p className="eyebrow">
-            {isCancelled
-              ? createdOrder.status === "REFUNDED"
-                ? "Pedido reembolsado"
-                : "Pedido cancelado"
-              : isPaid
-                ? "Pago confirmado"
-                : "Pedido reservado"}
-          </p>
-          <h1>{createdOrder.orderCode}</h1>
-          <p className="lead">
-            {isCancelled
-              ? createdOrder.status === "REFUNDED"
-                ? "Tu pedido fue cancelado y el reembolso local quedó completado."
-                : "Tu pedido fue cancelado y el cupo quedó liberado."
-              : isPaid
-                ? "Tu pedido local quedó pagado y confirmado para continuar con cocina y entrega."
-                : `Reservamos ${createdOrder.comboQuantity} combo(s) durante 15 minutos mientras completas el pago.`}
-          </p>
-
-          {error && (
-            <div className="alert" role="alert" aria-live="assertive">
-              {error}
-            </div>
-          )}
-          {cancelMessage && (
-            <div className="customer-cancel-success" role="status" aria-live="polite">
-              {cancelMessage}
-            </div>
-          )}
-
-          <div className="confirmation-grid">
-            <div>
-              <span>Total</span>
-              <strong>{money.format(createdOrder.totalCents / 100)}</strong>
-            </div>
-            <div>
-              <span>Entrega</span>
-              <strong>{createdOrder.pickup.locationLabel}</strong>
-              <small>
-                {new Intl.DateTimeFormat("es-MX", {
-                  timeZone: createdOrder.pickup.timezone,
-                  day: "numeric",
-                  month: "short",
-                  hour: "numeric",
-                  minute: "2-digit",
-                }).format(new Date(createdOrder.pickup.startsAt))}
-              </small>
-            </div>
-          </div>
-
-          {!isPaid && !isCancelled && (
-            <button
-              className="primary-button payment-button"
-              type="button"
-              onClick={confirmMockPayment}
-              disabled={paying}
-            >
-              {paying ? "Confirmando pago…" : "Simular pago local"}
-            </button>
-          )}
-
-          {isPaid && !isCancelled && (
-            <>
-              <div className="paid-badge">
-                Pago local aprobado
-              </div>
-
-              <div className="customer-qr-card">
-                <div className="customer-qr-copy">
-                  <p className="eyebrow">Código de entrega</p>
-                  <h2>Presenta este QR</h2>
-                  <p>
-                    Muéstralo al momento de recoger tu pedido. El personal lo
-                    escaneará para confirmar la entrega.
-                  </p>
-                </div>
-
-                <div className="customer-qr-frame" aria-label="QR de entrega">
-                  <QRCodeSVG
-                    value={pickupQrPayload(createdOrder)}
-                    size={220}
-                    level="H"
-                    marginSize={2}
-                    title={`Pedido ${createdOrder.orderCode}`}
-                  />
-                </div>
-
-                <div className="customer-qr-code">
-                  <span>Pedido</span>
-                  <strong>{createdOrder.orderCode}</strong>
-                </div>
-
-                <p className="customer-qr-warning">
-                  No compartas este QR públicamente. Funciona como comprobante
-                  para retirar tu pedido.
-                </p>
-              </div>
-            </>
-          )}
-
-          <div className="customer-order-actions">
-            {!isCancelled && cancellationOpen && (
-              <button
-                className="customer-cancel-button"
-                type="button"
-                onClick={cancelCreatedOrder}
-                disabled={canceling}
-              >
-                {canceling
-                  ? "Cancelando…"
-                  : isPaid
-                    ? "Cancelar e iniciar reembolso"
-                    : "Cancelar pedido"}
-              </button>
-            )}
-
-            <a
-              className="customer-manage-link"
-              href={`/pedido/${encodeURIComponent(createdOrder.orderCode)}#token=${encodeURIComponent(createdOrder.verificationToken)}`}
-            >
-              Administrar mi pedido
-            </a>
-          </div>
-
-          <p className="technical-note">
-            Estado: {createdOrder.status} · Pago: {createdOrder.paymentStatus}
-            {!isCancelled && (
-              <>
-                {" "}· Cancelaciones hasta{" "}
-                {new Intl.DateTimeFormat("es-MX", {
-                  timeZone: createdOrder.pickup.timezone,
-                  day: "numeric",
-                  month: "short",
-                  hour: "numeric",
-                  minute: "2-digit",
-                }).format(new Date(createdOrder.pickup.closesAt))}
-              </>
-            )}
-          </p>
-        </section>
-      </main>
+      <OrderConfirmation
+        order={createdOrder}
+        error={error}
+        cancelMessage={cancelMessage}
+        paying={paying}
+        canceling={canceling}
+        onConfirmPayment={() => void confirmMockPayment()}
+        onCancel={() => void cancelCreatedOrder()}
+      />
     );
   }
 
@@ -595,191 +456,34 @@ export function OrderApp() {
         </section>
       ) : (
         <form onSubmit={submitOrder} aria-busy={submitting}>
-          <section className="section">
-            <div className="section-heading">
-              <div>
-                <p className="step">01</p>
-                <h2>Tus hamburguesas</h2>
-              </div>
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={addBurger}
-                disabled={burgers.length >= maxCombosAvailable}
-              >
-                + Agregar combo
-              </button>
-            </div>
+          <BurgerBuilder
+            burgers={burgers}
+            comboPriceCents={combo?.priceCents ?? 0}
+            removableOptions={removableOptions}
+            extraOptions={extraOptions}
+            inventory={inventory}
+            maxCombosAvailable={maxCombosAvailable}
+            onAddBurger={addBurger}
+            onRemoveBurger={removeBurger}
+            onToggleRemoved={toggleRemoved}
+            onToggleExtra={toggleExtra}
+          />
 
-            <div className="burger-list">
-              {burgers.map((burger, burgerIndex) => (
-                <article className="burger-card" key={burger.localId}>
-                  <div className="burger-card-title">
-                    <div>
-                      <span>Combo {burgerIndex + 1}</span>
-                      <strong>{money.format((combo?.priceCents ?? 0) / 100)}</strong>
-                    </div>
-                    {burgers.length > 1 && (
-                      <button
-                        className="text-button"
-                        type="button"
-                        onClick={() => removeBurger(burger.localId)}
-                      >
-                        Quitar
-                      </button>
-                    )}
-                  </div>
+          <DrinkSelector
+            quantity={cokes}
+            priceCents={coke?.priceCents ?? 3000}
+            inventoryLimit={cokeInventoryLimit}
+            onChange={setCokes}
+          />
 
-                  <div className="option-block">
-                    <p className="option-title">Ingredientes incluidos</p>
-                    <p className="option-help">Desmarca lo que no quieras.</p>
-                    <div className="option-grid">
-                      {removableOptions.map((option) => {
-                        const included = !burger.removedIds.includes(option.id);
-                        return (
-                          <label className="check-row" key={option.id}>
-                            <input
-                              type="checkbox"
-                              checked={included}
-                              disabled={inventory?.modifierLimits[option.id] === 0}
-                              onChange={() => toggleRemoved(burger.localId, option.id)}
-                            />
-                            <span>
-                              {option.name}
-                              {inventory?.modifierLimits[option.id] === 0
-                                ? " · Agotado"
-                                : ""}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="option-block">
-                    <p className="option-title">Extras</p>
-                    <div className="option-grid">
-                      {extraOptions.map((option) => (
-                        <label className="check-row extra-row" key={option.id}>
-                          <input
-                            type="checkbox"
-                            checked={burger.extraIds.includes(option.id)}
-                            disabled={
-                              inventory?.modifierLimits[option.id] === 0 &&
-                              !burger.extraIds.includes(option.id)
-                            }
-                            onChange={() => toggleExtra(burger.localId, option.id)}
-                          />
-                          <span>
-                            {option.name}
-                            {inventory?.modifierLimits[option.id] === 0
-                              ? " · Agotado"
-                              : ""}
-                          </span>
-                          <strong>
-                            +{money.format(option.priceDeltaCents / 100)}
-                          </strong>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section className="section">
-            <div className="section-heading">
-              <div>
-                <p className="step">02</p>
-                <h2>Bebida</h2>
-              </div>
-            </div>
-
-            <div className="drink-row">
-              <div>
-                <strong>Coca-Cola lata</strong>
-                <span>
-                  {money.format((coke?.priceCents ?? 3000) / 100)} c/u
-                  {cokeInventoryLimit <= 0 ? " · Agotada" : ""}
-                </span>
-              </div>
-              <div className="quantity">
-                <button
-                  type="button"
-                  onClick={() => setCokes((value) => Math.max(0, value - 1))}
-                  aria-label="Quitar Coca-Cola"
-                >
-                  −
-                </button>
-                <span>{cokes}</span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCokes((value) =>
-                      Math.min(20, cokeInventoryLimit, value + 1),
-                    )
-                  }
-                  disabled={cokes >= cokeInventoryLimit}
-                  aria-label="Agregar Coca-Cola"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-          </section>
-
-          <section className="section">
-            <div className="section-heading">
-              <div>
-                <p className="step">03</p>
-                <h2>Tus datos</h2>
-              </div>
-            </div>
-
-            <div className="form-grid">
-              <label>
-                <span>Nombre *</span>
-                <input
-                  required
-                  minLength={2}
-                  maxLength={100}
-                  value={name}
-                  autoComplete="name"
-                  onChange={(input) => setName(input.target.value)}
-                  placeholder="Tu nombre"
-                />
-              </label>
-
-              <label>
-                <span>Teléfono *</span>
-                <div className="phone-input">
-                  <b>+52</b>
-                  <input
-                    required
-                    inputMode="numeric"
-                    autoComplete="tel-national"
-                    maxLength={10}
-                    value={phone}
-                    onChange={(input) => setPhone(input.target.value.replace(/\D/g, ""))}
-                    placeholder="6641234567"
-                  />
-                </div>
-              </label>
-
-              <label className="full-field">
-                <span>Correo (opcional)</span>
-                <input
-                  type="email"
-                  autoComplete="email"
-                  maxLength={160}
-                  value={email}
-                  onChange={(input) => setEmail(input.target.value)}
-                  placeholder="correo@ejemplo.com"
-                />
-              </label>
-            </div>
-          </section>
+          <CustomerFields
+            name={name}
+            phone={phone}
+            email={email}
+            onNameChange={setName}
+            onPhoneChange={setPhone}
+            onEmailChange={setEmail}
+          />
 
           <section className="checkout-bar">
             <div>
