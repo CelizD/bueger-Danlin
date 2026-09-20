@@ -143,16 +143,16 @@ owned_objects="$(
       SELECT
         (SELECT count(*) FROM pg_database
           WHERE datname = current_database()
-            AND pg_get_userbyid(datdba) = :'runtime_user')
+            AND pg_get_userbyid(datdba) = '$POSTGRES_RUNTIME_USER')
         +
         (SELECT count(*) FROM pg_namespace
           WHERE nspname = 'public'
-            AND pg_get_userbyid(nspowner) = :'runtime_user')
+            AND pg_get_userbyid(nspowner) = '$POSTGRES_RUNTIME_USER')
         +
         (SELECT count(*) FROM pg_class
           WHERE relnamespace = 'public'::regnamespace
             AND relkind IN ('r','p','S','v','m','f')
-            AND pg_get_userbyid(relowner) = :'runtime_user');
+            AND pg_get_userbyid(relowner) = '$POSTGRES_RUNTIME_USER');
     "
 )"
 
@@ -175,7 +175,7 @@ role_violations="$(
     --command="
       SELECT count(*)
       FROM pg_roles
-      WHERE rolname = :'runtime_user'
+      WHERE rolname = '$POSTGRES_RUNTIME_USER'
         AND (
           rolsuper
           OR rolcreatedb
@@ -206,7 +206,7 @@ membership_count="$(
       SELECT count(*)
       FROM pg_auth_members membership
       JOIN pg_roles member ON member.oid = membership.member
-      WHERE member.rolname = :'runtime_user';
+      WHERE member.rolname = '$POSTGRES_RUNTIME_USER';
     "
 )"
 
@@ -226,7 +226,7 @@ schema_create="$(
     --set=ON_ERROR_STOP=1 \
     --set=runtime_user="$POSTGRES_RUNTIME_USER" \
     --command="
-      SELECT has_schema_privilege(:'runtime_user', 'public', 'CREATE');
+      SELECT has_schema_privilege('$POSTGRES_RUNTIME_USER', 'public', 'CREATE');
     "
 )"
 
