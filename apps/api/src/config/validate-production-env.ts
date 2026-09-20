@@ -39,6 +39,25 @@ export function validateProductionEnvironment() {
 
   const authSecret = requireStrongSecret("AUTH_JWT_SECRET", 48);
   const qrSecret = requireStrongSecret("QR_TOKEN_SECRET", 48);
+  const mfaEncryptionKey =
+    process.env.MFA_ENCRYPTION_KEY?.trim() ?? "";
+
+  let decodedMfaKey: Buffer;
+
+  try {
+    decodedMfaKey = Buffer.from(
+      mfaEncryptionKey,
+      "base64url",
+    );
+  } catch {
+    decodedMfaKey = Buffer.alloc(0);
+  }
+
+  if (decodedMfaKey.length !== 32) {
+    throw new Error(
+      "MFA_ENCRYPTION_KEY must be a base64url-encoded 32-byte key",
+    );
+  }
 
   if (authSecret === qrSecret) {
     throw new Error("AUTH_JWT_SECRET and QR_TOKEN_SECRET must be different");
