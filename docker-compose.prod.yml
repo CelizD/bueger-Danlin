@@ -1,0 +1,211 @@
+name: burger-danlin-prod
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    command:
+      - postgres
+      - -c
+      - password_encryption=scram-sha-256
+    volumes:
+      - burger_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    shm_size: 256mb
+    networks:
+      - data
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command:
+      [
+        "sh",
+        "-c",
+        "exec redis-server --appendonly no --save '' --maxmemory 128mb --maxmemory-policy allkeys-lru --requirepass \"$$REDIS_PASSWORD\"",
+      ]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping | grep PONG",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    networks:
+      - data
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      API_PORT: 4000
+      API_PREFIX: api/v1
+      APP_TIMEZONE: ${APP_TIMEZONE:-America/Tijuana}
+      APP_ORIGIN: ${APP_ORIGIN}
+      FORCE_HTTPS: "true"
+      ENABLE_API_DOCS: "false"
+      JSON_BODY_LIMIT: ${JSON_BODY_LIMIT:-256kb}
+      URLENCODED_BODY_LIMIT: ${URLENCODED_BODY_LIMIT:-64kb}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-}
+      MERCADOPAGO_WEBHOOK_SECRET: ${MERCADOPAGO_WEBHOOK_SECRET:-}
+      QR_TOKEN_SECRET: ${QR_TOKEN_SECRET}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
+      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY}
+    ports:
+      - "127.0.0.1:4000:4000"
+    networks:
+      - app
+      - data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    logging:
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - app
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  backup:
+    build:
+      context: .
+      dockerfile: deploy/backup/Dockerfile
+    profiles:
+      - ops
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      BACKUP_AGE_RECIPIENT: ${BACKUP_AGE_RECIPIENT}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+      BACKUP_PREFIX: ${BACKUP_PREFIX:-burger-danlin}
+    volumes:
+      - ${BACKUP_DIR:-./backups}:/backups
+    networks:
+      - data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  restore-postgres:
+    image: postgres:18-alpine
+    profiles:
+      - dr
+    environment:
+      POSTGRES_DB: restore_drill
+      POSTGRES_USER: restore_drill
+      POSTGRES_PASSWORD: restore_drill_only
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U restore_drill -d restore_drill",
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+    networks:
+      - restore
+
+  restore-drill:
+    build:
+      context: .
+      dockerfile: deploy/backup/Dockerfile
+    profiles:
+      - dr
+    depends_on:
+      restore-postgres:
+        condition: service_healthy
+    environment:
+      RESTORE_DATABASE_URL: postgresql://restore_drill:restore_drill_only@restore-postgres:5432/restore_drill
+      BACKUP_FILE: ${BACKUP_FILE:-}
+      BACKUP_AGE_IDENTITY: /run/secrets/backup-age.key
+    volumes:
+      - ${BACKUP_DIR:-./backups}:/backups:ro
+      - ${BACKUP_AGE_IDENTITY_FILE:-/etc/burger-danlin/backup-age.key}:/run/secrets/backup-age.key:ro
+    networks:
+      - restore
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    command:
+      - /opt/backup/restore-drill.sh
+
+volumes:
+  burger_postgres_data:
+
+networks:
+  app:
+  data:
+    internal: true
+  restore:
+    internal: true
