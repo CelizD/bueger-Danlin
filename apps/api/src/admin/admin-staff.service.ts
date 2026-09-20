@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -39,6 +40,10 @@ export class AdminStaffService {
   async create(dto: CreateStaffUserDto, actorUserId: string) {
     const email = dto.email.trim().toLowerCase();
     const name = dto.name.trim();
+
+    if (!name) {
+      throw new BadRequestException("El nombre no puede quedar vacío.");
+    }
 
     const existing = await this.prisma.user.findUnique({
       where: { email },
@@ -125,6 +130,10 @@ export class AdminStaffService {
     const email =
       dto.email !== undefined ? dto.email.trim().toLowerCase() : undefined;
     const name = dto.name !== undefined ? dto.name.trim() : undefined;
+
+    if (dto.name !== undefined && !name) {
+      throw new BadRequestException("El nombre no puede quedar vacío.");
+    }
 
     if (email && email !== target.email) {
       const existing = await this.prisma.user.findUnique({
