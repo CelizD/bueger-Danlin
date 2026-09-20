@@ -344,3 +344,28 @@ Permisos actuales:
 - `DELIVERY`: solo Entrega; puede validar QR y mover `READY` a `DELIVERED`.
 
 Los permisos no dependen del frontend: también están validados por guards en el API.
+
+
+## Dashboard de ventas
+
+Panel:
+
+- `/admin/dashboard`
+
+Solo `ADMIN` puede acceder.
+
+Métricas:
+
+- ingresos de pedidos pagados no cancelados/reembolsados;
+- combos vendidos;
+- Coca-Colas vendidas;
+- ticket promedio;
+- pedidos cancelados;
+- pedidos reembolsados;
+- pedidos `NO_SHOW`;
+- ranking de extras vendidos;
+- ventas agrupadas por sábado.
+
+El dashboard puede filtrarse por un `PickupEvent` específico o mostrar el acumulado de todos los sábados.
+
+Los pedidos `NO_SHOW` siguen contando como venta cuando están pagados y no tienen reembolso, de acuerdo con la regla operativa de no reembolso automático.
