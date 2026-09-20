@@ -648,3 +648,68 @@ Tests críticos iniciales:
   - dos eventos distintos compiten por una sola unidad de inventario y solo uno puede venderla.
 
 Los tests de concurrencia usan registros con identificadores únicos y eliminan sus datos al finalizar.
+
+
+## Seguridad automática del repositorio
+
+El repositorio incluye `.github/workflows/security.yml` y `.github/dependabot.yml`.
+
+### Dependabot
+
+Dependabot revisa:
+
+- dependencias pnpm del monorepo semanalmente;
+- GitHub Actions semanalmente;
+- imágenes de Docker Compose mensualmente.
+
+Las actualizaciones llegan como pull requests para poder pasar por CI antes de entrar a `main`.
+
+### SCA
+
+En cada push/PR hacia `main` se ejecuta:
+
+```bash
+pnpm audit --prod --audit-level=high
+```
+
+El job falla si existe una vulnerabilidad `high` o `critical` conocida en una dependencia de producción.
+
+### Secret scanning
+
+Gitleaks v3 escanea el historial Git completo para detectar secretos, tokens, llaves y credenciales hardcodeadas.
+
+Nunca se debe resolver un hallazgo agregando el secreto a una allowlist solo para que el workflow quede verde. Primero se rota/elimina el secreto y luego, si es realmente un falso positivo, se documenta la excepción.
+
+### SAST
+
+Semgrep OSS `1.177.0` ejecuta análisis estático sobre el repositorio en:
+
+- pull requests;
+- pushes a `main`;
+- ejecución semanal;
+- ejecución manual.
+
+Se usa `--config auto` para seleccionar reglas según los lenguajes detectados. El job falla cuando Semgrep encuentra un hallazgo que debe atenderse.
+
+CodeQL no se usa actualmente porque este repositorio es privado y GitHub Code Security no está habilitado. Si en el futuro se habilita esa licencia, puede añadirse CodeQL como segunda capa de SAST.
+
+### SBOM
+
+En cada push a `main` y ejecución manual se genera un SBOM CycloneDX mediante Anchore/Syft:
+
+```text
+sbom.cdx.json
+```
+
+El SBOM se publica como artefacto del workflow para conocer qué componentes y versiones forman parte del software en ese commit.
+
+### Política
+
+Un cambio no debería considerarse listo para producción mientras estén fallando:
+
+- CI;
+- dependency audit;
+- secret scan;
+- SAST.
+
+El SBOM es informativo y forma parte de la trazabilidad del release.
