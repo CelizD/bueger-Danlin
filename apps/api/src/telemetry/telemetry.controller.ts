@@ -7,6 +7,7 @@ import {
   Logger,
   Post,
 } from "@nestjs/common";
+import { ClientErrorDto } from "./client-error.dto.js";
 import { WebVitalsDto } from "./web-vitals.dto.js";
 
 @Controller("telemetry")
@@ -31,6 +32,25 @@ export class TelemetryController {
         metricId: metric.metricId,
         route: metric.route,
         navigationType: metric.navigationType,
+      }),
+    );
+  }
+
+  @Post("client-error")
+  @HttpCode(204)
+  @Header("Cache-Control", "no-store")
+  recordClientError(
+    @Body() error: ClientErrorDto,
+    @Headers("x-request-id") requestId?: string,
+  ) {
+    this.logger.warn(
+      JSON.stringify({
+        type: "client-error",
+        requestId,
+        kind: error.kind,
+        route: error.route,
+        errorName: error.errorName,
+        digest: error.digest,
       }),
     );
   }
