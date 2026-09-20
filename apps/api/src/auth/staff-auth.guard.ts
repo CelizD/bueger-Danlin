@@ -8,6 +8,7 @@ import { JwtService } from "@nestjs/jwt";
 import { PrismaService } from "../database/prisma.service.js";
 import { STAFF_SESSION_COOKIE } from "./auth.constants.js";
 import type { StaffRequest, StaffSession } from "./auth.types.js";
+import { credentialVersion } from "./credential-version.js";
 
 @Injectable()
 export class StaffAuthGuard implements CanActivate {
@@ -35,10 +36,15 @@ export class StaffAuthGuard implements CanActivate {
           name: true,
           role: true,
           active: true,
+          passwordHash: true,
         },
       });
 
-      if (!user?.active) {
+      if (
+        !user?.active ||
+        !payload.credentialVersion ||
+        payload.credentialVersion !== credentialVersion(user.passwordHash)
+      ) {
         throw new UnauthorizedException();
       }
 
@@ -47,6 +53,7 @@ export class StaffAuthGuard implements CanActivate {
         email: user.email,
         name: user.name,
         role: user.role,
+        credentialVersion: payload.credentialVersion,
         iat: payload.iat,
         exp: payload.exp,
       };
