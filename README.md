@@ -339,7 +339,7 @@ Reglas de seguridad:
 
 Permisos actuales:
 
-- `ADMIN`: Pedidos, Cocina, Entrega, Sábados y Personal.
+- `ADMIN`: Dashboard, Pedidos, Cocina, Entrega, Sábados y Personal.
 - `KITCHEN`: solo Cocina; puede mover pedidos pagados a `PREPARING` y `READY`.
 - `DELIVERY`: solo Entrega; puede validar QR y mover `READY` a `DELIVERED`.
 
