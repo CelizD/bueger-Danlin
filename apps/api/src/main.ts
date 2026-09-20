@@ -3,6 +3,8 @@ import "./config/load-env.js";
 import cookieParser from "cookie-parser";
 import { Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
+import type { NestExpressApplication } from "@nestjs/platform-express";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import helmet from "helmet";
 import { randomUUID } from "node:crypto";
 import { AppModule } from "./app.module.js";
@@ -26,7 +28,7 @@ function allowedOrigins() {
 async function bootstrap() {
   validateProductionEnvironment();
 
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
   });
   const port = Number(process.env.API_PORT ?? 4000);
@@ -34,6 +36,16 @@ async function bootstrap() {
   const isProduction = process.env.NODE_ENV === "production";
   const origins = allowedOrigins();
   const httpLogger = new Logger("HTTP");
+  const jsonBodyLimit = process.env.JSON_BODY_LIMIT ?? "256kb";
+  const urlencodedBodyLimit = process.env.URLENCODED_BODY_LIMIT ?? "64kb";
+  const apiDocsEnabled =
+    process.env.ENABLE_API_DOCS === "true" || !isProduction;
+
+  app.useBodyParser("json", { limit: jsonBodyLimit });
+  app.useBodyParser("urlencoded", {
+    limit: urlencodedBodyLimit,
+    extended: true,
+  });
 
   const expressApp = app.getHttpAdapter().getInstance();
   expressApp.set("trust proxy", isProduction ? 1 : false);
@@ -190,6 +202,47 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  if (apiDocsEnabled) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle("Burger Danlin API")
+      .setDescription(
+        "API REST v1 para pedidos, operación, inventario, personal y administración de Burger Danlin.",
+      )
+      .setVersion("1.0")
+      .addCookieAuth(STAFF_SESSION_COOKIE, {
+        type: "apiKey",
+        in: "cookie",
+      })
+      .addApiKey(
+        {
+          type: "apiKey",
+          in: "header",
+          name: "X-Order-Token",
+          description:
+            "Token opaco del cliente para consultar o cancelar un pedido.",
+        },
+        "order-token",
+      )
+      .addApiKey(
+        {
+          type: "apiKey",
+          in: "header",
+          name: "Idempotency-Key",
+          description:
+            "Clave de idempotencia para operaciones de creación sensibles.",
+        },
+        "idempotency-key",
+      )
+      .build();
+
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+
+    SwaggerModule.setup("docs", app, document, {
+      useGlobalPrefix: true,
+      customSiteTitle: "Burger Danlin API",
+    });
+  }
 
   await app.listen(port);
 }
