@@ -63,6 +63,7 @@ const ROLE_DESCRIPTIONS: Record<
       "Ver todos los pedidos",
       "Operar Cocina y Entrega",
       "Administrar sábados",
+      "Administrar inventario",
       "Crear y administrar personal",
     ],
   },
