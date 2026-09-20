@@ -292,6 +292,10 @@ export class CustomerOrdersService {
         },
       });
 
+      // The order is cancelled immediately even when the external refund is
+      // still pending, so its reserved/committed ingredients must return to
+      // available stock exactly once.
+      await this.inventory.releaseOrder(tx, order.id);
       await this.reopenCapacityIfNeeded(tx, order.pickupEventId, order.pickupEvent);
 
       return {
