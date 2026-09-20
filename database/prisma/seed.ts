@@ -68,7 +68,7 @@ async function main() {
     },
   });
 
-  await prisma.product.upsert({
+  const coke = await prisma.product.upsert({
     where: { slug: "coca-cola-lata" },
     update: {
       name: "Coca-Cola lata",
@@ -223,7 +223,140 @@ async function main() {
     },
   });
 
+  const inventoryDefinitions = [
+    { key: "coca-cola", name: "Coca-Cola", unit: "lata", lowStockThreshold: 10 },
+    { key: "meat", name: "Carne", unit: "porción", lowStockThreshold: 10 },
+    { key: "cheese", name: "Queso", unit: "porción", lowStockThreshold: 10 },
+    { key: "bacon", name: "Tocino", unit: "porción", lowStockThreshold: 10 },
+    { key: "fries", name: "Papas", unit: "porción", lowStockThreshold: 10 },
+  ] as const;
 
+  const inventoryByKey = new Map<string, { id: string }>();
+
+  for (const item of inventoryDefinitions) {
+    const inventoryItem = await prisma.inventoryItem.upsert({
+      where: { key: item.key },
+      update: {
+        name: item.name,
+        unit: item.unit,
+        active: true,
+      },
+      create: {
+        key: item.key,
+        name: item.name,
+        unit: item.unit,
+        stockQuantity: 0,
+        lowStockThreshold: item.lowStockThreshold,
+        active: true,
+      },
+      select: { id: true },
+    });
+
+    inventoryByKey.set(item.key, inventoryItem);
+  }
+
+  const optionKeys = [
+    "included-cheese",
+    "included-bacon",
+    "extra-meat",
+    "extra-cheese",
+    "extra-bacon",
+    "extra-fries",
+  ];
+
+  const inventoryOptions = await prisma.modifierOption.findMany({
+    where: { key: { in: optionKeys } },
+    select: { id: true, key: true },
+  });
+
+  const optionByKey = new Map(
+    inventoryOptions.map((option) => [option.key, option.id]),
+  );
+
+  const usageDefinitions = [
+    {
+      key: "coke-product",
+      inventoryKey: "coca-cola",
+      productId: coke.id,
+      modifierKey: null,
+    },
+    {
+      key: "meat-base",
+      inventoryKey: "meat",
+      productId: combo.id,
+      modifierKey: null,
+    },
+    {
+      key: "fries-base",
+      inventoryKey: "fries",
+      productId: combo.id,
+      modifierKey: null,
+    },
+    {
+      key: "cheese-included",
+      inventoryKey: "cheese",
+      productId: combo.id,
+      modifierKey: "included-cheese",
+    },
+    {
+      key: "bacon-included",
+      inventoryKey: "bacon",
+      productId: combo.id,
+      modifierKey: "included-bacon",
+    },
+    {
+      key: "meat-extra",
+      inventoryKey: "meat",
+      productId: combo.id,
+      modifierKey: "extra-meat",
+    },
+    {
+      key: "cheese-extra",
+      inventoryKey: "cheese",
+      productId: combo.id,
+      modifierKey: "extra-cheese",
+    },
+    {
+      key: "bacon-extra",
+      inventoryKey: "bacon",
+      productId: combo.id,
+      modifierKey: "extra-bacon",
+    },
+    {
+      key: "fries-extra",
+      inventoryKey: "fries",
+      productId: combo.id,
+      modifierKey: "extra-fries",
+    },
+  ] as const;
+
+  for (const usage of usageDefinitions) {
+    const inventoryItemId = inventoryByKey.get(usage.inventoryKey)?.id;
+    const modifierOptionId = usage.modifierKey
+      ? optionByKey.get(usage.modifierKey)
+      : null;
+
+    if (!inventoryItemId || (usage.modifierKey && !modifierOptionId)) {
+      throw new Error(`No se pudo configurar inventario: ${usage.key}`);
+    }
+
+    await prisma.inventoryUsage.upsert({
+      where: { key: usage.key },
+      update: {
+        inventoryItemId,
+        productId: usage.productId,
+        modifierOptionId,
+        quantity: 1,
+      },
+      create: {
+        key: usage.key,
+        inventoryItemId,
+        productId: usage.productId,
+        modifierOptionId,
+        quantity: 1,
+      },
+    });
+  }
 }
 
 main()
