@@ -569,3 +569,16 @@ MFA_ENCRYPTION_KEY=<resultado>
 ```
 
 En producción esta variable es obligatoria y debe mantenerse en el gestor de secretos de la infraestructura.
+
+
+## Health/readiness
+
+Endpoints operativos del API:
+
+- `GET /api/v1/health`: compatibilidad; responde el mismo liveness check.
+- `GET /api/v1/health/live`: confirma que el proceso Nest está vivo.
+- `GET /api/v1/health/ready`: comprueba PostgreSQL mediante `SELECT 1`.
+
+`/health/ready` devuelve HTTP `503` cuando PostgreSQL no está disponible, para que un reverse proxy, monitor o futuro orquestador pueda retirar la instancia del tráfico sin confundir “proceso vivo” con “aplicación lista”.
+
+Los health checks llevan `Cache-Control: no-store` y no consumen la cuota global de rate limiting.
