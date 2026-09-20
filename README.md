@@ -307,3 +307,40 @@ Reglas:
 - cada cancelación/reembolso crea registros en `OrderStatusHistory` y `AuditLog`.
 
 El panel `/admin/pedidos` incluye filtros de cancelados/reembolsados y muestra el historial de estados de cada pedido.
+
+
+## Usuarios del personal
+
+Panel:
+
+- `/admin/personal`
+
+Solo un usuario con rol `ADMIN` puede administrar cuentas del personal.
+
+Funciones:
+
+- crear cuentas `ADMIN`, `KITCHEN` y `DELIVERY`;
+- activar o desactivar cuentas;
+- cambiar el rol de una cuenta;
+- cambiar contraseñas;
+- buscar y filtrar personal;
+- ver una matriz de permisos por rol.
+
+Reglas de seguridad:
+
+- contraseñas con Argon2id;
+- mínimo 12 caracteres para nuevas contraseñas;
+- cada cambio queda registrado en `AuditLog`;
+- un administrador no puede desactivar su propia cuenta;
+- un administrador no puede quitarse a sí mismo el rol `ADMIN`;
+- al desactivar una cuenta, su sesión deja de ser válida en la siguiente petición;
+- un cambio de rol entra en vigor inmediatamente porque el guard consulta el usuario actual en PostgreSQL;
+- un cambio de contraseña invalida los JWT anteriores de esa cuenta mediante una versión derivada de la credencial.
+
+Permisos actuales:
+
+- `ADMIN`: Pedidos, Cocina, Entrega, Sábados y Personal.
+- `KITCHEN`: solo Cocina; puede mover pedidos pagados a `PREPARING` y `READY`.
+- `DELIVERY`: solo Entrega; puede validar QR y mover `READY` a `DELIVERED`.
+
+Los permisos no dependen del frontend: también están validados por guards en el API.
