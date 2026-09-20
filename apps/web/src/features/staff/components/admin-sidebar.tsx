@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  canAccessAdminSection,
+  type AdminSection,
+  type StaffRole,
+} from "@/features/staff/permissions";
 import { API_URL } from "@/lib/api/browser";
 import {
   BarChart3,
@@ -15,17 +20,8 @@ import {
 export type StaffSessionUser = {
   name: string;
   email: string;
-  role: "ADMIN" | "KITCHEN" | "DELIVERY";
+  role: StaffRole;
 };
-
-export type AdminSection =
-  | "dashboard"
-  | "pedidos"
-  | "cocina"
-  | "entrega"
-  | "sabados"
-  | "inventario"
-  | "personal";
 
 type AdminSidebarProps = {
   user: StaffSessionUser | null;
@@ -39,49 +35,42 @@ const navItems = [
     href: "/admin/dashboard",
     label: "Dashboard",
     icon: BarChart3,
-    roles: ["ADMIN"],
   },
   {
     id: "pedidos",
     href: "/admin/pedidos",
     label: "Pedidos",
     icon: ShoppingBag,
-    roles: ["ADMIN"],
   },
   {
     id: "cocina",
     href: "/admin/cocina",
     label: "Cocina",
     icon: ChefHat,
-    roles: ["ADMIN", "KITCHEN"],
   },
   {
     id: "entrega",
     href: "/admin/entrega",
     label: "Entrega",
     icon: Truck,
-    roles: ["ADMIN", "DELIVERY"],
   },
   {
     id: "sabados",
     href: "/admin/sabados",
     label: "Sábados",
     icon: CalendarDays,
-    roles: ["ADMIN"],
   },
   {
     id: "inventario",
     href: "/admin/inventario",
     label: "Inventario",
     icon: Boxes,
-    roles: ["ADMIN"],
   },
   {
     id: "personal",
     href: "/admin/personal",
     label: "Personal",
     icon: Users,
-    roles: ["ADMIN"],
   },
 ] as const;
 
@@ -114,7 +103,10 @@ export function AdminSidebar({
           {navItems.map((item) => {
             if (
               !user ||
-              !(item.roles as readonly string[]).includes(user.role)
+              !canAccessAdminSection(
+                user.role,
+                item.id as AdminSection,
+              )
             ) {
               return null;
             }
