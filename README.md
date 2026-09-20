@@ -746,3 +746,27 @@ Guía completa:
 - `deploy/DR.md`
 
 Importante: el backup local cifrado todavía debe replicarse a almacenamiento independiente/offsite antes del lanzamiento. RPO y RTO permanecen pendientes de aprobación según impacto del negocio.
+
+
+### Backup offsite inmutable
+
+Producción incluye un flujo S3-compatible para una segunda copia fuera del VPS:
+
+- backup PostgreSQL cifrado con `age`;
+- upload del `.dump.age` y `.sha256`;
+- verificación previa de Versioning + Object Lock + retención;
+- verificación de tamaño del objeto remoto;
+- recuperación del backup más reciente desde Object Storage;
+- timer de backup cada hora;
+- restore drill mensual.
+
+La integración está preparada para IONOS Object Storage, pero el bucket y sus credenciales se configuran fuera del repositorio.
+
+Objetivos técnicos iniciales de recuperación:
+
+- RPO <= 1 hora;
+- RTO <= 4 horas.
+
+El RTO todavía requiere un simulacro real de pérdida total del VPS.
+
+Consulta `deploy/OFFSITE_BACKUP.md`, `deploy/DR.md` y `deploy/PRODUCTION.md`.
