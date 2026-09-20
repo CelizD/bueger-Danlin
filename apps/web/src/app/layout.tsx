@@ -2,8 +2,23 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Burger Danlin",
-  description: "Pedidos de hamburguesas para entrega programada.",
+  title: {
+    default: "Burger Danlin",
+    template: "%s | Burger Danlin",
+  },
+  description: "Hamburguesas por pedido con entrega programada.",
+  applicationName: "Burger Danlin",
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_MX",
+    siteName: "Burger Danlin",
+    title: "Burger Danlin",
+    description: "Hamburguesas por pedido con entrega programada.",
+  },
 };
 
 export default function RootLayout({
@@ -11,7 +26,14 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        <a className="skip-link" href="#main-content">
+          Saltar al contenido
+        </a>
+        <div id="main-content" tabIndex={-1}>
+          {children}
+        </div>
+      </body>
     </html>
   );
 }
