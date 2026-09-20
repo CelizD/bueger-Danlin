@@ -38,12 +38,15 @@ RUN apt-get update \
 COPY --from=build --chown=node:node /app/node_modules /app/node_modules
 COPY --from=build --chown=node:node /app/apps/api /app/apps/api
 COPY --from=build --chown=node:node /app/packages /app/packages
+COPY --from=build --chown=node:node /app/database /app/database
+COPY --from=build --chown=node:node /app/prisma.config.ts /app/prisma.config.ts
+COPY --from=build --chown=node:node /app/package.json /app/package.json
 
 USER node
 
 EXPOSE 4000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:4000/api/v1/health/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://127.0.0.1:4000/api/v1/health/ready',{headers:{'x-forwarded-proto':'https'}}).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
 
 CMD ["node", "dist/main.js"]
