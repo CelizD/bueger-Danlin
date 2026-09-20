@@ -66,7 +66,16 @@ export class AuthController {
   @Get("me")
   @UseGuards(StaffAuthGuard)
   me(@Req() request: StaffRequest) {
-    return { user: request.user };
+    const user = request.user!;
+
+    return {
+      user: {
+        sub: user.sub,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+    };
   }
 
   @Post("logout")
