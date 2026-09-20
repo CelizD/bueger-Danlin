@@ -107,45 +107,52 @@ export class InventoryService {
     },
     actorUserId: string,
   ) {
-    const before = await this.prisma.inventoryItem.findUnique({
-      where: { id },
-    });
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRawUnsafe(
+        `SELECT "id" FROM "InventoryItem" WHERE "id" = $1 FOR UPDATE`,
+        id,
+      );
 
-    if (!before) {
-      throw new ConflictException("El artículo de inventario no existe.");
-    }
+      const before = await tx.inventoryItem.findUnique({
+        where: { id },
+      });
 
-    const updated = await this.prisma.inventoryItem.update({
-      where: { id },
-      data,
-    });
+      if (!before) {
+        throw new ConflictException("El artículo de inventario no existe.");
+      }
 
-    await this.prisma.auditLog.create({
-      data: {
-        userId: actorUserId,
-        action: "INVENTORY_ITEM_UPDATED",
-        entityType: "InventoryItem",
-        entityId: id,
-        before: {
-          stockQuantity: before.stockQuantity,
-          lowStockThreshold: before.lowStockThreshold,
-          active: before.active,
+      const updated = await tx.inventoryItem.update({
+        where: { id },
+        data,
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId: actorUserId,
+          action: "INVENTORY_ITEM_UPDATED",
+          entityType: "InventoryItem",
+          entityId: id,
+          before: {
+            stockQuantity: before.stockQuantity,
+            lowStockThreshold: before.lowStockThreshold,
+            active: before.active,
+          },
+          after: {
+            stockQuantity: updated.stockQuantity,
+            lowStockThreshold: updated.lowStockThreshold,
+            active: updated.active,
+          },
         },
-        after: {
-          stockQuantity: updated.stockQuantity,
-          lowStockThreshold: updated.lowStockThreshold,
-          active: updated.active,
-        },
-      },
-    });
+      });
 
-    return {
-      ...updated,
-      lowStock:
-        updated.active &&
-        updated.stockQuantity <= updated.lowStockThreshold,
-      outOfStock: updated.active && updated.stockQuantity <= 0,
-    };
+      return {
+        ...updated,
+        lowStock:
+          updated.active &&
+          updated.stockQuantity <= updated.lowStockThreshold,
+        outOfStock: updated.active && updated.stockQuantity <= 0,
+      };
+    });
   }
 
   async reserveForOrder(
