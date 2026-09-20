@@ -9,7 +9,6 @@ import {
 import { BurgerBuilder } from "@/features/ordering/components/burger-builder";
 import { CustomerFields } from "@/features/ordering/components/customer-fields";
 import { DrinkSelector } from "@/features/ordering/components/drink-selector";
-import { OrderConfirmation } from "@/features/ordering/components/order-confirmation";
 import {
   formatPickup,
   money,
@@ -30,7 +29,24 @@ import type {
   InventoryAvailability,
   PickupEvent,
 } from "@/features/ordering/types";
+import dynamic from "next/dynamic";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+
+const OrderConfirmation = dynamic(
+  () =>
+    import(
+      "@/features/ordering/components/order-confirmation"
+    ).then((module) => module.OrderConfirmation),
+  {
+    loading: () => (
+      <main className="shell">
+        <p className="status-text" role="status" aria-live="polite">
+          Preparando confirmación…
+        </p>
+      </main>
+    ),
+  },
+);
 
 export function OrderApp() {
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
