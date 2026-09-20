@@ -55,6 +55,13 @@ No reutilices `AUTH_JWT_SECRET`, `QR_TOKEN_SECRET` ni `MFA_ENCRYPTION_KEY`.
 
 Para PostgreSQL/Redis usa contraseñas largas que no contengan caracteres que rompan una URL si se construye `DATABASE_URL`; base64url es una opción práctica.
 
+PostgreSQL usa dos identidades distintas:
+
+- `POSTGRES_ADMIN_USER`: propietario/administrador de la base. Solo bootstrap, migraciones y backups.
+- `POSTGRES_RUNTIME_USER`: rol de la API. No es superusuario, no puede crear roles/bases ni crear objetos en el esquema; recibe únicamente permisos DML sobre las tablas de la aplicación.
+
+Las contraseñas de ambos roles deben ser distintas. La API solo recibe las variables `POSTGRES_RUNTIME_*`.
+
 ## 3. Clave de backup age
 
 Construye primero la utilidad:
@@ -126,9 +133,18 @@ docker compose \
 
 No deben existir bindings públicos `0.0.0.0:5432` ni `0.0.0.0:6379`.
 
-## 7. Migraciones
+## 7. Crear/verificar el rol runtime y ejecutar migraciones
 
-Antes de levantar una nueva versión del API:
+El bootstrap es idempotente: crea el rol runtime si no existe, fuerza atributos no administrativos y aplica los permisos mínimos actuales/default.
+
+```bash
+docker compose \
+  --env-file /etc/burger-danlin/production.env \
+  -f docker-compose.prod.yml \
+  run --rm db-bootstrap
+```
+
+Después ejecuta las migraciones con el rol administrativo:
 
 ```bash
 docker compose \
