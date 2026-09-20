@@ -14,3 +14,11 @@ export type StaffRequest = {
   cookies?: Record<string, string | undefined>;
   user?: StaffSession;
 };
+
+export type MfaChallenge = {
+  sub: string;
+  purpose: "staff-mfa";
+  credentialVersion: string;
+  iat?: number;
+  exp?: number;
+};
