@@ -1,6 +1,6 @@
 "use client";
 
-import { API_URL } from "@/lib/api/browser";
+import { API_URL, apiFetch } from "@/lib/api/browser";
 import {
   ArrowRight,
   Check,
@@ -55,7 +55,7 @@ export default function AdminLoginPage() {
   useEffect(() => {
     async function checkSession() {
       try {
-        const response = await fetch(
+        const response = await apiFetch(
           `${API_URL}/auth/me`,
           {
             credentials: "include",
@@ -78,7 +78,7 @@ export default function AdminLoginPage() {
   }, []);
 
   async function loadMfaSetup() {
-    const response = await fetch(
+    const response = await apiFetch(
       `${API_URL}/auth/mfa/setup`,
       {
         credentials: "include",
@@ -111,7 +111,7 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${API_URL}/auth/login`,
         {
           method: "POST",
@@ -173,7 +173,7 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${API_URL}/auth/mfa/verify`,
         {
           method: "POST",
