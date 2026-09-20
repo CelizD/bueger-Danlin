@@ -162,4 +162,77 @@ if [ "${owned_objects:-0}" -ne 0 ]; then
   exit 1
 fi
 
-echo "PostgreSQL runtime role configured with least-privilege DML access."
+role_violations="$(
+  psql \
+    --host=postgres \
+    --port=5432 \
+    --username="$POSTGRES_ADMIN_USER" \
+    --dbname="$POSTGRES_DB" \
+    --tuples-only \
+    --no-align \
+    --set=ON_ERROR_STOP=1 \
+    --set=runtime_user="$POSTGRES_RUNTIME_USER" \
+    --command="
+      SELECT count(*)
+      FROM pg_roles
+      WHERE rolname = :'runtime_user'
+        AND (
+          rolsuper
+          OR rolcreatedb
+          OR rolcreaterole
+          OR rolreplication
+          OR rolbypassrls
+          OR NOT rolcanlogin
+        );
+    "
+)"
+
+if [ "${role_violations:-1}" -ne 0 ]; then
+  echo "FAIL: runtime role still has forbidden PostgreSQL attributes" >&2
+  exit 1
+fi
+
+membership_count="$(
+  psql \
+    --host=postgres \
+    --port=5432 \
+    --username="$POSTGRES_ADMIN_USER" \
+    --dbname="$POSTGRES_DB" \
+    --tuples-only \
+    --no-align \
+    --set=ON_ERROR_STOP=1 \
+    --set=runtime_user="$POSTGRES_RUNTIME_USER" \
+    --command="
+      SELECT count(*)
+      FROM pg_auth_members membership
+      JOIN pg_roles member ON member.oid = membership.member
+      WHERE member.rolname = :'runtime_user';
+    "
+)"
+
+if [ "${membership_count:-1}" -ne 0 ]; then
+  echo "FAIL: runtime role still inherits another PostgreSQL role" >&2
+  exit 1
+fi
+
+schema_create="$(
+  psql \
+    --host=postgres \
+    --port=5432 \
+    --username="$POSTGRES_ADMIN_USER" \
+    --dbname="$POSTGRES_DB" \
+    --tuples-only \
+    --no-align \
+    --set=ON_ERROR_STOP=1 \
+    --set=runtime_user="$POSTGRES_RUNTIME_USER" \
+    --command="
+      SELECT has_schema_privilege(:'runtime_user', 'public', 'CREATE');
+    "
+)"
+
+if [ "${schema_create}" != "f" ]; then
+  echo "FAIL: runtime role can still CREATE objects in schema public" >&2
+  exit 1
+fi
+
+echo "PostgreSQL runtime role verified: login-only, no admin attributes, no inherited roles, no object ownership, DML-only schema access."
