@@ -9,13 +9,16 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
-import { AdminGuard } from "../auth/admin.guard.js";
+
+import { ApiCookieAuth, ApiTags } from "@nestjs/swagger";import { AdminGuard } from "../auth/admin.guard.js";
 import { StaffAuthGuard } from "../auth/staff-auth.guard.js";
 import type { StaffRequest } from "../auth/auth.types.js";
 import { InventoryService } from "../inventory/inventory.service.js";
 import { CreateInventoryItemDto } from "./dto/create-inventory-item.dto.js";
 import { UpdateInventoryItemDto } from "./dto/update-inventory-item.dto.js";
 
+@ApiTags("Admin inventory")
+@ApiCookieAuth("burger_staff_session")
 @Controller("admin/inventory")
 @UseGuards(StaffAuthGuard, AdminGuard)
 export class AdminInventoryController {
