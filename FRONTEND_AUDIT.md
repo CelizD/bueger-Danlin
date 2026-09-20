@@ -30,7 +30,7 @@ Evolucionar el frontend actual sin sobrearquitectura. Burger Danlin sigue siendo
 | Rutas privadas indexables | ✅ | admin y pedido tienen noindex/nofollow + robots disallow |
 | Core Web Vitals | 🟡 | arquitectura Next ayuda, pero todavía no existe RUM |
 | Lighthouse/bundle budgets | 🔴 | pendiente |
-| Testing frontend real | 🟡 | Vitest activado con pruebas de reglas de pedidos, helpers y matriz de roles; faltan componentes/E2E |
+| Testing frontend real | 🟡 | Vitest cubre reglas y render de componentes críticos; faltan Testing Library/E2E/axe |
 | E2E | 🔴 | pendiente Playwright |
 | Accessibility automation | 🔴 | pendiente axe |
 | Storybook | 🔴 | pendiente cuando se formalice design system |
@@ -122,7 +122,12 @@ Implementado:
 - tests de payload QR sin PII;
 - tests de almacenamiento session-scoped por pedido;
 - tests de normalización de errores API;
-- tests de matriz de navegación ADMIN/KITCHEN/DELIVERY.
+- tests de matriz de navegación ADMIN/KITCHEN/DELIVERY;
+- render tests reales de campos del cliente;
+- render tests de bebida agotada;
+- render tests de ingredientes/extras agotados;
+- render tests del sidebar por rol;
+- Vitest configurado con alias `@/`.
 
 Siguiente subfase:
 
