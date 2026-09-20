@@ -1,5 +1,6 @@
 "use client";
 
+import { API_URL } from "@/lib/api/browser";
 import {
   ArrowLeft,
   CalendarDays,
@@ -12,9 +13,6 @@ import {
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
 
 type CustomerOrder = {
   orderCode: string;
