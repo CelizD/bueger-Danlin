@@ -1,112 +1,27 @@
 "use client";
 
-import { API_URL } from "@/lib/api/browser";
+import {
+  cancelOrder,
+  confirmMockOrderPayment,
+  createOrder,
+  loadOrderingData,
+} from "@/features/ordering/api";
+import {
+  formatPickup,
+  money,
+  newBurger,
+  orderTokenStorageKey,
+  pickupQrPayload,
+} from "@/features/ordering/formatters";
+import type {
+  BurgerSelection,
+  CatalogProduct,
+  CreatedOrder,
+  InventoryAvailability,
+  PickupEvent,
+} from "@/features/ordering/types";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-
-type ModifierOption = {
-  id: string;
-  name: string;
-  kind: "REMOVABLE" | "EXTRA" | "ADD_ON";
-  priceDeltaCents: number;
-  defaultSelected: boolean;
-};
-
-type CatalogProduct = {
-  id: string;
-  slug: string;
-  name: string;
-  description: string | null;
-  type: "COMBO" | "BEVERAGE" | "ADD_ON";
-  priceCents: number;
-  modifierGroups: Array<{
-    modifierGroup: {
-      id: string;
-      name: string;
-      active: boolean;
-      options: ModifierOption[];
-    };
-  }>;
-};
-
-type PickupEvent = {
-  id: string;
-  code: string;
-  name: string;
-  locationLabel: string;
-  timezone: string;
-  startsAt: string;
-  closesAt: string;
-  maxCombos: number;
-  reservedCombos: number;
-  remainingCombos: number;
-  status: "OPEN" | "SOLD_OUT";
-};
-
-type InventoryAvailability = {
-  items: Array<{
-    key: string;
-    name: string;
-    unit: string;
-    available: number;
-    lowStock: boolean;
-    outOfStock: boolean;
-  }>;
-  productLimits: Record<string, number>;
-  modifierLimits: Record<string, number>;
-};
-
-type BurgerSelection = {
-  localId: string;
-  removedIds: string[];
-  extraIds: string[];
-};
-
-type CreatedOrder = {
-  orderCode: string;
-  status: string;
-  paymentStatus: string;
-  currency: string;
-  totalCents: number;
-  comboQuantity: number;
-  reservationExpiresAt: string;
-  verificationToken: string;
-  pickup: {
-    locationLabel: string;
-    startsAt: string;
-    closesAt: string;
-    timezone: string;
-  };
-};
-
-const money = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "MXN",
-  maximumFractionDigits: 0,
-});
-
-function formatPickup(event: PickupEvent) {
-  return new Intl.DateTimeFormat("es-MX", {
-    timeZone: event.timezone,
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(event.startsAt));
-}
-
-function pickupQrPayload(order: CreatedOrder) {
-  return `BD1:${order.orderCode}:${order.verificationToken}`;
-}
-
-function newBurger(removedIds: string[] = []): BurgerSelection {
-  return {
-    localId: crypto.randomUUID(),
-    removedIds,
-    extraIds: [],
-  };
-}
 
 export function OrderApp() {
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
@@ -130,29 +45,12 @@ export function OrderApp() {
 
     async function load() {
       try {
-        const [catalogResponse, eventResponse, inventoryResponse] =
-          await Promise.all([
-            fetch(`${API_URL}/catalog`, { cache: "no-store" }),
-            fetch(`${API_URL}/pickup-events/current`, { cache: "no-store" }),
-            fetch(`${API_URL}/inventory/availability`, { cache: "no-store" }),
-          ]);
+        const {
+          catalog: catalogData,
+          event: eventData,
+          inventory: inventoryData,
+        } = await loadOrderingData();
 
-        if (!catalogResponse.ok || !inventoryResponse.ok) {
-          throw new Error("No se pudo cargar el menú.");
-        }
-
-        if (!eventResponse.ok && eventResponse.status !== 404) {
-          throw new Error("No se pudo consultar la fecha de entrega.");
-        }
-
-        const catalogData =
-          (await catalogResponse.json()) as CatalogProduct[];
-        const eventData =
-          eventResponse.status === 404
-            ? null
-            : ((await eventResponse.json()) as PickupEvent);
-        const inventoryData =
-          (await inventoryResponse.json()) as InventoryAvailability;
         const comboData = catalogData.find(
           (product) => product.type === "COMBO",
         );
@@ -166,7 +64,8 @@ export function OrderApp() {
             )
             .map((option) => option.id) ?? [];
         const comboInventoryLimit = comboData
-          ? (inventoryData.productLimits[comboData.id] ?? Number.MAX_SAFE_INTEGER)
+          ? (inventoryData.productLimits[comboData.id] ??
+            Number.MAX_SAFE_INTEGER)
           : 0;
 
         if (!cancelled) {
@@ -370,36 +269,19 @@ export function OrderApp() {
         });
       }
 
-      const response = await fetch(`${API_URL}/orders`, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "idempotency-key": crypto.randomUUID(),
+      const orderData = await createOrder({
+        pickupEventId: event.id,
+        customer: {
+          name: name.trim(),
+          phone: `+52${cleanPhone}`,
+          email: email.trim() || undefined,
         },
-        body: JSON.stringify({
-          pickupEventId: event.id,
-          customer: {
-            name: name.trim(),
-            phone: `+52${cleanPhone}`,
-            email: email.trim() || undefined,
-          },
-          items,
-        }),
+        items,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        const message = Array.isArray(data.message)
-          ? data.message.join(" ")
-          : data.message;
-        throw new Error(message || "No se pudo crear el pedido.");
-      }
-
-      const orderData = data as CreatedOrder;
       setCreatedOrder(orderData);
       window.sessionStorage.setItem(
-        `burger-danlin:order-token:${orderData.orderCode}`,
+        orderTokenStorageKey(orderData.orderCode),
         orderData.verificationToken,
       );
     } catch (submitError) {
@@ -429,24 +311,10 @@ export function OrderApp() {
     setCancelMessage("");
 
     try {
-      const response = await fetch(
-        `${API_URL}/orders/${encodeURIComponent(createdOrder.orderCode)}/cancel`,
-        {
-          method: "POST",
-          headers: {
-            "x-order-token": createdOrder.verificationToken,
-          },
-        },
+      const data = await cancelOrder(
+        createdOrder.orderCode,
+        createdOrder.verificationToken,
       );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        const message = Array.isArray(data.message)
-          ? data.message.join(" ")
-          : data.message;
-        throw new Error(message || "No se pudo cancelar el pedido.");
-      }
 
       setCreatedOrder((current) =>
         current
@@ -483,21 +351,10 @@ export function OrderApp() {
     setError("");
 
     try {
-      const response = await fetch(
-        `${API_URL}/payments/mock/${createdOrder.orderCode}/confirm`,
-        {
-          method: "POST",
-          headers: {
-            "x-order-token": createdOrder.verificationToken,
-          },
-        },
+      const data = await confirmMockOrderPayment(
+        createdOrder.orderCode,
+        createdOrder.verificationToken,
       );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "No se pudo confirmar el pago local.");
-      }
 
       setCreatedOrder((current) =>
         current
