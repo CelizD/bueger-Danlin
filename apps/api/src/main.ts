@@ -140,7 +140,7 @@ async function bootstrap() {
     );
     const browserStaffMutation =
       hasStaffCookie ||
-      /\/(auth\/(login|logout)|admin\/|staff\/)/.test(path);
+      /\/(auth\/(login|logout|mfa\/)|admin\/|staff\/)/.test(path);
 
     if (!browserStaffMutation) {
       next();
