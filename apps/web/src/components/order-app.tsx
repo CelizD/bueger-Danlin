@@ -660,7 +660,7 @@ export function OrderApp() {
         </div>
         {event && (
           <span className="availability">
-            {event.remainingCombos} de {event.maxCombos} disponibles
+            {maxCombosAvailable} de {event.maxCombos} disponibles
           </span>
         )}
       </header>
@@ -749,6 +749,7 @@ export function OrderApp() {
                             <input
                               type="checkbox"
                               checked={included}
+                              disabled={inventory?.modifierLimits[option.id] === 0}
                               onChange={() => toggleRemoved(burger.localId, option.id)}
                             />
                             <span>
