@@ -1,0 +1,11 @@
+[Unit]
+Description=Schedule Burger Danlin encrypted PostgreSQL backups
+
+[Timer]
+OnCalendar=*-*-* 00,06,12,18:17:00
+Persistent=true
+RandomizedDelaySec=5m
+Unit=burger-danlin-backup.service
+
+[Install]
+WantedBy=timers.target
