@@ -68,6 +68,7 @@ const ROLE_DESCRIPTIONS: Record<
       "Administrar sábados",
       "Administrar inventario",
       "Crear y administrar personal",
+      "MFA obligatorio para administradores",
     ],
   },
   KITCHEN: {
