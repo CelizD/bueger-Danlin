@@ -406,3 +406,26 @@ El panel permite cambiar el stock disponible, el umbral de stock bajo y activar/
 La página del cliente consulta `/inventory/availability` para limitar combos, Coca-Colas y extras antes del checkout. El backend vuelve a validar dentro de la transacción, por lo que la protección no depende del frontend.
 
 Después de aplicar la migración por primera vez, ejecuta el seed para crear las cinco definiciones y sus reglas de consumo. El seed crea el stock inicial en 0 y en ejecuciones posteriores no sobrescribe las cantidades que hayas configurado desde el panel.
+
+
+### CRUD de inventario
+
+El panel `/admin/inventario` permite:
+
+- crear artículos;
+- editar nombre y unidad;
+- cambiar stock disponible;
+- cambiar umbral de stock bajo;
+- activar/desactivar control;
+- eliminar artículos cuando no estén vinculados a ventas ni tengan historial.
+
+Los artículos base de Burger Danlin están vinculados a reglas de consumo, por lo que no se eliminan físicamente; se desactivan si dejan de usarse. Los artículos nuevos creados manualmente comienzan como inventario general y pueden eliminarse mientras no tengan movimientos o reglas asociadas.
+
+Endpoints administrativos:
+
+- `GET /admin/inventory`
+- `POST /admin/inventory`
+- `PATCH /admin/inventory/:id`
+- `DELETE /admin/inventory/:id`
+
+Todos requieren rol `ADMIN` y los cambios se registran en `AuditLog`.
