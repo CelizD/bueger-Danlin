@@ -5,6 +5,7 @@ export type StaffSession = {
   email: string;
   name: string;
   role: StaffRole;
+  credentialVersion: string;
   iat?: number;
   exp?: number;
 };
