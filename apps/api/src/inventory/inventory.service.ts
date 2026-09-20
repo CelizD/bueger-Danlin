@@ -188,6 +188,8 @@ export class InventoryService {
   async updateItem(
     id: string,
     data: {
+      name?: string;
+      unit?: string;
       stockQuantity?: number;
       lowStockThreshold?: number;
       active?: boolean;
