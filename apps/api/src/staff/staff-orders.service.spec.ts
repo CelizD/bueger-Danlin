@@ -45,8 +45,13 @@ function order(overrides: Record<string, unknown> = {}) {
 }
 
 function harness(currentOrder: ReturnType<typeof order>) {
+  const {
+    verificationTokenHash: _verificationTokenHash,
+    ...safeCurrentOrder
+  } = currentOrder;
+
   const updatedOrder = {
-    ...currentOrder,
+    ...safeCurrentOrder,
     status: "DELIVERED",
     deliveredAt: new Date(),
   };
