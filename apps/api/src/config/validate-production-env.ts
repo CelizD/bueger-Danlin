@@ -22,10 +22,19 @@ function requireStrongSecret(name: string, minLength: number) {
 export function validateProductionEnvironment() {
   if (process.env.NODE_ENV !== "production") return;
 
-  const appOrigin = process.env.APP_ORIGIN?.trim();
+  const appOrigins =
+    process.env.APP_ORIGIN
+      ?.split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean) ?? [];
 
-  if (!appOrigin || !appOrigin.startsWith("https://")) {
-    throw new Error("APP_ORIGIN is required in production and must use HTTPS");
+  if (
+    appOrigins.length === 0 ||
+    appOrigins.some((origin) => !origin.startsWith("https://"))
+  ) {
+    throw new Error(
+      "APP_ORIGIN is required in production and every origin must use HTTPS",
+    );
   }
 
   const authSecret = requireStrongSecret("AUTH_JWT_SECRET", 48);
