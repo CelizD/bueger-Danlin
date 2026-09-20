@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminSidebar } from "@/features/staff/components/admin-sidebar";
 import { API_URL } from "@/lib/api/browser";
 import {
   AlertTriangle,
@@ -380,58 +381,11 @@ export default function InventoryPage() {
 
   return (
     <main className="admin-page">
-      <aside className="admin-sidebar">
-        <div>
-          <div className="admin-sidebar-brand">
-            <div className="admin-sidebar-mark">BD</div>
-            <div>
-              <strong>Burger Danlin</strong>
-              <span>Operaciones</span>
-            </div>
-          </div>
-
-          <nav className="admin-nav">
-            <a href="/admin/dashboard">
-              <BarChart3 size={18} strokeWidth={1.8} />
-              Dashboard
-            </a>
-            <a href="/admin/pedidos">
-              <ShoppingBag size={18} strokeWidth={1.8} />
-              Pedidos
-            </a>
-            <a href="/admin/cocina">
-              <ChefHat size={18} strokeWidth={1.8} />
-              Cocina
-            </a>
-            <a href="/admin/entrega">
-              <Truck size={18} strokeWidth={1.8} />
-              Entrega
-            </a>
-            <a href="/admin/sabados">
-              <CalendarDays size={18} strokeWidth={1.8} />
-              Sábados
-            </a>
-            <a className="active" href="/admin/inventario">
-              <Boxes size={18} strokeWidth={1.8} />
-              Inventario
-            </a>
-            <a href="/admin/personal">
-              <Users size={18} strokeWidth={1.8} />
-              Personal
-            </a>
-          </nav>
-        </div>
-
-        <div className="admin-sidebar-user">
-          <div>
-            <strong>{user?.name}</strong>
-            <span>{user?.email}</span>
-          </div>
-          <button type="button" onClick={logout} aria-label="Cerrar sesión">
-            <LogOut size={18} />
-          </button>
-        </div>
-      </aside>
+      <AdminSidebar
+        user={user}
+        active="inventario"
+        subtitle="Operaciones"
+      />
 
       <section className="admin-content inventory-content">
         <header className="admin-content-header">
