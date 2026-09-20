@@ -63,6 +63,18 @@ SELECT format(
 ) \gexec
 
 SELECT format(
+  'REVOKE %I FROM %I',
+  parent.rolname,
+  member.rolname
+)
+FROM pg_auth_members membership
+JOIN pg_roles parent ON parent.oid = membership.roleid
+JOIN pg_roles member ON member.oid = membership.member
+WHERE member.rolname = :'runtime_user' \gexec
+
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+
+SELECT format(
   'REVOKE ALL PRIVILEGES ON DATABASE %I FROM %I',
   current_database(),
   :'runtime_user'
@@ -116,5 +128,38 @@ SELECT format(
   :'runtime_user'
 ) \gexec
 SQL
+
+owned_objects="$(
+  psql \
+    --host=postgres \
+    --port=5432 \
+    --username="$POSTGRES_ADMIN_USER" \
+    --dbname="$POSTGRES_DB" \
+    --tuples-only \
+    --no-align \
+    --set=ON_ERROR_STOP=1 \
+    --set=runtime_user="$POSTGRES_RUNTIME_USER" \
+    --command="
+      SELECT
+        (SELECT count(*) FROM pg_database
+          WHERE datname = current_database()
+            AND pg_get_userbyid(datdba) = :'runtime_user')
+        +
+        (SELECT count(*) FROM pg_namespace
+          WHERE nspname = 'public'
+            AND pg_get_userbyid(nspowner) = :'runtime_user')
+        +
+        (SELECT count(*) FROM pg_class
+          WHERE relnamespace = 'public'::regnamespace
+            AND relkind IN ('r','p','S','v','m','f')
+            AND pg_get_userbyid(relowner) = :'runtime_user');
+    "
+)"
+
+if [ "${owned_objects:-0}" -ne 0 ]; then
+  echo "FAIL: runtime role still owns database/schema objects; reassign ownership to the admin role before starting the API" >&2
+  echo "See deploy/postgres/MIGRATE_EXISTING_VOLUME.md" >&2
+  exit 1
+fi
 
 echo "PostgreSQL runtime role configured with least-privilege DML access."

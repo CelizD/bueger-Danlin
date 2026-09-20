@@ -62,6 +62,8 @@ PostgreSQL usa dos identidades distintas:
 
 Las contraseñas de ambos roles deben ser distintas. La API solo recibe las variables `POSTGRES_RUNTIME_*`.
 
+Si ya existe un volumen creado con el esquema anterior de un solo superusuario, sigue `deploy/postgres/MIGRATE_EXISTING_VOLUME.md` antes de arrancar la nueva configuración. El bootstrap rechaza de forma segura un runtime que todavía sea propietario de la base, esquema o tablas.
+
 ## 3. Clave de backup age
 
 Construye primero la utilidad:
