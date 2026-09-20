@@ -11,6 +11,7 @@ import { OrdersModule } from "./orders/orders.module.js";
 import { PaymentsModule } from "./payments/payments.module.js";
 import { PickupEventsModule } from "./pickup-events/pickup-events.module.js";
 import { StaffModule } from "./staff/staff.module.js";
+import { TelemetryController } from "./telemetry/telemetry.controller.js";
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { StaffModule } from "./staff/staff.module.js";
       },
     ]),
   ],
-  controllers: [HealthController],
+  controllers: [HealthController, TelemetryController],
   providers: [
     {
       provide: APP_GUARD,
