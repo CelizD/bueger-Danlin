@@ -18,7 +18,8 @@
     "infra:down": "docker compose down",
     "db:seed": "prisma db seed",
     "db:migrate:deploy": "prisma migrate deploy",
-    "ci": "pnpm lint && pnpm test && pnpm build"
+    "ci": "pnpm lint && pnpm test && pnpm build",
+    "bundle:report": "pnpm --filter @burger/web bundle:report"
   },
   "devDependencies": {
     "dotenv": "^17.2.2",
