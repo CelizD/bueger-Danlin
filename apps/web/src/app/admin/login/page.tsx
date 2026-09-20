@@ -244,7 +244,7 @@ export default function AdminLoginPage() {
   if (checking) {
     return (
       <main className="admin-login-shell">
-        <div className="admin-login-loading">
+        <div className="admin-login-loading" role="status" aria-live="polite">
           Verificando sesión…
         </div>
       </main>
@@ -297,7 +297,7 @@ export default function AdminLoginPage() {
               </div>
 
               {error && (
-                <div className="admin-login-error">
+                <div className="admin-login-error" role="alert" aria-live="assertive">
                   {error}
                 </div>
               )}
@@ -381,7 +381,7 @@ export default function AdminLoginPage() {
               </div>
 
               {error && (
-                <div className="admin-login-error">
+                <div className="admin-login-error" role="alert" aria-live="assertive">
                   {error}
                 </div>
               )}
@@ -464,7 +464,7 @@ export default function AdminLoginPage() {
               </div>
 
               {error && (
-                <div className="admin-login-error">
+                <div className="admin-login-error" role="alert" aria-live="assertive">
                   {error}
                 </div>
               )}
@@ -536,7 +536,7 @@ export default function AdminLoginPage() {
               </div>
 
               {error && (
-                <div className="admin-login-error">
+                <div className="admin-login-error" role="alert" aria-live="assertive">
                   {error}
                 </div>
               )}
