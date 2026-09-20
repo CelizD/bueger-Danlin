@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BarChart3,
   CalendarDays,
   ChevronDown,
   ChefHat,
@@ -221,6 +222,10 @@ export default function AdminOrdersPage() {
           </div>
 
           <nav className="admin-nav">
+            <a href="/admin/dashboard">
+              <BarChart3 size={18} strokeWidth={1.8} />
+              Dashboard
+            </a>
             <a className="active" href="/admin/pedidos">
               <ShoppingBag size={18} strokeWidth={1.8} />
               Pedidos
