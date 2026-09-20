@@ -8,13 +8,16 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
-import { AdminGuard } from "../auth/admin.guard.js";
+
+import { ApiCookieAuth, ApiTags } from "@nestjs/swagger";import { AdminGuard } from "../auth/admin.guard.js";
 import { StaffAuthGuard } from "../auth/staff-auth.guard.js";
 import type { StaffRequest } from "../auth/auth.types.js";
 import { AdminPickupEventsService } from "./admin-pickup-events.service.js";
 import { CreatePickupEventDto } from "./dto/create-pickup-event.dto.js";
 import { UpdatePickupEventDto } from "./dto/update-pickup-event.dto.js";
 
+@ApiTags("Admin pickup events")
+@ApiCookieAuth("burger_staff_session")
 @Controller("admin/pickup-events")
 @UseGuards(StaffAuthGuard, AdminGuard)
 export class AdminPickupEventsController {
