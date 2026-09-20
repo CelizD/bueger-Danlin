@@ -188,12 +188,14 @@ services:
     profiles:
       - ops
     environment:
-      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?S3_ACCESS_KEY_ID is required}
-      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?S3_SECRET_ACCESS_KEY is required}
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
       AWS_DEFAULT_REGION: ${S3_REGION:-de}
       AWS_EC2_METADATA_DISABLED: "true"
-      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:?S3_ENDPOINT_URL is required}
-      S3_BUCKET: ${S3_BUCKET:?S3_BUCKET is required}
+      AWS_PAGER: ""
+      AWS_CLI_AUTO_PROMPT: "off"
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-}
+      S3_BUCKET: ${S3_BUCKET:-}
       S3_PREFIX: ${S3_PREFIX:-burger-danlin/postgres}
       BACKUP_PREFIX: ${BACKUP_PREFIX:-burger-danlin}
     volumes:
@@ -215,12 +217,14 @@ services:
     profiles:
       - dr
     environment:
-      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?S3_ACCESS_KEY_ID is required}
-      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?S3_SECRET_ACCESS_KEY is required}
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
       AWS_DEFAULT_REGION: ${S3_REGION:-de}
       AWS_EC2_METADATA_DISABLED: "true"
-      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:?S3_ENDPOINT_URL is required}
-      S3_BUCKET: ${S3_BUCKET:?S3_BUCKET is required}
+      AWS_PAGER: ""
+      AWS_CLI_AUTO_PROMPT: "off"
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-}
+      S3_BUCKET: ${S3_BUCKET:-}
       S3_PREFIX: ${S3_PREFIX:-burger-danlin/postgres}
       BACKUP_PREFIX: ${BACKUP_PREFIX:-burger-danlin}
       OFFSITE_BACKUP_KEY: ${OFFSITE_BACKUP_KEY:-}
