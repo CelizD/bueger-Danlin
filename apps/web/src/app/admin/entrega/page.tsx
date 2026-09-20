@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Boxes,
   BarChart3,
   CalendarDays,
   Camera,
@@ -339,6 +340,12 @@ export default function DeliveryPage() {
               <a href="/admin/sabados">
                 <CalendarDays size={18} strokeWidth={1.8} />
                 Sábados
+              </a>
+            )}
+            {user?.role === "ADMIN" && (
+              <a href="/admin/inventario">
+                <Boxes size={18} strokeWidth={1.8} />
+                Inventario
               </a>
             )}
             {user?.role === "ADMIN" && (
