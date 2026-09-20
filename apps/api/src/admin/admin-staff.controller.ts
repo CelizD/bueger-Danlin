@@ -9,7 +9,8 @@ import {
   UseGuards,
 } from "@nestjs/common";
 
-import { ApiCookieAuth, ApiTags } from "@nestjs/swagger";import { AdminGuard } from "../auth/admin.guard.js";
+import { ApiCookieAuth, ApiTags } from "@nestjs/swagger";
+import { AdminGuard } from "../auth/admin.guard.js";
 import { StaffAuthGuard } from "../auth/staff-auth.guard.js";
 import type { StaffRequest } from "../auth/auth.types.js";
 import { AdminStaffService } from "./admin-staff.service.js";
