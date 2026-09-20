@@ -19,7 +19,7 @@ COPY database database
 
 RUN pnpm install --frozen-lockfile
 
-RUN pnpm db:generate \
+RUN DATABASE_URL="postgresql://prisma_build:prisma_build@127.0.0.1:5432/prisma_build?schema=public" pnpm db:generate \
   && pnpm --filter @burger/types build \
   && pnpm --filter @burger/api build
 
