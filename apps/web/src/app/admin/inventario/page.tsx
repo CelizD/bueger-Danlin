@@ -1,5 +1,6 @@
 "use client";
 
+import { API_URL } from "@/lib/api/browser";
 import {
   AlertTriangle,
   BarChart3,
@@ -21,9 +22,6 @@ import {
   X,
 } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
 
 type StaffUser = {
   sub: string;
