@@ -213,7 +213,11 @@ export class AdminStaffService {
 
     await this.prisma.user.update({
       where: { id },
-      data: { passwordHash },
+      data: {
+        passwordHash,
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+      },
     });
 
     await this.prisma.auditLog.create({
