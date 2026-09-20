@@ -25,7 +25,7 @@ type CookieResponse = {
     options: {
       httpOnly: boolean;
       secure: boolean;
-      sameSite: "lax";
+      sameSite: "lax" | "strict";
       maxAge: number;
       path: string;
     },
@@ -35,7 +35,7 @@ type CookieResponse = {
     options: {
       httpOnly: boolean;
       secure: boolean;
-      sameSite: "lax";
+      sameSite: "lax" | "strict";
       path: string;
     },
   ) => void;
@@ -63,7 +63,7 @@ export class AuthController {
     response.cookie(STAFF_SESSION_COOKIE, result.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       maxAge: STAFF_SESSION_SECONDS * 1000,
       path: "/",
     });
@@ -93,7 +93,7 @@ export class AuthController {
     response.clearCookie(STAFF_SESSION_COOKIE, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       path: "/",
     });
   }
