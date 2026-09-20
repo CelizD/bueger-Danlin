@@ -9,8 +9,8 @@ import {
 } from "class-validator";
 
 export class WebVitalsDto {
-  @IsIn(["CLS", "FCP", "INP", "LCP", "TTFB"])
-  name!: "CLS" | "FCP" | "INP" | "LCP" | "TTFB";
+  @IsIn(["CLS", "FCP", "FID", "INP", "LCP", "TTFB"])
+  name!: "CLS" | "FCP" | "FID" | "INP" | "LCP" | "TTFB";
 
   @IsNumber()
   @Min(0)
