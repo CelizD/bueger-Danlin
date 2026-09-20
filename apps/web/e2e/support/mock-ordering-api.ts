@@ -1,7 +1,7 @@
 import type { Page, Route } from "@playwright/test";
 
 const corsHeaders = {
-  "access-control-allow-origin": "http://127.0.0.1:3100",
+  "access-control-allow-origin": "http://localhost:3100",
   "access-control-allow-credentials": "true",
   "access-control-allow-methods": "GET,POST,PATCH,OPTIONS",
   "access-control-allow-headers":
