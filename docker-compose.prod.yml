@@ -183,6 +183,58 @@ services:
     cap_drop:
       - ALL
 
+  offsite-upload:
+    image: burger-danlin-backup:local
+    profiles:
+      - ops
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?S3_ACCESS_KEY_ID is required}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?S3_SECRET_ACCESS_KEY is required}
+      AWS_DEFAULT_REGION: ${S3_REGION:-de}
+      AWS_EC2_METADATA_DISABLED: "true"
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:?S3_ENDPOINT_URL is required}
+      S3_BUCKET: ${S3_BUCKET:?S3_BUCKET is required}
+      S3_PREFIX: ${S3_PREFIX:-burger-danlin/postgres}
+      BACKUP_PREFIX: ${BACKUP_PREFIX:-burger-danlin}
+    volumes:
+      - ${BACKUP_DIR:-./backups}:/backups:ro
+    networks:
+      - offsite
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    command:
+      - /opt/backup/offsite-upload.sh
+
+  offsite-fetch:
+    image: burger-danlin-backup:local
+    profiles:
+      - dr
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?S3_ACCESS_KEY_ID is required}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?S3_SECRET_ACCESS_KEY is required}
+      AWS_DEFAULT_REGION: ${S3_REGION:-de}
+      AWS_EC2_METADATA_DISABLED: "true"
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:?S3_ENDPOINT_URL is required}
+      S3_BUCKET: ${S3_BUCKET:?S3_BUCKET is required}
+      S3_PREFIX: ${S3_PREFIX:-burger-danlin/postgres}
+      BACKUP_PREFIX: ${BACKUP_PREFIX:-burger-danlin}
+      OFFSITE_BACKUP_KEY: ${OFFSITE_BACKUP_KEY:-}
+    volumes:
+      - ${BACKUP_DIR:-./backups}:/backups
+    networks:
+      - offsite
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    command:
+      - /opt/backup/offsite-fetch-latest.sh
+
   restore-postgres:
     image: postgres:18-alpine
     profiles:
@@ -233,6 +285,7 @@ volumes:
 
 networks:
   app:
+  offsite:
   data:
     internal: true
   restore:
