@@ -339,7 +339,7 @@ Reglas de seguridad:
 
 Permisos actuales:
 
-- `ADMIN`: Dashboard, Pedidos, Cocina, Entrega, Sábados y Personal.
+- `ADMIN`: Dashboard, Pedidos, Cocina, Entrega, Sábados, Inventario y Personal.
 - `KITCHEN`: solo Cocina; puede mover pedidos pagados a `PREPARING` y `READY`.
 - `DELIVERY`: solo Entrega; puede validar QR y mover `READY` a `DELIVERED`.
 
@@ -369,3 +369,40 @@ Métricas:
 El dashboard puede filtrarse por un `PickupEvent` específico o mostrar el acumulado de todos los sábados.
 
 Los pedidos `NO_SHOW` siguen contando como venta cuando están pagados y no tienen reembolso, de acuerdo con la regla operativa de no reembolso automático.
+
+
+## Inventario
+
+Panel:
+
+- `/admin/inventario`
+
+Artículos controlados inicialmente:
+
+- Coca-Cola por lata;
+- Carne por porción;
+- Queso por porción;
+- Tocino por porción;
+- Papas por porción.
+
+Reglas de consumo:
+
+- cada combo reserva 1 porción de carne y 1 porción de papas;
+- queso y tocino incluidos solo consumen stock si el cliente no los quita;
+- carne extra, queso extra, tocino extra y papas extra consumen 1 porción adicional;
+- cada Coca-Cola consume 1 lata.
+
+Flujo de inventario:
+
+1. Al crear un pedido, el API bloquea las filas de inventario necesarias.
+2. Si existe stock, lo descuenta y crea una reserva por 15 minutos.
+3. Al pagar, la reserva pasa a `COMMITTED`.
+4. Si el cliente cancela, el stock regresa automáticamente.
+5. Si una reserva pendiente vence, se libera automáticamente la siguiente vez que se consulta o reserva inventario.
+6. Si no existe stock suficiente, el pedido completo se revierte y no se vende.
+
+El panel permite cambiar el stock disponible, el umbral de stock bajo y activar/desactivar el control de cada artículo. Los cambios manuales quedan registrados en `AuditLog`.
+
+La página del cliente consulta `/inventory/availability` para limitar combos, Coca-Colas y extras antes del checkout. El backend vuelve a validar dentro de la transacción, por lo que la protección no depende del frontend.
+
+Después de aplicar la migración por primera vez, ejecuta el seed para crear las cinco definiciones y sus reglas de consumo. El seed crea el stock inicial en 0 y en ejecuciones posteriores no sobrescribe las cantidades que hayas configurado desde el panel.
