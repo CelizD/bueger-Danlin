@@ -6,13 +6,17 @@ import {
 } from "@nestjs/common";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../database/prisma.service.js";
+import { InventoryService } from "../inventory/inventory.service.js";
 
 const TERMINAL_STATUSES = ["DELIVERED", "CANCELLED", "REFUNDED", "NO_SHOW"] as const;
 const CAPACITY_STATUSES = ["PAID", "CONFIRMED", "PREPARING", "READY", "DELIVERED"] as const;
 
 @Injectable()
 export class CustomerOrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly inventory: InventoryService,
+  ) {}
 
   async getOrder(orderCodeInput: string, verificationToken: string) {
     const orderCode = orderCodeInput.trim().toUpperCase();
@@ -176,6 +180,7 @@ export class CustomerOrdersService {
           },
         });
 
+        await this.inventory.releaseOrder(tx, order.id);
         await this.reopenCapacityIfNeeded(tx, order.pickupEventId, order.pickupEvent);
 
         return {
@@ -235,6 +240,7 @@ export class CustomerOrdersService {
           },
         });
 
+        await this.inventory.releaseOrder(tx, order.id);
         await this.reopenCapacityIfNeeded(tx, order.pickupEventId, order.pickupEvent);
 
         return {
