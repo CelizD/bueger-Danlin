@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminSidebar } from "@/features/staff/components/admin-sidebar";
-import { API_URL } from "@/lib/api/browser";
+import { API_URL, apiFetch } from "@/lib/api/browser";
 import {
   Boxes,
   BarChart3,
@@ -68,7 +68,7 @@ export default function KitchenPage() {
     if (showRefresh) setRefreshing(true);
 
     try {
-      const me = await fetch(`${API_URL}/auth/me`, {
+      const me = await apiFetch(`${API_URL}/auth/me`, {
         credentials: "include",
         cache: "no-store",
       });
@@ -87,7 +87,7 @@ export default function KitchenPage() {
 
       setUser(meData.user);
 
-      const response = await fetch(`${API_URL}/staff/kitchen/orders`, {
+      const response = await apiFetch(`${API_URL}/staff/kitchen/orders`, {
         credentials: "include",
         cache: "no-store",
       });
@@ -140,7 +140,7 @@ export default function KitchenPage() {
     setError("");
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${API_URL}/staff/kitchen/orders/${encodeURIComponent(order.orderCode)}/${next}`,
         {
           method: "PATCH",
@@ -167,7 +167,7 @@ export default function KitchenPage() {
   }
 
   async function logout() {
-    await fetch(`${API_URL}/auth/logout`, {
+    await apiFetch(`${API_URL}/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
