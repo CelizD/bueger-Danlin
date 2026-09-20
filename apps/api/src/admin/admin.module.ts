@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { AuthModule } from "../auth/auth.module.js";
 import { AdminDashboardController } from "./admin-dashboard.controller.js";
+import { AdminInventoryController } from "./admin-inventory.controller.js";
 import { AdminOrdersController } from "./admin-orders.controller.js";
 import { AdminPickupEventsController } from "./admin-pickup-events.controller.js";
 import { AdminStaffController } from "./admin-staff.controller.js";
@@ -11,7 +12,7 @@ import { AdminStaffService } from "./admin-staff.service.js";
 
 @Module({
   imports: [AuthModule],
-  controllers: [AdminDashboardController, AdminOrdersController, AdminPickupEventsController, AdminStaffController],
+  controllers: [AdminDashboardController, AdminInventoryController, AdminOrdersController, AdminPickupEventsController, AdminStaffController],
   providers: [AdminDashboardService, AdminOrdersService, AdminPickupEventsService, AdminStaffService],
 })
 export class AdminModule {}
