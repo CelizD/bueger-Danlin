@@ -13,10 +13,10 @@ import { StaffModule } from "./staff/staff.module.js";
 @Module({
   imports: [
     DatabaseModule,
+    InventoryModule,
     AuthModule,
     AdminModule,
     CatalogModule,
-    InventoryModule,
     PickupEventsModule,
     OrdersModule,
     PaymentsModule,
