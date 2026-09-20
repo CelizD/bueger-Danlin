@@ -19,7 +19,6 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { BrowserQRCodeReader } from "@zxing/browser";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type StaffUser = {
@@ -140,25 +139,32 @@ export default function DeliveryPage() {
     if (!scannerOpen || !videoRef.current) return;
 
     let disposed = false;
-    const reader = new BrowserQRCodeReader();
 
-    void reader
-      .decodeFromVideoDevice(
-        undefined,
-        videoRef.current,
-        (result, _error, controls) => {
-          if (!result || disposed || processingScanRef.current) return;
+    void import("@zxing/browser")
+      .then(({ BrowserQRCodeReader }) => {
+        if (disposed || !videoRef.current) return undefined;
 
-          processingScanRef.current = true;
-          controls.stop();
-          setScannerOpen(false);
+        const reader = new BrowserQRCodeReader();
 
-          void processQr(result.getText()).finally(() => {
-            processingScanRef.current = false;
-          });
-        },
-      )
+        return reader.decodeFromVideoDevice(
+          undefined,
+          videoRef.current,
+          (result, _error, controls) => {
+            if (!result || disposed || processingScanRef.current) return;
+
+            processingScanRef.current = true;
+            controls.stop();
+            setScannerOpen(false);
+
+            void processQr(result.getText()).finally(() => {
+              processingScanRef.current = false;
+            });
+          },
+        );
+      })
       .then((controls) => {
+        if (!controls) return;
+
         if (disposed) {
           controls.stop();
           return;
