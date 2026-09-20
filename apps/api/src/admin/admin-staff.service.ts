@@ -7,6 +7,7 @@ import {
 } from "@nestjs/common";
 import * as argon2 from "argon2";
 import { PrismaService } from "../database/prisma.service.js";
+import { Prisma } from "../generated/prisma/client.js";
 import { CreateStaffUserDto } from "./dto/create-staff-user.dto.js";
 import { ResetStaffPasswordDto } from "./dto/reset-staff-password.dto.js";
 import { UpdateStaffUserDto } from "./dto/update-staff-user.dto.js";
@@ -228,7 +229,7 @@ export class AdminStaffService {
       data: {
         mfaEnabled: false,
         mfaSecretEncrypted: null,
-        mfaRecoveryCodeHashes: null,
+        mfaRecoveryCodeHashes: Prisma.DbNull,
         mfaLastUsedStep: null,
         mfaEnrolledAt: null,
       },
