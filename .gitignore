@@ -26,3 +26,9 @@ deploy/backup/*.key
 apps/web/playwright-report/
 apps/web/test-results/
 apps/web/blob-report/
+
+gitleaks-report.json
+gitleaks-current.json
+
+gitleaks-report.json
+gitleaks-current.json
