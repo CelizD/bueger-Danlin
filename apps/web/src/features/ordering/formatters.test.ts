@@ -38,6 +38,14 @@ describe("ordering helpers", () => {
         closesAt: "2026-09-26T04:00:00.000Z",
         timezone: "America/Tijuana",
       },
+      groupDelivery: {
+        minPaidOrders: 5,
+        paidOrderCount: 4,
+        remainingPaidOrders: 1,
+        transportCostCents: 10_000,
+        estimatedDeliveryFeeCents: 2_500,
+        freeDeliveryUnlocked: false,
+      },
     };
 
     const payload = pickupQrPayload(order);
