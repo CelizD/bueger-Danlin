@@ -125,8 +125,12 @@ services:
       TELEGRAM_NOTIFY_PREPARING: ${TELEGRAM_NOTIFY_PREPARING:-false}
       TELEGRAM_NOTIFY_READY: ${TELEGRAM_NOTIFY_READY:-true}
       TELEGRAM_NOTIFY_DELIVERED: ${TELEGRAM_NOTIFY_DELIVERED:-true}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
-      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      TELEGRAM_NOTIFY_CANCELLED: ${TELEGRAM_NOTIFY_CANCELLED:-true}
+      TELEGRAM_BOT_TOKEN_FILE: /run/secrets/telegram-bot-token
+      TELEGRAM_CHAT_ID_FILE: /run/secrets/telegram-chat-id
+    volumes:
+      - ${TELEGRAM_BOT_TOKEN_FILE:-/dev/null}:/run/secrets/telegram-bot-token:ro
+      - ${TELEGRAM_CHAT_ID_FILE:-/dev/null}:/run/secrets/telegram-chat-id:ro
     ports:
       - "127.0.0.1:4000:4000"
     networks:
