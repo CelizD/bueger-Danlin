@@ -6,6 +6,7 @@ import {
   vi,
 } from "vitest";
 import { PaymentProviderRegistry } from "./payment-provider.registry.js";
+import type { MercadoPagoApiClient } from "./providers/mercadopago/mercadopago-api.client.js";
 import { MercadoPagoProvider } from "./providers/mercadopago/mercadopago.provider.js";
 import { MockPaymentProvider } from "./providers/mock/mock-payment.provider.js";
 
@@ -13,17 +14,23 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
+function mercadoPagoProvider() {
+  return new MercadoPagoProvider({
+    createOrder: vi.fn(),
+  } as unknown as MercadoPagoApiClient);
+}
+
 function registry() {
   return new PaymentProviderRegistry(
     new MockPaymentProvider(),
-    new MercadoPagoProvider(),
+    mercadoPagoProvider(),
   );
 }
 
 describe("PaymentProviderRegistry", () => {
   it("resuelve el proveedor mock registrado", () => {
     const mock = new MockPaymentProvider();
-    const mercadoPago = new MercadoPagoProvider();
+    const mercadoPago = mercadoPagoProvider();
     const paymentProviders = new PaymentProviderRegistry(
       mock,
       mercadoPago,
@@ -40,7 +47,7 @@ describe("PaymentProviderRegistry", () => {
     const mock = new MockPaymentProvider();
     const paymentProviders = new PaymentProviderRegistry(
       mock,
-      new MercadoPagoProvider(),
+      mercadoPagoProvider(),
     );
 
     expect(paymentProviders.getConfigured()).toBe(mock);
