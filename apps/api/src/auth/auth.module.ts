@@ -13,6 +13,7 @@ import { MfaController } from "./mfa.controller.js";
 import { MfaService } from "./mfa.service.js";
 import { RolesGuard } from "./roles.guard.js";
 import { StaffAuthGuard } from "./staff-auth.guard.js";
+import { StaffSessionService } from "./staff-session.service.js";
 
 @Module({
   imports: [
@@ -48,10 +49,16 @@ import { StaffAuthGuard } from "./staff-auth.guard.js";
   providers: [
     AuthService,
     MfaService,
+    StaffSessionService,
     StaffAuthGuard,
     AdminGuard,
     RolesGuard,
   ],
-  exports: [StaffAuthGuard, AdminGuard, RolesGuard],
+  exports: [
+    StaffAuthGuard,
+    AdminGuard,
+    RolesGuard,
+    StaffSessionService,
+  ],
 })
 export class AuthModule {}

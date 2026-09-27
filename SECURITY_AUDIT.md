@@ -92,7 +92,7 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | Inventario de datos | ✅ | `docs/DATA_INVENTORY.md` clasifica PII, secretos, pagos, logs, backups, flujos y accesos por rol |
 | Tenant isolation | 🔵 | No aplica mientras sea un solo negocio |
 | OIDC/PKCE | 🔵 | No hay IdP/SSO |
-| Session invalidation | ✅ | Cambio de contraseña/estado invalida sesiones anteriores |
+| Session invalidation | ✅ | Cada JWT referencia una sesión persistente server-side; logout revoca esa sesión inmediatamente y cambio de contraseña/estado sigue invalidando credenciales |
 | Bloqueo tras fallos | ✅ | Persistido en PostgreSQL |
 | Headers API | ✅ | Helmet + HSTS prod |
 | Headers Web | ✅ | CSP prod, nosniff, DENY frame, Referrer, Permissions, COOP/CORP, HSTS |
@@ -167,7 +167,7 @@ Pendiente antes de habilitar pagos reales:
 4. Rate limiting + lockout persistente.
 5. RBAC server-side.
 6. Cookies seguras.
-7. Invalidación de sesiones.
+7. Sesiones persistentes revocables server-side; logout invalida inmediatamente el JWT asociado.
 8. CORS allowlist.
 9. CSRF para panel.
 10. CSP/HSTS/Helmet.

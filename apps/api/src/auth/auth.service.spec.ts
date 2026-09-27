@@ -1,5 +1,4 @@
 import { UnauthorizedException } from "@nestjs/common";
-import type { JwtService } from "@nestjs/jwt";
 import * as argon2 from "argon2";
 import {
   beforeAll,
@@ -12,14 +11,16 @@ import {
 import type { PrismaService } from "../database/prisma.service.js";
 import { AuthService } from "./auth.service.js";
 import type { MfaService } from "./mfa.service.js";
+import type { StaffSessionService } from "./staff-session.service.js";
 
 let passwordHash: string;
 
 const findUnique = vi.fn();
 const update = vi.fn();
 const auditCreate = vi.fn();
-const signAsync = vi.fn();
 const createChallenge = vi.fn();
+const createSession = vi.fn();
+const revokeSession = vi.fn();
 
 const prisma = {
   user: {
@@ -31,13 +32,14 @@ const prisma = {
   },
 } as unknown as PrismaService;
 
-const jwtService = {
-  signAsync,
-} as unknown as JwtService;
-
 const mfaService = {
   createChallenge,
 } as unknown as MfaService;
+
+const staffSessionService = {
+  createSession,
+  revokeSession,
+} as unknown as StaffSessionService;
 
 let service: AuthService;
 
@@ -68,8 +70,8 @@ beforeAll(async () => {
 
   service = new AuthService(
     prisma,
-    jwtService,
     mfaService,
+    staffSessionService,
   );
 });
 
@@ -77,7 +79,12 @@ beforeEach(() => {
   vi.clearAllMocks();
   update.mockResolvedValue(undefined);
   auditCreate.mockResolvedValue(undefined);
-  signAsync.mockResolvedValue("staff-session-token");
+  createSession.mockResolvedValue({
+    token: "staff-session-token",
+    sessionId: "session-1",
+    expiresAt: new Date(Date.now() + 60_000),
+  });
+  revokeSession.mockResolvedValue(true);
   createChallenge.mockResolvedValue("mfa-challenge-token");
 });
 
@@ -95,7 +102,7 @@ describe("AuthService.login", () => {
         where: { email: "staff@example.com" },
       }),
     );
-    expect(signAsync).toHaveBeenCalledTimes(1);
+    expect(createSession).toHaveBeenCalledTimes(1);
     expect(auditCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -111,6 +118,33 @@ describe("AuthService.login", () => {
         role: "KITCHEN",
       },
     });
+  });
+
+  it("revoca la sesión persistente al cerrar sesión", async () => {
+    const session = {
+      sid: "session-1",
+      sub: "user-1",
+      email: "staff@example.com",
+      name: "Staff",
+      role: "KITCHEN" as const,
+      credentialVersion: "version",
+    };
+
+    await expect(service.logout(session)).resolves.toBe(true);
+
+    expect(revokeSession).toHaveBeenCalledWith(
+      "user-1",
+      "session-1",
+    );
+    expect(auditCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: "STAFF_LOGOUT",
+          entityType: "StaffSession",
+          entityId: "session-1",
+        }),
+      }),
+    );
   });
 
   it("incrementa intentos fallidos sin revelar si la cuenta existe", async () => {
@@ -185,7 +219,7 @@ describe("AuthService.login", () => {
     );
 
     expect(createChallenge).toHaveBeenCalledTimes(1);
-    expect(signAsync).not.toHaveBeenCalled();
+    expect(createSession).not.toHaveBeenCalled();
     expect(result).toEqual({
       mfaRequired: true,
       setupRequired: false,

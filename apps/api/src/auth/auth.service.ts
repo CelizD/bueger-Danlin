@@ -1,8 +1,7 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
 import { PrismaService } from "../database/prisma.service.js";
 import type { StaffSession } from "./auth.types.js";
-import { credentialVersion } from "./credential-version.js";
+import { StaffSessionService } from "./staff-session.service.js";
 import { MfaService } from "./mfa.service.js";
 import {
   hashStaffPassword,
@@ -20,8 +19,8 @@ export class AuthService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly jwtService: JwtService,
     private readonly mfaService: MfaService,
+    private readonly staffSessionService: StaffSessionService,
   ) {}
 
   async login(emailInput: string, password: string) {
@@ -139,17 +138,16 @@ export class AuthService {
       };
     }
 
-    const session: StaffSession = {
-      sub: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      credentialVersion: credentialVersion(
+    const createdSession =
+      await this.staffSessionService.createSession(
+        {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
         user.passwordHash,
-      ),
-    };
-
-    const token = await this.jwtService.signAsync(session);
+      );
 
     await this.prisma.auditLog.create({
       data: {
@@ -159,13 +157,14 @@ export class AuthService {
         entityId: user.id,
         after: {
           role: user.role,
+          sessionId: createdSession.sessionId,
         },
       },
     });
 
     return {
       mfaRequired: false as const,
-      token,
+      token: createdSession.token,
       user: {
         id: user.id,
         email: user.email,
@@ -173,5 +172,27 @@ export class AuthService {
         role: user.role,
       },
     };
+  }
+
+  async logout(session: StaffSession) {
+    const revoked =
+      await this.staffSessionService.revokeSession(
+        session.sub,
+        session.sid,
+      );
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: session.sub,
+        action: "STAFF_LOGOUT",
+        entityType: "StaffSession",
+        entityId: session.sid,
+        after: {
+          revoked,
+        },
+      },
+    });
+
+    return revoked;
   }
 }

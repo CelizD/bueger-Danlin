@@ -8,6 +8,7 @@ import {
 } from "vitest";
 import type { PrismaService } from "../database/prisma.service.js";
 import { MfaService } from "./mfa.service.js";
+import type { StaffSessionService } from "./staff-session.service.js";
 
 const originalEncryptionKey = process.env.MFA_ENCRYPTION_KEY;
 
@@ -26,6 +27,7 @@ function createService() {
   const service = new MfaService(
     {} as PrismaService,
     {} as JwtService,
+    {} as StaffSessionService,
   );
 
   return service as unknown as {

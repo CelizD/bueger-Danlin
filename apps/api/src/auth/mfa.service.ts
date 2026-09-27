@@ -20,10 +20,8 @@ import {
   STAFF_JWT_AUDIENCE,
   STAFF_JWT_ISSUER,
 } from "./auth.constants.js";
-import type {
-  MfaChallenge,
-  StaffSession,
-} from "./auth.types.js";
+import type { MfaChallenge } from "./auth.types.js";
+import { StaffSessionService } from "./staff-session.service.js";
 import { credentialVersion } from "./credential-version.js";
 
 const TOTP_PERIOD_SECONDS = 30;
@@ -155,6 +153,7 @@ export class MfaService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly staffSessionService: StaffSessionService,
   ) {}
 
   async createChallenge(user: {
@@ -395,18 +394,27 @@ export class MfaService {
       };
     });
 
-    const session: StaffSession = {
-      sub: result.user.id,
-      email: result.user.email,
-      name: result.user.name,
-      role: result.user.role,
-      credentialVersion: credentialVersion(result.passwordHash),
-    };
+    const createdSession =
+      await this.staffSessionService.createSession(
+        result.user,
+        result.passwordHash,
+      );
 
-    const token = await this.jwtService.signAsync(session);
+    await this.prisma.auditLog.create({
+      data: {
+        userId: result.user.id,
+        action: "STAFF_LOGIN_SUCCESS",
+        entityType: "StaffSession",
+        entityId: createdSession.sessionId,
+        after: {
+          role: result.user.role,
+          mfa: true,
+        },
+      },
+    });
 
     return {
-      token,
+      token: createdSession.token,
       user: result.user,
       recoveryCodes: result.recoveryCodes,
     };

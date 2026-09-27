@@ -145,10 +145,12 @@ export class AuthController {
   @Post("logout")
   @UseGuards(StaffAuthGuard)
   @HttpCode(204)
-  logout(
+  async logout(
+    @Req() request: StaffRequest,
     @Res({ passthrough: true })
     response: CookieResponse,
   ) {
+    await this.authService.logout(request.user!);
     response.clearCookie(STAFF_SESSION_COOKIE, {
       httpOnly: true,
       secure:

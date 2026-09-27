@@ -8,6 +8,7 @@ import type { StaffRole, StaffSession } from "./auth.types.js";
 
 function contextWithRole(role: StaffRole): ExecutionContext {
   const user: StaffSession = {
+    sid: "session-1",
     sub: "user-1",
     email: "staff@example.com",
     name: "Staff",

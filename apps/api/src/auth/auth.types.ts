@@ -1,6 +1,7 @@
 export type StaffRole = "ADMIN" | "KITCHEN" | "DELIVERY";
 
 export type StaffSession = {
+  sid: string;
   sub: string;
   email: string;
   name: string;

@@ -48,23 +48,44 @@ export class StaffAuthGuard implements CanActivate {
           },
         );
 
-      const user =
-        await this.prisma.user.findUnique({
-          where: { id: payload.sub },
+      if (!payload.sid || !payload.credentialVersion) {
+        throw new UnauthorizedException();
+      }
+
+      const session =
+        await this.prisma.staffSession.findUnique({
+          where: { id: payload.sid },
           select: {
             id: true,
-            email: true,
-            name: true,
-            role: true,
-            active: true,
-            passwordHash: true,
-            mfaEnabled: true,
+            userId: true,
+            credentialVersion: true,
+            expiresAt: true,
+            revokedAt: true,
+            user: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+                role: true,
+                active: true,
+                passwordHash: true,
+                mfaEnabled: true,
+              },
+            },
           },
         });
 
+      const user = session?.user;
+      const now = new Date();
+
       if (
+        !session ||
+        session.userId !== payload.sub ||
+        session.revokedAt ||
+        session.expiresAt <= now ||
         !user?.active ||
-        !payload.credentialVersion ||
+        session.credentialVersion !==
+          payload.credentialVersion ||
         payload.credentialVersion !==
           credentialVersion(user.passwordHash) ||
         (user.role === "ADMIN" &&
@@ -74,6 +95,7 @@ export class StaffAuthGuard implements CanActivate {
       }
 
       request.user = {
+        sid: session.id,
         sub: user.id,
         email: user.email,
         name: user.name,

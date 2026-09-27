@@ -87,9 +87,24 @@ model User {
   createdAt              DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  auditLogs AuditLog[]
+  auditLogs     AuditLog[]
+  staffSessions StaffSession[]
 
   @@index([lockedUntil])
+}
+
+model StaffSession {
+  id                String   @id
+  userId            String
+  credentialVersion String
+  expiresAt         DateTime
+  revokedAt         DateTime?
+  createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
 }
 
 model Customer {
