@@ -85,22 +85,40 @@ export async function mockOrderingApi(page: Page) {
     }
 
     if (
-      path.endsWith("/pickup-events/current") &&
+      path.endsWith("/pickup-events/open") &&
       method === "GET"
     ) {
-      await json(route, {
-        id: "event-1",
-        code: "SAT-E2E",
-        name: "Sábado E2E",
-        locationLabel: "Universidad",
-        timezone: "America/Tijuana",
-        startsAt: "2026-09-26T19:00:00.000Z",
-        closesAt: "2026-09-26T04:00:00.000Z",
-        maxCombos: 50,
-        reservedCombos: 2,
-        remainingCombos: 48,
-        status: "OPEN",
-      });
+      await json(route, [
+        {
+          id: "event-1",
+          code: "SAT-E2E-UNIVERSIDAD",
+          name: "Universidad E2E",
+          locationLabel: "Universidad",
+          pickupPoint: {
+            id: "point-1",
+            code: "UNIVERSIDAD",
+            name: "Universidad",
+            address: "Entrada principal",
+            latitude: null,
+            longitude: null,
+          },
+          timezone: "America/Tijuana",
+          startsAt: "2026-09-26T19:00:00.000Z",
+          closesAt: "2026-09-26T04:00:00.000Z",
+          maxCombos: 50,
+          reservedCombos: 2,
+          remainingCombos: 48,
+          status: "OPEN",
+          groupDelivery: {
+            minPaidOrders: 5,
+            paidOrderCount: 3,
+            remainingPaidOrders: 2,
+            transportCostCents: 10000,
+            estimatedDeliveryFeeCents: 3334,
+            freeDeliveryUnlocked: false,
+          },
+        },
+      ]);
       return;
     }
 
