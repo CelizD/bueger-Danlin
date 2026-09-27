@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 const weakValues = new Set([
   "",
   "change-me",
@@ -11,6 +13,22 @@ const productionPaymentProviders = new Set([
   "stripe",
   "mercadopago",
 ]);
+
+function setting(name: string) {
+  const direct = process.env[name]?.trim();
+
+  if (direct) return direct;
+
+  const file = process.env[`${name}_FILE`]?.trim();
+
+  if (!file) return "";
+
+  try {
+    return readFileSync(file, "utf8").trim();
+  } catch {
+    return "";
+  }
+}
 
 function requireStrongSecret(name: string, minLength: number) {
   const value = process.env[name]?.trim() ?? "";
@@ -88,10 +106,18 @@ export function validateProductionEnvironment() {
   }
 
   if (telegramSetting === "true") {
-    requireStrongSecret("TELEGRAM_BOT_TOKEN", 20);
+    const telegramBotToken = setting("TELEGRAM_BOT_TOKEN");
 
-    const telegramChatId =
-      process.env.TELEGRAM_CHAT_ID?.trim() ?? "";
+    if (
+      telegramBotToken.length < 20 ||
+      weakValues.has(telegramBotToken.toLowerCase())
+    ) {
+      throw new Error(
+        "TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_TOKEN_FILE must provide a valid bot token",
+      );
+    }
+
+    const telegramChatId = setting("TELEGRAM_CHAT_ID");
 
     if (!/^-?\d+$/.test(telegramChatId)) {
       throw new Error(
