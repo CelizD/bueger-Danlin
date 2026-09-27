@@ -25,6 +25,7 @@ const originalQrSecret = process.env.QR_TOKEN_SECRET;
 
 const dto: CreateOrderDto = {
   pickupEventId: "event-1",
+  groupDeliveryTermsAccepted: true,
   customer: {
     name: " Cliente ",
     phone: "+526641234567",
@@ -43,6 +44,7 @@ const dto: CreateOrderDto = {
 function normalizedHash(input: CreateOrderDto) {
   const normalized = {
     pickupEventId: input.pickupEventId,
+    groupDeliveryTermsAccepted: true,
     customer: {
       name: input.customer.name.trim(),
       phone: input.customer.phone,
@@ -111,6 +113,28 @@ afterEach(() => {
 });
 
 describe("OrdersService idempotency", () => {
+  it("rechaza crear un pedido sin aceptar la entrega grupal", async () => {
+    const prisma = {
+      order: { findUnique: vi.fn() },
+      $transaction: vi.fn(),
+    } as unknown as PrismaService;
+    const inventory = {} as InventoryService;
+    const service = new OrdersService(prisma, inventory);
+
+    await expect(
+      service.create(
+        {
+          ...dto,
+          groupDeliveryTermsAccepted: false,
+        },
+        "idempotency-key-123456",
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(prisma.order.findUnique).not.toHaveBeenCalled();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
   it("rechaza Idempotency-Key demasiado corta antes de escribir", async () => {
     const prisma = {
       order: { findUnique: vi.fn() },

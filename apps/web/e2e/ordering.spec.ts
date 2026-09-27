@@ -41,11 +41,18 @@ test("cliente crea pedido, paga y obtiene QR", async ({
     .getByLabel("Correo (opcional)")
     .fill("daniel@example.com");
 
+  const continueButton = page.getByRole("button", {
+    name: "Continuar al pago",
+  });
+
+  await expect(continueButton).toBeDisabled();
+
   await page
-    .getByRole("button", {
-      name: "Continuar al pago",
-    })
-    .click();
+    .getByLabel(/Entiendo y acepto que/)
+    .check();
+
+  await expect(continueButton).toBeEnabled();
+  await continueButton.click();
 
   await expect(
     page.getByRole("heading", {

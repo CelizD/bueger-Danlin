@@ -224,10 +224,16 @@ model Order {
   totalCents            Int
   comboQuantity         Int
   verificationTokenHash String        @unique
-  reservationExpiresAt  DateTime?
-  cancelledAt           DateTime?
-  deliveredAt           DateTime?
-  createdAt             DateTime      @default(now())
+  reservationExpiresAt                    DateTime?
+  cancelledAt                             DateTime?
+  deliveredAt                             DateTime?
+  groupDeliveryTermsAcceptedAt            DateTime?
+  groupDeliveryTermsVersion               String?
+  groupDeliveryMinPaidOrdersAtOrder       Int?
+  groupDeliveryTransportCostCentsAtOrder  Int?
+  groupDeliveryPaidOrdersAtOrder          Int?
+  groupDeliveryEstimatedFeeCentsAtOrder   Int?
+  createdAt                               DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 
   customer      Customer            @relation(fields: [customerId], references: [id])

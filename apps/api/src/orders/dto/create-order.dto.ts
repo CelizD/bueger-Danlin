@@ -2,7 +2,9 @@ import { Type } from "class-transformer";
 import {
   ArrayMaxSize,
   ArrayMinSize,
+  Equals,
   IsArray,
+  IsBoolean,
   IsEmail,
   IsInt,
   IsOptional,
@@ -60,6 +62,13 @@ export class CreateOrderDto {
   @IsString()
   @MinLength(1)
   pickupEventId!: string;
+
+  @IsBoolean()
+  @Equals(true, {
+    message:
+      "Debes aceptar las condiciones de entrega grupal antes de continuar.",
+  })
+  groupDeliveryTermsAccepted!: boolean;
 
   @ValidateNested()
   @Type(() => CreateOrderCustomerDto)

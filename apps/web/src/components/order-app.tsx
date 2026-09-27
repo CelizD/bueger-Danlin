@@ -9,6 +9,7 @@ import {
 import { BurgerBuilder } from "@/features/ordering/components/burger-builder";
 import { CustomerFields } from "@/features/ordering/components/customer-fields";
 import { DrinkSelector } from "@/features/ordering/components/drink-selector";
+import { GroupDeliveryConsent } from "@/features/ordering/components/group-delivery-consent";
 import { PickupPointSelector } from "@/features/ordering/components/pickup-point-selector";
 import {
   formatPickup,
@@ -59,6 +60,7 @@ export function OrderApp() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [groupDeliveryAccepted, setGroupDeliveryAccepted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [paying, setPaying] = useState(false);
@@ -186,6 +188,7 @@ export function OrderApp() {
     );
 
     setEvent(nextEvent);
+    setGroupDeliveryAccepted(false);
     setError("");
     setBurgers((current) => {
       if (nextLimit <= 0) return [];
@@ -304,6 +307,13 @@ export function OrderApp() {
 
     if (!event || !combo || burgers.length === 0) return;
 
+    if (!groupDeliveryAccepted) {
+      setError(
+        "Debes aceptar las condiciones de entrega grupal antes de continuar.",
+      );
+      return;
+    }
+
     const cleanPhone = phone.replace(/\D/g, "");
 
     if (cleanPhone.length !== 10) {
@@ -333,6 +343,7 @@ export function OrderApp() {
 
       const orderData = await createOrder({
         pickupEventId: event.id,
+        groupDeliveryTermsAccepted: groupDeliveryAccepted,
         customer: {
           name: name.trim(),
           phone: `+52${cleanPhone}`,
@@ -558,6 +569,12 @@ export function OrderApp() {
             onEmailChange={setEmail}
           />
 
+          <GroupDeliveryConsent
+            event={event}
+            checked={groupDeliveryAccepted}
+            onChange={setGroupDeliveryAccepted}
+          />
+
           <section className="checkout-bar">
             <div>
               <span>Total estimado</span>
@@ -567,7 +584,11 @@ export function OrderApp() {
             <button
               className="primary-button"
               type="submit"
-              disabled={submitting || burgers.length === 0}
+              disabled={
+                submitting ||
+                burgers.length === 0 ||
+                !groupDeliveryAccepted
+              }
             >
               {submitting ? "Creando pedido…" : "Continuar al pago"}
             </button>

@@ -102,6 +102,7 @@ export type PaymentResult = {
 
 export type CreateOrderInput = {
   pickupEventId: string;
+  groupDeliveryTermsAccepted: boolean;
   customer: {
     name: string;
     phone: string;

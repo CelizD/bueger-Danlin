@@ -172,7 +172,21 @@ export async function mockOrderingApi(page: Page) {
     if (path.endsWith("/orders") && method === "POST") {
       const input = request.postDataJSON() as {
         pickupEventId?: string;
+        groupDeliveryTermsAccepted?: boolean;
       };
+
+      if (input.groupDeliveryTermsAccepted !== true) {
+        await json(
+          route,
+          {
+            message:
+              "Debes aceptar las condiciones de entrega grupal antes de continuar.",
+          },
+          400,
+        );
+        return;
+      }
+
       const isCucapa = input.pickupEventId === "event-2";
 
       await json(route, {

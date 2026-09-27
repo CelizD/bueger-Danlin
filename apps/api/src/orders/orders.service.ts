@@ -24,6 +24,7 @@ const CAPACITY_STATUSES = [
 ] as const;
 
 const RESERVATION_MINUTES = 15;
+const GROUP_DELIVERY_TERMS_VERSION = "2026-09-27-v1";
 
 @Injectable()
 export class OrdersService {
@@ -52,8 +53,15 @@ export class OrdersService {
       );
     }
 
+    if (dto.groupDeliveryTermsAccepted !== true) {
+      throw new BadRequestException(
+        "Debes aceptar las condiciones de entrega grupal antes de continuar.",
+      );
+    }
+
     const normalizedRequest = {
       pickupEventId: dto.pickupEventId,
+      groupDeliveryTermsAccepted: true,
       customer: {
         name: dto.customer.name.trim(),
         phone: dto.customer.phone,
@@ -325,6 +333,28 @@ export class OrdersService {
           });
         }
 
+        const groupDeliveryPaidOrders = await tx.order.count({
+          where: {
+            pickupEventId: event.id,
+            paymentStatus: "PAID",
+            status: {
+              notIn: ["CANCELLED", "REFUNDED"],
+            },
+          },
+        });
+
+        const groupDeliveryFreeUnlocked =
+          groupDeliveryPaidOrders >= event.freeDeliveryMinPaidOrders;
+
+        const groupDeliveryEstimatedFeeCents =
+          groupDeliveryFreeUnlocked
+            ? 0
+            : groupDeliveryPaidOrders > 0
+              ? Math.ceil(
+                  event.transportCostCents / groupDeliveryPaidOrders,
+                )
+              : null;
+
         const customer = await tx.customer.create({
           data: {
             name: normalizedRequest.customer.name,
@@ -359,6 +389,16 @@ export class OrdersService {
             comboQuantity,
             verificationTokenHash,
             reservationExpiresAt,
+            groupDeliveryTermsAcceptedAt: now,
+            groupDeliveryTermsVersion: GROUP_DELIVERY_TERMS_VERSION,
+            groupDeliveryMinPaidOrdersAtOrder:
+              event.freeDeliveryMinPaidOrders,
+            groupDeliveryTransportCostCentsAtOrder:
+              event.transportCostCents,
+            groupDeliveryPaidOrdersAtOrder:
+              groupDeliveryPaidOrders,
+            groupDeliveryEstimatedFeeCentsAtOrder:
+              groupDeliveryEstimatedFeeCents,
           },
         });
 
