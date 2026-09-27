@@ -7,14 +7,14 @@ import {
 import { createHash, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../database/prisma.service.js";
 import { InventoryService } from "../inventory/inventory.service.js";
-import { MockPaymentProvider } from "./providers/mock/mock-payment.provider.js";
+import { PaymentProviderRegistry } from "./payment-provider.registry.js";
 
 @Injectable()
 export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly inventory: InventoryService,
-    private readonly mockPaymentProvider: MockPaymentProvider,
+    private readonly paymentProviderRegistry: PaymentProviderRegistry,
   ) {}
 
   async confirmMockPayment(orderCode: string, verificationToken: string) {
@@ -93,8 +93,10 @@ export class PaymentsService {
       }
 
       const idempotencyKey = `mock:${order.id}`;
+      const mockPaymentProvider =
+        this.paymentProviderRegistry.get("mock");
       const providerPayment =
-        await this.mockPaymentProvider.createCheckout({
+        await mockPaymentProvider.createCheckout({
           paymentId: order.id,
           orderCode: order.orderCode,
           amountCents: order.totalCents,
