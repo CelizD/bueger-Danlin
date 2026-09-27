@@ -277,7 +277,54 @@ curl -fsS \
   >/dev/null
 ```
 
-## 9. Nginx y TLS
+## 9. Observabilidad
+
+Genera una contraseña fuerte para Grafana en:
+
+```text
+/etc/burger-danlin/production.env
+```
+
+Variables:
+
+```text
+GRAFANA_ADMIN_USER=admin
+GRAFANA_ADMIN_PASSWORD=<secreto-largo>
+```
+
+Levanta la pila:
+
+```bash
+docker compose \
+  --env-file /etc/burger-danlin/production.env \
+  -f docker-compose.prod.yml \
+  --profile observability \
+  up -d prometheus loki alloy node-exporter grafana
+```
+
+Grafana escucha únicamente en:
+
+```text
+127.0.0.1:3001
+```
+
+Accede desde tu equipo con:
+
+```bash
+ssh -L 3001:127.0.0.1:3001 deploy@TU_VPS
+```
+
+Después abre `http://127.0.0.1:3001`.
+
+Prometheus y Loki no publican puertos al host. El endpoint `/api/v1/metrics` está bloqueado en el Nginx público y Prometheus lo consulta por la red privada de Docker.
+
+Consulta:
+
+```text
+deploy/observability/README.md
+```
+
+## 10. Nginx y TLS
 
 Usa:
 
@@ -298,7 +345,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-## 10. Backup manual inicial
+## 11. Backup manual inicial
 
 Antes de activar automatización:
 
@@ -330,7 +377,7 @@ Nunca debe quedar un archivo `.dump` sin cifrar en:
 
 El proceso utiliza archivos temporales dentro de `/tmp` y cifra el dump antes de moverlo al directorio final.
 
-## 11. Restore drill inicial
+## 12. Restore drill inicial
 
 ```bash
 docker compose \
@@ -354,7 +401,7 @@ docker compose \
   --profile dr rm -sf restore-postgres
 ```
 
-## 12. Activar timers
+## 13. Activar timers
 
 ```bash
 sudo cp \
@@ -445,7 +492,7 @@ Objetivos técnicos iniciales:
 
 Son objetivos operativos y deben validarse con evidencia real.
 
-## 13. Logs
+## 14. Logs
 
 Logs de aplicación:
 
@@ -486,7 +533,7 @@ No deben imprimirse en logs:
 - claves MFA;
 - claves `age`.
 
-## 14. Backup offsite inmutable
+## 15. Backup offsite inmutable
 
 Configura un bucket IONOS Object Storage dedicado con:
 
@@ -520,7 +567,7 @@ docker compose \
 
 No consideres DR completo hasta hacer un restore drill con un archivo descargado desde la copia offsite.
 
-## 15. Preflight del VPS
+## 16. Preflight del VPS
 
 Antes de abrir tráfico:
 
@@ -553,7 +600,7 @@ UID 10001
 GID 10001
 ```
 
-## 16. TLS y DNS
+## 17. TLS y DNS
 
 Antes de solicitar certificados:
 
@@ -576,7 +623,7 @@ No expongas públicamente:
 
 Web/API permanecen en loopback y Nginx es el punto de entrada público.
 
-## 17. Verificación del usuario de backups
+## 18. Verificación del usuario de backups
 
 Después de construir la imagen puedes verificar que no corre como root:
 
