@@ -445,6 +445,7 @@ describe("PaymentsService.createCheckout", () => {
   it("reutiliza el checkout persistido sin crear otra orden externa", async () => {
     process.env.NODE_ENV = "test";
     process.env.PAYMENT_PROVIDER = "mercadopago";
+    process.env.ENABLE_REAL_PAYMENTS = "true";
 
     const existingPayment = payment({
       externalId: "ORDTST01",
