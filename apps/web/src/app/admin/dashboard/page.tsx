@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  AdminDayPanel,
+  type AdminDayPanelData,
+} from "@/features/staff/components/admin-day-panel";
 import { AdminSidebar } from "@/features/staff/components/admin-sidebar";
 import { API_URL, apiFetch } from "@/lib/api/browser";
 import {
@@ -45,6 +49,7 @@ type DashboardData = {
     selectedEvent: DashboardEvent | null;
     events: DashboardEvent[];
   };
+  day: AdminDayPanelData | null;
   metrics: {
     revenueCents: number;
     combosSold: number;
@@ -195,10 +200,10 @@ export default function DashboardPage() {
       <section className="admin-content dashboard-content">
         <header className="admin-content-header">
           <div>
-            <p className="admin-kicker">Rendimiento del negocio</p>
-            <h1>Dashboard</h1>
+            <p className="admin-kicker">Operación y ventas</p>
+            <h1>Panel del día</h1>
             <p>
-              Ventas, productos y resultados de la operación en un solo lugar.
+              Lo que tienes que preparar, cobrar y entregar hoy, con el histórico debajo.
             </p>
           </div>
 
@@ -206,7 +211,7 @@ export default function DashboardPage() {
             <select
               value={selectedEventId}
               onChange={(event) => void changeEvent(event.target.value)}
-              aria-label="Filtrar dashboard por sábado"
+              aria-label="Filtrar panel por entrega"
             >
               <option value="ALL">Todos los sábados</option>
               {data?.filter.events.map((event) => (
@@ -241,6 +246,20 @@ export default function DashboardPage() {
                 {data.filter.selectedEvent
                   ? `Mostrando ${data.filter.selectedEvent.name} · ${eventDate(data.filter.selectedEvent.startsAt)}`
                   : "Mostrando acumulado de todos los sábados"}
+              </span>
+            </div>
+
+            <AdminDayPanel day={data.day} />
+
+            <div className="dashboard-history-heading">
+              <div>
+                <p className="admin-kicker">Análisis</p>
+                <h2>Rendimiento e histórico</h2>
+              </div>
+              <span>
+                {data.filter.selectedEvent
+                  ? "Entrega seleccionada"
+                  : "Acumulado general"}
               </span>
             </div>
 

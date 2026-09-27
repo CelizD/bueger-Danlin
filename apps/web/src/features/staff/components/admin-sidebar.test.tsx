@@ -15,7 +15,7 @@ describe("AdminSidebar", () => {
       />,
     );
 
-    expect(html).toContain("Dashboard");
+    expect(html).toContain("Panel del día");
     expect(html).toContain("Pedidos");
     expect(html).toContain("Cocina");
     expect(html).toContain("Entrega");
@@ -39,7 +39,7 @@ describe("AdminSidebar", () => {
     );
 
     expect(html).toContain("Cocina");
-    expect(html).not.toContain(">Dashboard<");
+    expect(html).not.toContain(">Panel del día<");
     expect(html).not.toContain(">Pedidos<");
     expect(html).not.toContain(">Inventario<");
     expect(html).not.toContain(">Personal<");
@@ -59,7 +59,7 @@ describe("AdminSidebar", () => {
     );
 
     expect(html).toContain("Entrega");
-    expect(html).not.toContain(">Dashboard<");
+    expect(html).not.toContain(">Panel del día<");
     expect(html).not.toContain(">Pedidos<");
     expect(html).not.toContain(">Inventario<");
     expect(html).not.toContain(">Personal<");

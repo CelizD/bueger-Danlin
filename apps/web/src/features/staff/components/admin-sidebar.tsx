@@ -33,7 +33,7 @@ const navItems = [
   {
     id: "dashboard",
     href: "/admin/dashboard",
-    label: "Dashboard",
+    label: "Panel del día",
     icon: BarChart3,
   },
   {
