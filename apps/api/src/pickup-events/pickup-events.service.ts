@@ -9,66 +9,153 @@ const CAPACITY_STATUSES = [
   "DELIVERED",
 ] as const;
 
+const GROUP_EXCLUDED_STATUSES = [
+  "CANCELLED",
+  "REFUNDED",
+] as const;
+
 @Injectable()
 export class PickupEventsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getCurrent() {
+  async getOpen() {
     const now = new Date();
 
-    const event = await this.prisma.pickupEvent.findFirst({
+    const events = await this.prisma.pickupEvent.findMany({
       where: {
         status: { in: ["OPEN", "SOLD_OUT"] },
         closesAt: { gt: now },
+        pickupPoint: {
+          active: true,
+        },
       },
-      orderBy: { startsAt: "asc" },
+      include: {
+        pickupPoint: true,
+        orders: {
+          select: {
+            status: true,
+            paymentStatus: true,
+            comboQuantity: true,
+            reservationExpiresAt: true,
+          },
+        },
+      },
+      orderBy: [
+        { startsAt: "asc" },
+        { pickupPoint: { name: "asc" } },
+      ],
+      take: 50,
     });
+
+    const normalized = await Promise.all(
+      events.map(async (event) => {
+        const reservedCombos = event.orders
+          .filter(
+            (order) =>
+              CAPACITY_STATUSES.includes(
+                order.status as (typeof CAPACITY_STATUSES)[number],
+              ) ||
+              (order.status === "PENDING_PAYMENT" &&
+                !!order.reservationExpiresAt &&
+                order.reservationExpiresAt > now),
+          )
+          .reduce(
+            (sum, order) => sum + order.comboQuantity,
+            0,
+          );
+
+        const soldOut =
+          reservedCombos >= event.maxCombos;
+
+        const nextStatus = soldOut
+          ? "SOLD_OUT"
+          : "OPEN";
+
+        if (nextStatus !== event.status) {
+          await this.prisma.pickupEvent.update({
+            where: { id: event.id },
+            data: { status: nextStatus },
+          });
+        }
+
+        const paidOrderCount = event.orders.filter(
+          (order) =>
+            order.paymentStatus === "PAID" &&
+            !GROUP_EXCLUDED_STATUSES.includes(
+              order.status as (typeof GROUP_EXCLUDED_STATUSES)[number],
+            ),
+        ).length;
+
+        const freeDeliveryUnlocked =
+          paidOrderCount >=
+          event.freeDeliveryMinPaidOrders;
+
+        const estimatedDeliveryFeeCents =
+          freeDeliveryUnlocked
+            ? 0
+            : paidOrderCount > 0
+              ? Math.ceil(
+                  event.transportCostCents /
+                    paidOrderCount,
+                )
+              : event.transportCostCents > 0
+                ? event.transportCostCents
+                : 0;
+
+        return {
+          id: event.id,
+          code: event.code,
+          name: event.name,
+          locationLabel: event.locationLabel,
+          pickupPoint: {
+            id: event.pickupPoint.id,
+            code: event.pickupPoint.code,
+            name: event.pickupPoint.name,
+            address: event.pickupPoint.address,
+            latitude: event.pickupPoint.latitude,
+            longitude: event.pickupPoint.longitude,
+          },
+          timezone: event.timezone,
+          startsAt: event.startsAt,
+          closesAt: event.closesAt,
+          maxCombos: event.maxCombos,
+          reservedCombos,
+          remainingCombos: Math.max(
+            0,
+            event.maxCombos - reservedCombos,
+          ),
+          status: nextStatus,
+          groupDelivery: {
+            minPaidOrders:
+              event.freeDeliveryMinPaidOrders,
+            paidOrderCount,
+            remainingPaidOrders: Math.max(
+              0,
+              event.freeDeliveryMinPaidOrders -
+                paidOrderCount,
+            ),
+            transportCostCents:
+              event.transportCostCents,
+            estimatedDeliveryFeeCents,
+            freeDeliveryUnlocked,
+          },
+        };
+      }),
+    );
+
+    return normalized;
+  }
+
+  async getCurrent() {
+    const events = await this.getOpen();
+    const event = events[0];
 
     if (!event) {
-      throw new NotFoundException("No hay un evento de entrega abierto.");
+      throw new NotFoundException(
+        "No hay un evento de entrega abierto.",
+      );
     }
 
-    const capacity = await this.prisma.order.aggregate({
-      where: {
-        pickupEventId: event.id,
-        OR: [
-          { status: { in: [...CAPACITY_STATUSES] } },
-          {
-            status: "PENDING_PAYMENT",
-            reservationExpiresAt: { gt: now },
-          },
-        ],
-      },
-      _sum: { comboQuantity: true },
-    });
-
-    const reservedCombos = capacity._sum.comboQuantity ?? 0;
-    const soldOut = reservedCombos >= event.maxCombos;
-
-    if (event.status === "SOLD_OUT" && !soldOut) {
-      await this.prisma.pickupEvent.update({
-        where: { id: event.id },
-        data: { status: "OPEN" },
-      });
-    } else if (event.status === "OPEN" && soldOut) {
-      await this.prisma.pickupEvent.update({
-        where: { id: event.id },
-        data: { status: "SOLD_OUT" },
-      });
-    }
-
-    return {
-      id: event.id,
-      code: event.code,
-      name: event.name,
-      locationLabel: event.locationLabel,
-      timezone: event.timezone,
-      startsAt: event.startsAt,
-      closesAt: event.closesAt,
-      maxCombos: event.maxCombos,
-      reservedCombos,
-      remainingCombos: Math.max(0, event.maxCombos - reservedCombos),
-      status: soldOut ? "SOLD_OUT" : "OPEN",
-    };
+    return event;
   }
 }
