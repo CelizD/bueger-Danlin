@@ -464,6 +464,17 @@ export class OrdersService {
             closesAt: event.closesAt,
             timezone: event.timezone,
           },
+          groupDelivery: {
+            minPaidOrders: event.freeDeliveryMinPaidOrders,
+            paidOrderCount: groupDeliveryPaidOrders,
+            remainingPaidOrders: Math.max(
+              0,
+              event.freeDeliveryMinPaidOrders - groupDeliveryPaidOrders,
+            ),
+            transportCostCents: event.transportCostCents,
+            estimatedDeliveryFeeCents: groupDeliveryEstimatedFeeCents,
+            freeDeliveryUnlocked: groupDeliveryFreeUnlocked,
+          },
         };
       });
 
@@ -516,6 +527,10 @@ export class OrdersService {
     totalCents: number;
     comboQuantity: number;
     reservationExpiresAt: Date | null;
+    groupDeliveryMinPaidOrdersAtOrder: number | null;
+    groupDeliveryTransportCostCentsAtOrder: number | null;
+    groupDeliveryPaidOrdersAtOrder: number | null;
+    groupDeliveryEstimatedFeeCentsAtOrder: number | null;
     pickupEvent: {
       id: string;
       code: string;
@@ -542,6 +557,24 @@ export class OrdersService {
         startsAt: order.pickupEvent.startsAt,
         closesAt: order.pickupEvent.closesAt,
         timezone: order.pickupEvent.timezone,
+      },
+      groupDelivery: {
+        minPaidOrders:
+          order.groupDeliveryMinPaidOrdersAtOrder ?? 5,
+        paidOrderCount:
+          order.groupDeliveryPaidOrdersAtOrder ?? 0,
+        remainingPaidOrders: Math.max(
+          0,
+          (order.groupDeliveryMinPaidOrdersAtOrder ?? 5) -
+            (order.groupDeliveryPaidOrdersAtOrder ?? 0),
+        ),
+        transportCostCents:
+          order.groupDeliveryTransportCostCentsAtOrder ?? 0,
+        estimatedDeliveryFeeCents:
+          order.groupDeliveryEstimatedFeeCentsAtOrder,
+        freeDeliveryUnlocked:
+          (order.groupDeliveryPaidOrdersAtOrder ?? 0) >=
+          (order.groupDeliveryMinPaidOrdersAtOrder ?? 5),
       },
     };
   }

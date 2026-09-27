@@ -60,6 +60,13 @@ test("cliente crea pedido, paga y obtiene QR", async ({
     }),
   ).toBeVisible();
 
+  await expect(
+    page.getByText("3 de 5 pedidos pagados"),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Faltan 2 pedidos para envío gratis"),
+  ).toBeVisible();
+
   const storedToken = await page.evaluate(() =>
     window.sessionStorage.getItem(
       "burger-danlin:order-token:H-TEST01",
@@ -86,6 +93,28 @@ test("cliente crea pedido, paga y obtiene QR", async ({
 
   await expect(
     page.getByLabel("QR de entrega"),
+  ).toBeVisible();
+
+  await expect(
+    page.getByText("4 de 5 pedidos pagados"),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Falta 1 pedido para envío gratis"),
+  ).toBeVisible();
+  await expect(page.getByText("$25", { exact: false })).toBeVisible();
+
+  await page
+    .getByRole("link", { name: "Administrar mi pedido" })
+    .click();
+
+  await expect(
+    page.getByRole("heading", { name: "H-TEST01" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Pagado", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("4 de 5 pedidos pagados"),
   ).toBeVisible();
 });
 

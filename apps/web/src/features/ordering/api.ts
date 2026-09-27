@@ -2,6 +2,7 @@ import { apiErrorMessage, apiFetch } from "@/lib/api/browser";
 import type {
   CancelOrderResult,
   CatalogProduct,
+  CustomerOrderRefresh,
   CreateOrderInput,
   CreatedOrder,
   InventoryAvailability,
@@ -106,4 +107,30 @@ export async function confirmMockOrderPayment(
   }
 
   return data as PaymentResult;
+}
+
+
+export async function loadCustomerOrder(
+  orderCode: string,
+  verificationToken: string,
+) {
+  const response = await apiFetch(
+    `/orders/${encodeURIComponent(orderCode)}`,
+    {
+      headers: {
+        "x-order-token": verificationToken,
+      },
+      cache: "no-store",
+    },
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      apiErrorMessage(data, "No se pudo actualizar el pedido."),
+    );
+  }
+
+  return data as CustomerOrderRefresh;
 }

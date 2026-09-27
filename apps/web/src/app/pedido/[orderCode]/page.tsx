@@ -1,5 +1,6 @@
 "use client";
 
+import { GroupDeliveryProgress } from "@/features/ordering/components/group-delivery-progress";
 import { API_URL, apiFetch } from "@/lib/api/browser";
 import {
   ArrowLeft,
@@ -31,6 +32,19 @@ type CustomerOrder = {
     startsAt: string;
     closesAt: string;
     timezone: string;
+    pickupPoint: {
+      code: string;
+      name: string;
+      address: string | null;
+    };
+  };
+  groupDelivery: {
+    minPaidOrders: number;
+    paidOrderCount: number;
+    remainingPaidOrders: number;
+    transportCostCents: number;
+    estimatedDeliveryFeeCents: number | null;
+    freeDeliveryUnlocked: boolean;
   };
   items: Array<{
     id: string;
@@ -270,9 +284,18 @@ export default function CustomerOrderPage() {
               <article>
                 <MapPin size={18} />
                 <span>Lugar</span>
-                <strong>{order.pickup.locationLabel}</strong>
+                <strong>{order.pickup.pickupPoint.name}</strong>
+                {order.pickup.pickupPoint.address && (
+                  <small>{order.pickup.pickupPoint.address}</small>
+                )}
               </article>
             </section>
+
+            <GroupDeliveryProgress
+              group={order.groupDelivery}
+              pointName={order.pickup.pickupPoint.name}
+              paymentStatus={order.paymentStatus}
+            />
 
             <section className="customer-order-items">
               <div className="customer-order-section-head">

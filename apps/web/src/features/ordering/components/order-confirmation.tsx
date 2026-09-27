@@ -2,6 +2,7 @@ import {
   money,
   pickupQrPayload,
 } from "@/features/ordering/formatters";
+import { GroupDeliveryProgress } from "@/features/ordering/components/group-delivery-progress";
 import type { CreatedOrder } from "@/features/ordering/types";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -82,6 +83,7 @@ export function OrderConfirmation({
             <small>
               {new Intl.DateTimeFormat("es-MX", {
                 timeZone: order.pickup.timezone,
+                weekday: "short",
                 day: "numeric",
                 month: "short",
                 hour: "numeric",
@@ -90,6 +92,12 @@ export function OrderConfirmation({
             </small>
           </div>
         </div>
+
+        <GroupDeliveryProgress
+          group={order.groupDelivery}
+          pointName={order.pickup.locationLabel}
+          paymentStatus={order.paymentStatus}
+        />
 
         {!isPaid && !isCancelled && (
           <button

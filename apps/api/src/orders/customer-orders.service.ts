@@ -25,7 +25,11 @@ export class CustomerOrdersService {
     const order = await this.prisma.order.findUnique({
       where: { orderCode },
       include: {
-        pickupEvent: true,
+        pickupEvent: {
+          include: {
+            pickupPoint: true,
+          },
+        },
         items: {
           orderBy: { id: "asc" },
           include: { modifiers: { orderBy: { id: "asc" } } },
@@ -44,6 +48,28 @@ export class CustomerOrdersService {
 
     const latestPayment = order.payments[0] ?? null;
     const refundRequested = this.hasRefundRequest(latestPayment?.metadata);
+
+    const paidOrderCount = await this.prisma.order.count({
+      where: {
+        pickupEventId: order.pickupEventId,
+        paymentStatus: "PAID",
+        status: {
+          notIn: ["CANCELLED", "REFUNDED"],
+        },
+      },
+    });
+
+    const freeDeliveryUnlocked =
+      paidOrderCount >= order.pickupEvent.freeDeliveryMinPaidOrders;
+
+    const estimatedDeliveryFeeCents =
+      freeDeliveryUnlocked
+        ? 0
+        : paidOrderCount > 0
+          ? Math.ceil(
+              order.pickupEvent.transportCostCents / paidOrderCount,
+            )
+          : null;
 
     return {
       orderCode: order.orderCode,
@@ -67,6 +93,22 @@ export class CustomerOrdersService {
         startsAt: order.pickupEvent.startsAt,
         closesAt: order.pickupEvent.closesAt,
         timezone: order.pickupEvent.timezone,
+        pickupPoint: {
+          code: order.pickupEvent.pickupPoint.code,
+          name: order.pickupEvent.pickupPoint.name,
+          address: order.pickupEvent.pickupPoint.address,
+        },
+      },
+      groupDelivery: {
+        minPaidOrders: order.pickupEvent.freeDeliveryMinPaidOrders,
+        paidOrderCount,
+        remainingPaidOrders: Math.max(
+          0,
+          order.pickupEvent.freeDeliveryMinPaidOrders - paidOrderCount,
+        ),
+        transportCostCents: order.pickupEvent.transportCostCents,
+        estimatedDeliveryFeeCents,
+        freeDeliveryUnlocked,
       },
       items: order.items.map((item) => ({
         id: item.id,

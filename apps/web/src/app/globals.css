@@ -5069,3 +5069,104 @@ textarea:focus-visible,
     padding: 16px;
   }
 }
+
+
+/* Group delivery progress after purchase */
+.group-delivery-progress-card {
+  display: grid;
+  gap: 14px;
+  margin: 20px 0;
+  padding: 18px;
+  border: 1px solid #d9d2c7;
+  border-radius: 16px;
+  background: #fbfaf7;
+}
+
+.group-delivery-progress-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.group-delivery-progress-head h2 {
+  margin: 4px 0 0;
+  font-size: 24px;
+  letter-spacing: -0.035em;
+}
+
+.group-delivery-progress-head > strong {
+  color: #2f2b26;
+  font-size: 20px;
+}
+
+.group-delivery-progress-icons {
+  display: grid;
+  gap: 7px;
+  padding: 13px;
+  border-radius: 11px;
+  background: #f0ece5;
+}
+
+.group-delivery-progress-icons > span {
+  font-size: 20px;
+  letter-spacing: 2px;
+  overflow-wrap: anywhere;
+}
+
+.group-delivery-progress-icons strong {
+  color: #4d473f;
+  font-size: 11px;
+}
+
+.group-delivery-pending,
+.group-delivery-free {
+  display: grid;
+  gap: 5px;
+  padding: 12px 13px;
+  border-radius: 11px;
+}
+
+.group-delivery-pending {
+  background: #fff4df;
+  color: #674c1f;
+}
+
+.group-delivery-free {
+  background: #eaf3e6;
+  color: #3f633c;
+}
+
+.group-delivery-pending strong,
+.group-delivery-free strong {
+  font-size: 12px;
+}
+
+.group-delivery-pending span,
+.group-delivery-free span {
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.group-delivery-progress-note {
+  margin: 0;
+  color: #81786d;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.customer-order-summary article small {
+  display: block;
+  margin-top: 3px;
+  color: #857d72;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+@media (max-width: 620px) {
+  .group-delivery-progress-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+}

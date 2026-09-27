@@ -4,6 +4,7 @@ import {
   cancelOrder,
   confirmMockOrderPayment,
   createOrder,
+  loadCustomerOrder,
   loadOrderingData,
 } from "@/features/ordering/api";
 import { BurgerBuilder } from "@/features/ordering/components/burger-builder";
@@ -438,6 +439,27 @@ export function OrderApp() {
             }
           : current,
       );
+
+      try {
+        const refreshed = await loadCustomerOrder(
+          createdOrder.orderCode,
+          createdOrder.verificationToken,
+        );
+
+        setCreatedOrder((current) =>
+          current
+            ? {
+                ...current,
+                status: refreshed.status,
+                paymentStatus: refreshed.paymentStatus,
+                groupDelivery: refreshed.groupDelivery,
+              }
+            : current,
+        );
+      } catch {
+        // El pago ya quedó confirmado. Si la actualización del progreso
+        // falla, "Administrar mi pedido" lo recalculará al abrirse.
+      }
     } catch (paymentError) {
       setError(
         paymentError instanceof Error

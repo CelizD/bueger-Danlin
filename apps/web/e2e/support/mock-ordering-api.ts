@@ -22,6 +22,9 @@ async function json(
 }
 
 export async function mockOrderingApi(page: Page) {
+  let mockPaid = false;
+  let selectedPickup: "Universidad" | "Cucapá" = "Universidad";
+
   await page.route("**/api/v1/**", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -188,6 +191,8 @@ export async function mockOrderingApi(page: Page) {
       }
 
       const isCucapa = input.pickupEventId === "event-2";
+      selectedPickup = isCucapa ? "Cucapá" : "Universidad";
+      mockPaid = false;
 
       await json(route, {
         orderCode: "H-TEST01",
@@ -206,6 +211,14 @@ export async function mockOrderingApi(page: Page) {
           closesAt: "2026-09-26T04:00:00.000Z",
           timezone: "America/Tijuana",
         },
+        groupDelivery: {
+          minPaidOrders: 5,
+          paidOrderCount: isCucapa ? 4 : 3,
+          remainingPaidOrders: isCucapa ? 1 : 2,
+          transportCostCents: 10000,
+          estimatedDeliveryFeeCents: isCucapa ? 2500 : 3334,
+          freeDeliveryUnlocked: false,
+        },
       });
       return;
     }
@@ -214,9 +227,64 @@ export async function mockOrderingApi(page: Page) {
       path.endsWith("/payments/mock/H-TEST01/confirm") &&
       method === "POST"
     ) {
+      mockPaid = true;
       await json(route, {
         status: "CONFIRMED",
         paymentStatus: "PAID",
+      });
+      return;
+    }
+
+    if (
+      path.endsWith("/orders/H-TEST01") &&
+      method === "GET"
+    ) {
+      const isCucapa = selectedPickup === "Cucapá";
+      const paidOrderCount = mockPaid
+        ? isCucapa
+          ? 5
+          : 4
+        : isCucapa
+          ? 4
+          : 3;
+      const freeDeliveryUnlocked = paidOrderCount >= 5;
+
+      await json(route, {
+        orderCode: "H-TEST01",
+        status: mockPaid ? "PAID" : "PENDING_PAYMENT",
+        paymentStatus: mockPaid ? "PAID" : "PENDING",
+        currency: "MXN",
+        totalCents: 13000,
+        comboQuantity: 1,
+        createdAt: "2026-09-20T05:00:00.000Z",
+        cancelledAt: null,
+        canCancel: true,
+        cancellationDeadline: "2026-09-26T04:00:00.000Z",
+        refundStatus: null,
+        pickup: {
+          locationLabel: selectedPickup,
+          startsAt: isCucapa
+            ? "2026-09-26T20:00:00.000Z"
+            : "2026-09-26T19:00:00.000Z",
+          closesAt: "2026-09-26T04:00:00.000Z",
+          timezone: "America/Tijuana",
+          pickupPoint: {
+            code: isCucapa ? "CUCAPA" : "UNIVERSIDAD",
+            name: selectedPickup,
+            address: isCucapa ? "Punto Cucapá" : "Entrada principal",
+          },
+        },
+        groupDelivery: {
+          minPaidOrders: 5,
+          paidOrderCount,
+          remainingPaidOrders: Math.max(0, 5 - paidOrderCount),
+          transportCostCents: 10000,
+          estimatedDeliveryFeeCents: freeDeliveryUnlocked
+            ? 0
+            : Math.ceil(10000 / paidOrderCount),
+          freeDeliveryUnlocked,
+        },
+        items: [],
       });
       return;
     }

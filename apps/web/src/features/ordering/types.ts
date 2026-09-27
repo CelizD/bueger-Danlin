@@ -23,6 +23,15 @@ export type CatalogProduct = {
   }>;
 };
 
+export type GroupDeliveryStatus = {
+  minPaidOrders: number;
+  paidOrderCount: number;
+  remainingPaidOrders: number;
+  transportCostCents: number;
+  estimatedDeliveryFeeCents: number | null;
+  freeDeliveryUnlocked: boolean;
+};
+
 export type PickupEvent = {
   id: string;
   code: string;
@@ -43,14 +52,7 @@ export type PickupEvent = {
   reservedCombos: number;
   remainingCombos: number;
   status: "OPEN" | "SOLD_OUT";
-  groupDelivery: {
-    minPaidOrders: number;
-    paidOrderCount: number;
-    remainingPaidOrders: number;
-    transportCostCents: number;
-    estimatedDeliveryFeeCents: number | null;
-    freeDeliveryUnlocked: boolean;
-  };
+  groupDelivery: GroupDeliveryStatus;
 };
 
 export type InventoryAvailability = {
@@ -87,6 +89,13 @@ export type CreatedOrder = {
     closesAt: string;
     timezone: string;
   };
+  groupDelivery: GroupDeliveryStatus;
+};
+
+export type CustomerOrderRefresh = {
+  status: string;
+  paymentStatus: string;
+  groupDelivery: GroupDeliveryStatus;
 };
 
 export type CancelOrderResult = {

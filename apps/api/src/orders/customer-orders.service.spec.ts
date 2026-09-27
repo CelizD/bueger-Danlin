@@ -79,6 +79,69 @@ function harness(currentOrder: ReturnType<typeof order>) {
   };
 }
 
+describe("CustomerOrdersService.getOrder", () => {
+  it("devuelve progreso grupal vivo y costo estimado", async () => {
+    const prisma = {
+      order: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "order-1",
+          orderCode: "H-A1B2C3D4",
+          pickupEventId: "event-1",
+          verificationTokenHash: TOKEN_HASH,
+          status: "PAID",
+          paymentStatus: "PAID",
+          currency: "MXN",
+          totalCents: 13_000,
+          comboQuantity: 1,
+          createdAt: new Date(),
+          cancelledAt: null,
+          payments: [],
+          items: [],
+          pickupEvent: {
+            id: "event-1",
+            locationLabel: "Universidad",
+            startsAt: new Date(Date.now() + 2 * 60 * 60_000),
+            closesAt: new Date(Date.now() + 60 * 60_000),
+            timezone: "America/Tijuana",
+            freeDeliveryMinPaidOrders: 5,
+            transportCostCents: 10_000,
+            pickupPoint: {
+              code: "UNIVERSIDAD",
+              name: "Universidad",
+              address: "Entrada principal",
+            },
+          },
+        }),
+        count: vi.fn().mockResolvedValue(4),
+      },
+    } as unknown as PrismaService;
+
+    const service = new CustomerOrdersService(
+      prisma,
+      {} as InventoryService,
+    );
+
+    const result = await service.getOrder(
+      "H-A1B2C3D4",
+      TOKEN,
+    );
+
+    expect(result.groupDelivery).toEqual({
+      minPaidOrders: 5,
+      paidOrderCount: 4,
+      remainingPaidOrders: 1,
+      transportCostCents: 10_000,
+      estimatedDeliveryFeeCents: 2_500,
+      freeDeliveryUnlocked: false,
+    });
+    expect(result.pickup.pickupPoint).toEqual({
+      code: "UNIVERSIDAD",
+      name: "Universidad",
+      address: "Entrada principal",
+    });
+  });
+});
+
 describe("CustomerOrdersService.cancel", () => {
   it("rechaza el token antes de modificar el pedido", async () => {
     const current = order();
