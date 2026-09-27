@@ -424,6 +424,36 @@ services:
         max-size: "10m"
         max-file: "3"
 
+
+  alertmanager:
+    image: prom/alertmanager:v0.34.1
+    restart: unless-stopped
+    profiles:
+      - telegram-alerts
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    volumes:
+      - ./deploy/observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ${TELEGRAM_BOT_TOKEN_FILE:-/dev/null}:/run/secrets/telegram-bot-token:ro
+      - ${TELEGRAM_CHAT_ID_FILE:-/dev/null}:/run/secrets/telegram-chat-id:ro
+      - burger_alertmanager_data:/alertmanager
+    networks:
+      - observability
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    logging:
+      driver: json-file
+      options:
+        tag: "alertmanager"
+        max-size: "10m"
+        max-file: "3"
+
   loki:
     image: grafana/loki:3.7.8
     restart: unless-stopped
@@ -552,6 +582,7 @@ services:
 volumes:
   burger_postgres_data:
   burger_prometheus_data:
+  burger_alertmanager_data:
   burger_loki_data:
   burger_alloy_data:
   burger_grafana_data:
