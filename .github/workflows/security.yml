@@ -85,6 +85,62 @@ jobs:
       - name: Run Semgrep
         run: semgrep scan --config auto --error --exclude apps/api/src/generated/prisma .
 
+  container-scan:
+    name: Container image scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build API image
+        run: docker build --pull --file apps/api/Dockerfile --tag burger-danlin-api:scan .
+
+      - name: Scan API image with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: burger-danlin-api:scan
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          scanners: vuln
+          severity: HIGH,CRITICAL
+
+      - name: Build Web image
+        run: >-
+          docker build --pull
+          --build-arg NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
+          --file apps/web/Dockerfile
+          --tag burger-danlin-web:scan
+          .
+
+      - name: Scan Web image with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: burger-danlin-web:scan
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          scanners: vuln
+          severity: HIGH,CRITICAL
+
+      - name: Build backup image
+        run: docker build --pull --file deploy/backup/Dockerfile --tag burger-danlin-backup:scan .
+
+      - name: Scan backup image with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: burger-danlin-backup:scan
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          scanners: vuln
+          severity: HIGH,CRITICAL
+
   sbom:
     name: Generate SBOM
     if: github.event_name != 'pull_request'
