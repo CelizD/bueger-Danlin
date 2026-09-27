@@ -26,6 +26,10 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [x] Objetivos técnicos iniciales RPO/RTO documentados.
 - [x] Retention cleanup con dry-run, kill switch y tests.
 - [x] Timer systemd diario de retención preparado.
+- [x] Prometheus/Loki/Grafana/Alloy configurados.
+- [x] Dashboard Grafana y datasources provisionados.
+- [x] Reglas Prometheus para API, DB, latencia, errores, inventario, memoria y disco.
+- [x] Endpoint de métricas bloqueado desde Nginx público.
 
 ## Pendiente hasta tener VPS/dominio/proveedores
 
@@ -79,6 +83,18 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [ ] Validar SHA-256.
 - [ ] Ejecutar restore drill con el archivo descargado.
 - [ ] Guardar una segunda copia segura de backup-age.key fuera del VPS.
+
+### Observabilidad
+
+- [ ] Generar contraseña fuerte de Grafana.
+- [ ] Levantar el perfil `observability`.
+- [ ] Confirmar targets de Prometheus en estado UP.
+- [ ] Confirmar ingestión de logs en Loki.
+- [ ] Confirmar dashboard `Burger Danlin — Overview`.
+- [ ] Confirmar que Grafana solo escucha en loopback o detrás de acceso restringido.
+- [ ] Confirmar que `/api/v1/metrics` no es público.
+- [ ] Definir canal de notificaciones y conectar Alertmanager o equivalente.
+- [ ] Medir consumo real de CPU/RAM/disco del stack.
 
 ### Operación
 
