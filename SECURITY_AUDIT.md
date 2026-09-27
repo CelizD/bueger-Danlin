@@ -196,37 +196,37 @@ Pendiente antes de habilitar pagos reales:
 
 ### Fase 3 — Privacidad y threat model
 
-5. Threat model.
-6. Inventario de datos.
-7. Política de retención/eliminación.
-8. Privacy notice.
+4. Threat model.
+5. Inventario de datos.
+6. Política de retención/eliminación.
+7. Privacy notice.
 
 ### Fase 4 — Observabilidad
 
-9. Métricas.
-10. Tracing.
-11. Logs centralizados.
-12. Alertas.
-13. Runbooks e incident contacts.
+8. Métricas.
+9. Tracing.
+10. Logs centralizados.
+11. Alertas.
+12. Runbooks e incident contacts.
 
 ### Fase 5 — Preproducción
 
-14. ADRs.
-15. Load/stress test.
-16. Staging.
-17. Rollback probado.
-18. DAST.
-19. Infraestructura real: dominio/TLS/WAF.
-20. Backup offsite real.
-21. Simulacro completo de pérdida del VPS.
-22. Pentest.
+13. ADRs.
+14. Load/stress test.
+15. Staging.
+16. Rollback probado.
+17. DAST.
+18. Infraestructura real: dominio/TLS/WAF.
+19. Backup offsite real.
+20. Simulacro completo de pérdida del VPS.
+21. Pentest.
 
 ### Fase 6 — Pagos
 
-23. Completar flujo real de Mercado Pago.
-24. Sandbox.
-25. Webhooks/reconciliación/refunds.
-26. Activación explícita de pagos reales.
+22. Completar flujo real de Mercado Pago.
+23. Sandbox.
+24. Webhooks/reconciliación/refunds.
+25. Activación explícita de pagos reales.
 
 ## Próximo control
 
