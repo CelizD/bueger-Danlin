@@ -7,7 +7,7 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates openssl \
   && rm -rf /var/lib/apt/lists/* \
   && corepack enable \
-  && corepack prepare pnpm@10.17.1 --activate
+  && corepack prepare pnpm@10.34.5 --activate
 
 WORKDIR /app
 
@@ -23,17 +23,20 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN pnpm --filter @burger/types build \
-  && pnpm --filter @burger/web build
+  && pnpm --filter @burger/web build \
+  && pnpm --filter @burger/web --prod deploy --legacy /prod/web \
+  && cp -R apps/web/.next /prod/web/.next
 
 FROM node:24-bookworm-slim AS runtime
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-WORKDIR /app/apps/web
+WORKDIR /app
 
-COPY --from=build --chown=node:node /app/node_modules /app/node_modules
-COPY --from=build --chown=node:node /app/apps/web /app/apps/web
-COPY --from=build --chown=node:node /app/packages /app/packages
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v1.22.22 \
+  && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg /usr/local/bin/pnpm /usr/local/bin/pnpx
+
+COPY --from=build --chown=node:node /prod/web ./
 
 USER node
 
