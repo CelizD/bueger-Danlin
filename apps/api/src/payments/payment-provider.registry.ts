@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import type { PaymentProvider } from "./domain/payment-provider.interface.js";
 import type { PaymentProviderName } from "./domain/payment-provider.types.js";
+import { MercadoPagoProvider } from "./providers/mercadopago/mercadopago.provider.js";
 import { MockPaymentProvider } from "./providers/mock/mock-payment.provider.js";
 
 const providerNames = new Set<PaymentProviderName>([
@@ -33,9 +34,11 @@ export class PaymentProviderRegistry {
 
   constructor(
     mockPaymentProvider: MockPaymentProvider,
+    mercadoPagoProvider: MercadoPagoProvider,
   ) {
     this.providers = new Map<PaymentProviderName, PaymentProvider>([
       [mockPaymentProvider.name, mockPaymentProvider],
+      [mercadoPagoProvider.name, mercadoPagoProvider],
     ]);
   }
 
