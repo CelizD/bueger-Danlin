@@ -83,7 +83,7 @@ describe("validateProductionEnvironment", () => {
     vi.stubEnv("TELEGRAM_CHAT_ID", "123456789");
 
     expect(() => validateProductionEnvironment()).toThrow(
-      "TELEGRAM_BOT_TOKEN must be a strong secret",
+      "TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_TOKEN_FILE must provide a valid bot token",
     );
   });
 
