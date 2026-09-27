@@ -47,11 +47,24 @@ export function eligibleOrderWhere(
     OR: [
       {
         status: "PENDING_PAYMENT",
+        paymentStatus: {
+          in: ["PENDING", "FAILED", "CANCELLED"],
+        },
         createdAt: { lt: cutoffs.pendingPayment },
       },
       {
         status: "CANCELLED",
+        paymentStatus: {
+          in: ["PENDING", "FAILED", "CANCELLED"],
+        },
         createdAt: { lt: cutoffs.cancelled },
+      },
+      {
+        status: "CANCELLED",
+        paymentStatus: {
+          in: ["PAID", "REFUNDED", "PARTIALLY_REFUNDED"],
+        },
+        createdAt: { lt: cutoffs.historical },
       },
       {
         status: {
