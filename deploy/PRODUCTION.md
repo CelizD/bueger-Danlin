@@ -27,11 +27,24 @@ PostgreSQL y Redis no publican puertos al host en `docker-compose.prod.yml`.
 
 ```bash
 sudo install -d -m 700 /etc/burger-danlin
-sudo install -d -m 700 /var/backups/burger-danlin
+sudo install -d -m 700 -o 10001 -g 10001 /var/backups/burger-danlin
 sudo install -d -m 755 /opt/burger-danlin
 ```
 
-El repositorio puede vivir en `/opt/burger-danlin`.
+Si `/var/backups/burger-danlin` ya existía antes de aplicar el usuario no-root del contenedor de backups:
+
+```bash
+sudo chown 10001:10001 /var/backups/burger-danlin
+sudo chmod 700 /var/backups/burger-danlin
+```
+
+El UID/GID `10001` corresponde al usuario `backup` dentro de la imagen `burger-danlin-backup`.
+
+El repositorio puede vivir en:
+
+```text
+/opt/burger-danlin
+```
 
 ## 2. Configuración de producción
 
@@ -53,16 +66,26 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 
 No reutilices `AUTH_JWT_SECRET`, `QR_TOKEN_SECRET` ni `MFA_ENCRYPTION_KEY`.
 
-Para PostgreSQL/Redis usa contraseñas largas que no contengan caracteres que rompan una URL si se construye `DATABASE_URL`; base64url es una opción práctica.
+Para PostgreSQL y Redis usa contraseñas largas que no contengan caracteres que rompan una URL si se construye `DATABASE_URL`. `base64url` es una opción práctica.
 
 PostgreSQL usa dos identidades distintas:
 
 - `POSTGRES_ADMIN_USER`: propietario/administrador de la base. Solo bootstrap, migraciones y backups.
-- `POSTGRES_RUNTIME_USER`: rol de la API. No es superusuario, no puede crear roles/bases ni crear objetos en el esquema; recibe únicamente permisos DML sobre las tablas de la aplicación.
+- `POSTGRES_RUNTIME_USER`: rol de la API. No es superusuario, no puede crear roles, bases ni objetos en el esquema. Recibe únicamente permisos DML sobre las tablas de la aplicación.
 
-Las contraseñas de ambos roles deben ser distintas. La API solo recibe las variables `POSTGRES_RUNTIME_*`.
+Las contraseñas de ambos roles deben ser distintas.
 
-Si ya existe un volumen creado con el esquema anterior de un solo superusuario, sigue `deploy/postgres/MIGRATE_EXISTING_VOLUME.md` antes de arrancar la nueva configuración. El bootstrap rechaza de forma segura un runtime que todavía sea propietario de la base, esquema o tablas.
+La API solo recibe las variables `POSTGRES_RUNTIME_*`.
+
+Si ya existe un volumen creado con el esquema anterior de un solo superusuario, sigue:
+
+```text
+deploy/postgres/MIGRATE_EXISTING_VOLUME.md
+```
+
+antes de arrancar la nueva configuración.
+
+El bootstrap rechaza de forma segura un runtime que todavía sea propietario de la base, esquema o tablas.
 
 ## 3. Clave de backup age
 
@@ -70,17 +93,41 @@ Construye primero la utilidad:
 
 ```bash
 cd /opt/burger-danlin
-docker build -f deploy/backup/Dockerfile -t burger-danlin-backup .
+
+docker build \
+  -f deploy/backup/Dockerfile \
+  -t burger-danlin-backup .
 ```
 
-Genera la identidad privada directamente en `/etc`:
+La imagen de backups ejecuta normalmente como usuario no-root:
+
+```text
+uid=10001(backup)
+gid=10001(backup)
+```
+
+El directorio `/etc/burger-danlin` está protegido para `root`, por lo que la generación inicial de la clave privada utiliza root únicamente durante esa operación puntual.
+
+Genera la identidad privada:
 
 ```bash
 sudo docker run --rm \
+  --user 0:0 \
   -v /etc/burger-danlin:/keys \
   burger-danlin-backup \
   -c 'age-keygen -o /keys/backup-age.key'
+```
+
+Protege inmediatamente la clave:
+
+```bash
 sudo chmod 600 /etc/burger-danlin/backup-age.key
+```
+
+Comprueba sus permisos:
+
+```bash
+sudo ls -l /etc/burger-danlin/backup-age.key
 ```
 
 Obtén el recipient público:
@@ -89,9 +136,21 @@ Obtén el recipient público:
 sudo grep "^# public key:" /etc/burger-danlin/backup-age.key
 ```
 
-Copia únicamente el valor `age1...` a `BACKUP_AGE_RECIPIENT` en `production.env`.
+Copia únicamente el valor `age1...` a `BACKUP_AGE_RECIPIENT` dentro de:
 
-La clave privada nunca debe entrar a Git, variables del frontend ni logs.
+```text
+/etc/burger-danlin/production.env
+```
+
+La clave privada nunca debe entrar a:
+
+- Git
+- variables del frontend
+- Dockerfiles
+- logs
+- imágenes Docker
+- commits
+- archivos `.env.example`
 
 ## 4. Validar configuración
 
@@ -115,7 +174,9 @@ docker compose \
 
 API y Web ejecutan Node como usuario no-root.
 
-## 6. Levantar PostgreSQL/Redis
+La imagen de backups también ejecuta como usuario no-root con UID/GID `10001`.
+
+## 6. Levantar PostgreSQL y Redis
 
 ```bash
 docker compose \
@@ -133,11 +194,25 @@ docker compose \
   ps
 ```
 
-No deben existir bindings públicos `0.0.0.0:5432` ni `0.0.0.0:6379`.
+No deben existir bindings públicos:
 
-## 7. Crear/verificar el rol runtime y ejecutar migraciones
+```text
+0.0.0.0:5432
+0.0.0.0:6379
+```
 
-El bootstrap es idempotente: crea el rol runtime si no existe, fuerza atributos no administrativos y aplica los permisos mínimos actuales/default.
+PostgreSQL y Redis deben permanecer accesibles únicamente dentro de las redes Docker correspondientes.
+
+## 7. Crear y verificar el rol runtime y ejecutar migraciones
+
+El bootstrap es idempotente:
+
+- crea el rol runtime si no existe;
+- fuerza atributos no administrativos;
+- aplica permisos mínimos actuales;
+- aplica permisos por defecto para objetos futuros.
+
+Ejecuta:
 
 ```bash
 docker compose \
@@ -155,7 +230,19 @@ docker compose \
   run --rm migrate
 ```
 
-En producción se usa `prisma migrate deploy`, no `migrate dev`.
+En producción se usa:
+
+```text
+prisma migrate deploy
+```
+
+No uses:
+
+```text
+prisma migrate dev
+```
+
+en producción.
 
 ## 8. Levantar aplicación
 
@@ -169,16 +256,36 @@ docker compose \
 Verifica:
 
 ```bash
-curl -fsS -H 'X-Forwarded-Proto: https' http://127.0.0.1:4000/api/v1/health/live
-curl -fsS -H 'X-Forwarded-Proto: https' http://127.0.0.1:4000/api/v1/health/ready
-curl -fsS http://127.0.0.1:3000/ >/dev/null
+curl -fsS \
+  -H 'X-Forwarded-Proto: https' \
+  http://127.0.0.1:4000/api/v1/health/live
 ```
 
-## 9. Nginx/TLS
+```bash
+curl -fsS \
+  -H 'X-Forwarded-Proto: https' \
+  http://127.0.0.1:4000/api/v1/health/ready
+```
 
-Usa `deploy/nginx/burger-danlin.conf.example` como base.
+```bash
+curl -fsS \
+  http://127.0.0.1:3000/ \
+  >/dev/null
+```
 
-Nginx es el único componente que debe escuchar públicamente en HTTP/HTTPS. El API y Web permanecen en loopback.
+## 9. Nginx y TLS
+
+Usa:
+
+```text
+deploy/nginx/burger-danlin.conf.example
+```
+
+como base.
+
+Nginx es el único componente que debe escuchar públicamente en HTTP/HTTPS.
+
+El API y Web permanecen en loopback.
 
 Configura certificados reales antes de producción y valida:
 
@@ -205,7 +312,19 @@ burger-danlin-YYYYMMDDTHHMMSSZ.dump.age
 burger-danlin-YYYYMMDDTHHMMSSZ.dump.age.sha256
 ```
 
-Nunca debe quedar un `.dump` sin cifrar en `/var/backups/burger-danlin`.
+Comprueba permisos:
+
+```bash
+sudo ls -lah /var/backups/burger-danlin
+```
+
+Nunca debe quedar un archivo `.dump` sin cifrar en:
+
+```text
+/var/backups/burger-danlin
+```
+
+El proceso utiliza archivos temporales dentro de `/tmp` y cifra el dump antes de moverlo al directorio final.
 
 ## 11. Restore drill inicial
 
@@ -234,12 +353,32 @@ docker compose \
 ## 12. Activar timers
 
 ```bash
-sudo cp deploy/systemd/burger-danlin-backup.service /etc/systemd/system/
-sudo cp deploy/systemd/burger-danlin-backup.timer /etc/systemd/system/
-sudo cp deploy/systemd/burger-danlin-restore-drill.service /etc/systemd/system/
-sudo cp deploy/systemd/burger-danlin-restore-drill.timer /etc/systemd/system/
+sudo cp \
+  deploy/systemd/burger-danlin-backup.service \
+  /etc/systemd/system/
 
+sudo cp \
+  deploy/systemd/burger-danlin-backup.timer \
+  /etc/systemd/system/
+
+sudo cp \
+  deploy/systemd/burger-danlin-restore-drill.service \
+  /etc/systemd/system/
+
+sudo cp \
+  deploy/systemd/burger-danlin-restore-drill.timer \
+  /etc/systemd/system/
+```
+
+Recarga systemd:
+
+```bash
 sudo systemctl daemon-reload
+```
+
+Activa los timers:
+
+```bash
 sudo systemctl enable --now burger-danlin-backup.timer
 sudo systemctl enable --now burger-danlin-restore-drill.timer
 ```
@@ -257,32 +396,59 @@ Baseline incluido:
 
 Objetivos técnicos iniciales:
 
-- RPO: <= 1 hora para PostgreSQL, sujeto a que la copia offsite finalice correctamente;
-- RTO: <= 4 horas para recuperar el servicio completo, pendiente de validar con un simulacro de pérdida total del VPS.
+- RPO: `<= 1 hora` para PostgreSQL, sujeto a que la copia offsite finalice correctamente;
+- RTO: `<= 4 horas` para recuperar el servicio completo, pendiente de validar con un simulacro de pérdida total del VPS.
 
 Son objetivos operativos y deben validarse con evidencia real.
 
 ## 13. Logs
+
+Logs de aplicación:
 
 ```bash
 docker compose \
   --env-file /etc/burger-danlin/production.env \
   -f docker-compose.prod.yml \
   logs --tail=200 api web postgres redis
+```
 
+Logs de backup:
+
+```bash
 journalctl -u burger-danlin-backup.service
+```
+
+Logs del restore drill:
+
+```bash
 journalctl -u burger-danlin-restore-drill.service
 ```
 
 Docker aplica rotación local de logs para evitar crecimiento ilimitado.
 
+No deben imprimirse en logs:
+
+- contraseñas;
+- tokens;
+- claves privadas;
+- `DATABASE_URL` completas;
+- secretos JWT;
+- claves MFA;
+- claves `age`.
+
 ## 14. Backup offsite inmutable
 
-Configura un bucket IONOS Object Storage dedicado con Versioning, Object Lock y retención por defecto.
+Configura un bucket IONOS Object Storage dedicado con:
+
+- Versioning;
+- Object Lock;
+- retención por defecto.
 
 Consulta:
 
-`deploy/OFFSITE_BACKUP.md`
+```text
+deploy/OFFSITE_BACKUP.md
+```
 
 Prueba el upload:
 
@@ -322,7 +488,20 @@ El preflight comprueba como mínimo:
 - configuración Nginx;
 - permisos del archivo de secretos;
 - resolución del Compose de producción;
-- ausencia de PostgreSQL/Redis en interfaces públicas.
+- ausencia de PostgreSQL y Redis en interfaces públicas.
+
+También conviene comprobar los permisos del directorio de backups:
+
+```bash
+sudo stat /var/backups/burger-danlin
+```
+
+El propietario esperado debe corresponder a:
+
+```text
+UID 10001
+GID 10001
+```
 
 ## 16. TLS y DNS
 
@@ -336,4 +515,49 @@ Antes de solicitar certificados:
 6. recarga Nginx;
 7. comprueba HTTPS desde una red externa.
 
-No expongas 3000, 4000, 5432 ni 6379 públicamente. Web/API permanecen en loopback y Nginx es el punto de entrada público.
+No expongas públicamente:
+
+```text
+3000
+4000
+5432
+6379
+```
+
+Web/API permanecen en loopback y Nginx es el punto de entrada público.
+
+## 17. Verificación del usuario de backups
+
+Después de construir la imagen puedes verificar que no corre como root:
+
+```bash
+docker run --rm \
+  burger-danlin-backup \
+  -c "id"
+```
+
+La salida esperada es similar a:
+
+```text
+uid=10001(backup) gid=10001(backup)
+```
+
+No debe aparecer:
+
+```text
+uid=0(root)
+```
+
+El uso de:
+
+```text
+--user 0:0
+```
+
+queda reservado únicamente para operaciones administrativas explícitas como la creación inicial de:
+
+```text
+/etc/burger-danlin/backup-age.key
+```
+
+Los backups normales, restauraciones y operaciones offsite deben utilizar el usuario no-root configurado en la imagen.

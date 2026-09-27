@@ -8,6 +8,8 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "America/Tijuana"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
 
   - package-ecosystem: "github-actions"
@@ -17,6 +19,8 @@ updates:
       day: "monday"
       time: "09:15"
       timezone: "America/Tijuana"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
 
   - package-ecosystem: "docker-compose"
@@ -25,4 +29,6 @@ updates:
       interval: "monthly"
       time: "09:30"
       timezone: "America/Tijuana"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 3

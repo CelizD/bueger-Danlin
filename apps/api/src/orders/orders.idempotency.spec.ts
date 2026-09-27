@@ -5,6 +5,7 @@ import {
 import {
   createHash,
   createHmac,
+  randomBytes,
 } from "node:crypto";
 import {
   afterEach,
@@ -19,8 +20,7 @@ import type { InventoryService } from "../inventory/inventory.service.js";
 import type { CreateOrderDto } from "./dto/create-order.dto.js";
 import { OrdersService } from "./orders.service.js";
 
-const SECRET =
-  "test-qr-secret-at-least-thirty-two-characters-long";
+const SECRET = randomBytes(32).toString("base64url");
 const originalQrSecret = process.env.QR_TOKEN_SECRET;
 
 const dto: CreateOrderDto = {
