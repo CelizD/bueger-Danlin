@@ -378,10 +378,11 @@ Grafana queda en:
 
 y se recomienda acceder mediante túnel SSH.
 
-Guía completa:
+Guías:
 
 ```text
 deploy/observability/README.md
+deploy/TELEGRAM.md
 ```
 
 ## Retención de datos
