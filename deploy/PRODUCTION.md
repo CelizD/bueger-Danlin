@@ -77,6 +77,8 @@ Las contraseñas de ambos roles deben ser distintas.
 
 La API solo recibe las variables `POSTGRES_RUNTIME_*`.
 
+En producción, `PAYMENT_PROVIDER` debe ser exactamente `stripe` o `mercadopago`. El valor `mock` está reservado para desarrollo y pruebas; si se configura `mock`, un valor vacío o un proveedor desconocido con `NODE_ENV=production`, la API rechazará el arranque. Configura también los secretos del proveedor seleccionado antes de desplegar.
+
 Si ya existe un volumen creado con el esquema anterior de un solo superusuario, sigue:
 
 ```text
