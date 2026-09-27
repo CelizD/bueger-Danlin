@@ -18,7 +18,7 @@ describe("staffPasswordPolicyIssue", () => {
   it.each([
     "password1234",
     "PASSWORD1234",
-    "password-123",
+    "password_123",
     "burgerdanlin123",
     "aaaaaaaaaaaa",
     "111111111111",
