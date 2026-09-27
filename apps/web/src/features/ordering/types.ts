@@ -28,6 +28,14 @@ export type PickupEvent = {
   code: string;
   name: string;
   locationLabel: string;
+  pickupPoint: {
+    id: string;
+    code: string;
+    name: string;
+    address: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  };
   timezone: string;
   startsAt: string;
   closesAt: string;
@@ -35,6 +43,14 @@ export type PickupEvent = {
   reservedCombos: number;
   remainingCombos: number;
   status: "OPEN" | "SOLD_OUT";
+  groupDelivery: {
+    minPaidOrders: number;
+    paidOrderCount: number;
+    remainingPaidOrders: number;
+    transportCostCents: number;
+    estimatedDeliveryFeeCents: number;
+    freeDeliveryUnlocked: boolean;
+  };
 };
 
 export type InventoryAvailability = {
