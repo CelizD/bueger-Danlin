@@ -1,0 +1,11 @@
+[Unit]
+Description=Schedule daily Burger Danlin data retention cleanup
+
+[Timer]
+OnCalendar=*-*-* 03:40:00
+Persistent=true
+RandomizedDelaySec=15m
+Unit=burger-danlin-retention-cleanup.service
+
+[Install]
+WantedBy=timers.target
