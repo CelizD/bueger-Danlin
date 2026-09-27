@@ -7,6 +7,7 @@ import { OrdersService } from "./orders.service.js";
 
 type CreatedFixture = {
   eventIds: string[];
+  pickupPointIds: string[];
   productId: string;
   inventoryItemId?: string;
 };
@@ -18,12 +19,20 @@ const fixtures: CreatedFixture[] = [];
 
 async function createEvent(code: string, maxCombos: number) {
   const now = Date.now();
+  const pickupPoint = await prisma.pickupPoint.create({
+    data: {
+      code: `POINT-${code}`,
+      name: `Punto ${code}`,
+      active: true,
+    },
+  });
 
-  return prisma.pickupEvent.create({
+  const event = await prisma.pickupEvent.create({
     data: {
       code,
       name: code,
-      locationLabel: "Test",
+      locationLabel: pickupPoint.name,
+      pickupPointId: pickupPoint.id,
       timezone: "America/Tijuana",
       startsAt: new Date(now + 2 * 60 * 60 * 1000),
       closesAt: new Date(now + 60 * 60 * 1000),
@@ -31,6 +40,8 @@ async function createEvent(code: string, maxCombos: number) {
       status: "OPEN",
     },
   });
+
+  return { event, pickupPoint };
 }
 
 async function cleanupFixture(fixture: CreatedFixture) {
@@ -80,6 +91,12 @@ async function cleanupFixture(fixture: CreatedFixture) {
       id: { in: fixture.eventIds },
     },
   });
+
+  await prisma.pickupPoint.deleteMany({
+    where: {
+      id: { in: fixture.pickupPointIds },
+    },
+  });
 }
 
 function orderDto(eventId: string, productId: string, phone: string) {
@@ -127,10 +144,14 @@ describe("OrdersService concurrency", () => {
         active: true,
       },
     });
-    const event = await createEvent(`cap-${suffix}`, 1);
+    const { event, pickupPoint } = await createEvent(
+      `cap-${suffix}`,
+      1,
+    );
 
     fixtures.push({
       eventIds: [event.id],
+      pickupPointIds: [pickupPoint.id],
       productId: product.id,
     });
 
@@ -196,11 +217,14 @@ describe("OrdersService concurrency", () => {
       },
     });
 
-    const eventA = await createEvent(`inv-a-${suffix}`, 1);
-    const eventB = await createEvent(`inv-b-${suffix}`, 1);
+    const { event: eventA, pickupPoint: pointA } =
+      await createEvent(`inv-a-${suffix}`, 1);
+    const { event: eventB, pickupPoint: pointB } =
+      await createEvent(`inv-b-${suffix}`, 1);
 
     fixtures.push({
       eventIds: [eventA.id, eventB.id],
+      pickupPointIds: [pointA.id, pointB.id],
       productId: product.id,
       inventoryItemId: inventoryItem.id,
     });
