@@ -34,7 +34,7 @@ export class PaymentProviderRegistry {
   constructor(
     mockPaymentProvider: MockPaymentProvider,
   ) {
-    this.providers = new Map([
+    this.providers = new Map<PaymentProviderName, PaymentProvider>([
       [mockPaymentProvider.name, mockPaymentProvider],
     ]);
   }
