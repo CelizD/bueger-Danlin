@@ -6,18 +6,31 @@ import {
   vi,
 } from "vitest";
 import { PaymentProviderRegistry } from "./payment-provider.registry.js";
+import { MercadoPagoProvider } from "./providers/mercadopago/mercadopago.provider.js";
 import { MockPaymentProvider } from "./providers/mock/mock-payment.provider.js";
 
 afterEach(() => {
   vi.unstubAllEnvs();
 });
 
+function registry() {
+  return new PaymentProviderRegistry(
+    new MockPaymentProvider(),
+    new MercadoPagoProvider(),
+  );
+}
+
 describe("PaymentProviderRegistry", () => {
   it("resuelve el proveedor mock registrado", () => {
     const mock = new MockPaymentProvider();
-    const registry = new PaymentProviderRegistry(mock);
+    const mercadoPago = new MercadoPagoProvider();
+    const paymentProviders = new PaymentProviderRegistry(
+      mock,
+      mercadoPago,
+    );
 
-    expect(registry.get("mock")).toBe(mock);
+    expect(paymentProviders.get("mock")).toBe(mock);
+    expect(paymentProviders.get("mercadopago")).toBe(mercadoPago);
   });
 
   it("usa mock por defecto fuera de producción", () => {
@@ -25,49 +38,48 @@ describe("PaymentProviderRegistry", () => {
     vi.stubEnv("PAYMENT_PROVIDER", "");
 
     const mock = new MockPaymentProvider();
-    const registry = new PaymentProviderRegistry(mock);
+    const paymentProviders = new PaymentProviderRegistry(
+      mock,
+      new MercadoPagoProvider(),
+    );
 
-    expect(registry.getConfigured()).toBe(mock);
+    expect(paymentProviders.getConfigured()).toBe(mock);
   });
 
   it("rechaza proveedores desconocidos", () => {
     vi.stubEnv("NODE_ENV", "test");
     vi.stubEnv("PAYMENT_PROVIDER", "otro");
 
-    const registry = new PaymentProviderRegistry(
-      new MockPaymentProvider(),
-    );
+    const paymentProviders = registry();
 
-    expect(() => registry.getConfigured()).toThrow(
+    expect(() => paymentProviders.getConfigured()).toThrow(
       "Unsupported PAYMENT_PROVIDER: otro",
     );
   });
 
-  it.each(["mercadopago", "stripe"] as const)(
-    "rechaza %s mientras todavía no esté registrado",
-    (provider) => {
-      vi.stubEnv("NODE_ENV", "test");
-      vi.stubEnv("PAYMENT_PROVIDER", provider);
+  it("resuelve mercadopago cuando está configurado", () => {
+    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("PAYMENT_PROVIDER", "mercadopago");
 
-      const registry = new PaymentProviderRegistry(
-        new MockPaymentProvider(),
-      );
+    expect(registry().getConfigured().name).toBe("mercadopago");
+  });
 
-      expect(() => registry.getConfigured()).toThrow(
-        `Payment provider "${provider}" is not registered yet`,
-      );
-    },
-  );
+  it("rechaza stripe mientras todavía no esté registrado", () => {
+    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("PAYMENT_PROVIDER", "stripe");
+
+    expect(() => registry().getConfigured()).toThrow(
+      'Payment provider "stripe" is not registered yet',
+    );
+  });
 
   it("no hace fallback a mock en producción", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("PAYMENT_PROVIDER", "");
 
-    const registry = new PaymentProviderRegistry(
-      new MockPaymentProvider(),
-    );
+    const paymentProviders = registry();
 
-    expect(() => registry.getConfigured()).toThrow(
+    expect(() => paymentProviders.getConfigured()).toThrow(
       "PAYMENT_PROVIDER is required in production",
     );
   });
