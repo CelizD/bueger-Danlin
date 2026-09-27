@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  AdminDeliveryGroups,
+  type AdminDeliveryGroup,
+} from "@/features/staff/components/admin-delivery-groups";
 import { AdminSidebar } from "@/features/staff/components/admin-sidebar";
 import { API_URL, apiFetch } from "@/lib/api/browser";
 import {
@@ -51,6 +55,8 @@ type AdminOrder = {
   paymentStatus: string;
   totalCents: number;
   comboQuantity: number;
+  groupDeliveryFinalFeeCents: number | null;
+  groupDeliveryFinalizedAt: string | null;
   createdAt: string;
   customer: {
     name: string;
@@ -58,11 +64,19 @@ type AdminOrder = {
     email: string | null;
   };
   pickupEvent: {
+    id: string;
     code: string;
     name: string;
     locationLabel: string;
     startsAt: string;
+    closesAt: string;
     timezone: string;
+    pickupPoint: {
+      id: string;
+      code: string;
+      name: string;
+      address: string | null;
+    };
   };
   items: OrderItem[];
   statusHistory: Array<{
@@ -87,7 +101,10 @@ type OrdersResponse = {
     pendingOrders: number;
     totalCombos: number;
     paidRevenueCents: number;
+    finalDeliveryCashCents: number;
+    activeGroups: number;
   };
+  groups: AdminDeliveryGroup[];
   orders: AdminOrder[];
 };
 
@@ -115,6 +132,7 @@ export default function AdminOrdersPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("ALL");
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -181,16 +199,23 @@ export default function AdminOrdersPage() {
           order.status === status ||
           order.paymentStatus === status;
 
+        const matchesGroup =
+          selectedEventId === null ||
+          order.pickupEvent.id === selectedEventId;
+
         const matchesQuery =
           !normalizedQuery ||
           order.orderCode.toLowerCase().includes(normalizedQuery) ||
           order.customer.name.toLowerCase().includes(normalizedQuery) ||
-          order.customer.phone.includes(normalizedQuery);
+          order.customer.phone.includes(normalizedQuery) ||
+          order.pickupEvent.pickupPoint.name
+            .toLowerCase()
+            .includes(normalizedQuery);
 
-        return matchesStatus && matchesQuery;
+        return matchesStatus && matchesGroup && matchesQuery;
       }) ?? []
     );
-  }, [data, query, status]);
+  }, [data, query, selectedEventId, status]);
 
   async function logout() {
     await apiFetch(`${API_URL}/auth/logout`, {
@@ -222,7 +247,9 @@ export default function AdminOrdersPage() {
           <div>
             <p className="admin-kicker">Operación del sábado</p>
             <h1>Pedidos</h1>
-            <p>Revisa ventas, personalizaciones y estado de cada pedido.</p>
+            <p>
+              Revisa pedidos por punto, progreso grupal y cobros de envío.
+            </p>
           </div>
 
           <button
@@ -241,7 +268,7 @@ export default function AdminOrdersPage() {
 
         {error && <div className="admin-error-banner">{error}</div>}
 
-        <section className="admin-metrics">
+        <section className="admin-metrics admin-metrics-four">
           <article>
             <ShoppingBag size={19} strokeWidth={1.7} />
             <span>Pedidos</span>
@@ -259,7 +286,25 @@ export default function AdminOrdersPage() {
               {money.format((data?.summary.paidRevenueCents ?? 0) / 100)}
             </strong>
           </article>
+          <article>
+            <Truck size={19} strokeWidth={1.7} />
+            <span>Envío por cobrar</span>
+            <strong>
+              {money.format(
+                (data?.summary.finalDeliveryCashCents ?? 0) / 100,
+              )}
+            </strong>
+          </article>
         </section>
+
+        <AdminDeliveryGroups
+          groups={data?.groups ?? []}
+          selectedEventId={selectedEventId}
+          onSelect={(eventId) => {
+            setSelectedEventId(eventId);
+            setExpanded(null);
+          }}
+        />
 
         <section className="admin-orders-section">
           <div className="admin-orders-toolbar">
@@ -268,7 +313,7 @@ export default function AdminOrdersPage() {
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Buscar código, cliente o teléfono"
+                placeholder="Buscar código, cliente, teléfono o punto"
               />
             </div>
 
@@ -326,7 +371,7 @@ export default function AdminOrdersPage() {
 
                       <div className="admin-order-count">
                         <strong>{order.comboQuantity}</strong>
-                        <span>combo(s)</span>
+                        <span>{order.pickupEvent.pickupPoint.name}</span>
                       </div>
 
                       <div className="admin-order-total">
@@ -354,7 +399,13 @@ export default function AdminOrdersPage() {
                           </div>
                           <div>
                             <span>Entrega</span>
-                            <strong>{order.pickupEvent.locationLabel}</strong>
+                            <strong>
+                              {order.pickupEvent.pickupPoint.name}
+                            </strong>
+                            <small>
+                              {order.pickupEvent.pickupPoint.address ||
+                                "Sin dirección registrada"}
+                            </small>
                             <small>
                               {new Date(order.pickupEvent.startsAt).toLocaleString(
                                 "es-MX",
@@ -365,6 +416,31 @@ export default function AdminOrdersPage() {
                               )}
                             </small>
                           </div>
+                        </div>
+
+                        <div className="admin-delivery-charge">
+                          <div>
+                            <span>Envío grupal</span>
+                            <strong>
+                              {order.groupDeliveryFinalizedAt
+                                ? order.groupDeliveryFinalFeeCents === 0
+                                  ? "Envío gratis"
+                                  : money.format(
+                                      (order.groupDeliveryFinalFeeCents ?? 0) /
+                                        100,
+                                    )
+                                : order.paymentStatus === "PAID"
+                                  ? "Pendiente de cierre"
+                                  : "No cuenta hasta pagar"}
+                            </strong>
+                          </div>
+                          <small>
+                            {order.groupDeliveryFinalizedAt
+                              ? order.groupDeliveryFinalFeeCents === 0
+                                ? "El grupo alcanzó la meta. No cobres envío."
+                                : "Cobrar este monto en efectivo al entregar."
+                              : "El cargo definitivo se congela al cerrar el punto."}
+                          </small>
                         </div>
 
                         <div className="admin-items">
