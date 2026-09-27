@@ -106,6 +106,15 @@ describe("retention policy", () => {
           }),
           expect.objectContaining({
             status: "CANCELLED",
+            paymentStatus: {
+              in: ["PENDING", "FAILED", "CANCELLED"],
+            },
+          }),
+          expect.objectContaining({
+            status: "CANCELLED",
+            paymentStatus: {
+              in: ["PAID", "REFUNDED", "PARTIALLY_REFUNDED"],
+            },
           }),
           expect.objectContaining({
             status: {
