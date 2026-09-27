@@ -84,6 +84,12 @@ server {
     add_header X-Frame-Options "DENY" always;
     add_header Referrer-Policy "no-referrer" always;
 
+    # Prometheus scrapes the API over the private Docker network.
+    # Do not expose application metrics to the public Internet.
+    location = /api/v1/metrics {
+        return 404;
+    }
+
     location / {
         proxy_pass http://127.0.0.1:4000;
         proxy_http_version 1.1;
