@@ -100,7 +100,11 @@ export function PickupPointSelector({
                       Faltan {group.remainingPaidOrders} pedido{group.remainingPaidOrders === 1 ? "" : "s"} para envío gratis
                     </span>
                     <strong>
-                      Envío estimado ahora: {money.format(group.estimatedDeliveryFeeCents / 100)}
+                      {group.estimatedDeliveryFeeCents === null
+                        ? "Costo por persona pendiente del primer pedido pagado"
+                        : `Envío estimado ahora: ${money.format(
+                            group.estimatedDeliveryFeeCents / 100,
+                          )}`}
                     </strong>
                   </>
                 )}
