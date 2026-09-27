@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { assertRealPaymentsEnabled } from "../../real-payments.guard.js";
 import type {
   MercadoPagoCreateOrderInput,
   MercadoPagoOrderResponse,
@@ -75,6 +76,8 @@ export class MercadoPagoApiClient {
   async createOrder(
     input: MercadoPagoCreateOrderInput,
   ): Promise<MercadoPagoOrderResponse> {
+    assertRealPaymentsEnabled();
+
     const accessToken = requireAccessToken();
 
     assertIdempotencyKey(input.idempotencyKey);

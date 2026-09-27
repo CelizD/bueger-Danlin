@@ -9,6 +9,7 @@ import { PrismaService } from "../database/prisma.service.js";
 import { InventoryService } from "../inventory/inventory.service.js";
 import type { PaymentProviderName } from "./domain/payment-provider.types.js";
 import { PaymentProviderRegistry } from "./payment-provider.registry.js";
+import { assertRealPaymentsEnabled } from "./real-payments.guard.js";
 
 function databaseProvider(name: PaymentProviderName) {
   switch (name) {
@@ -72,6 +73,8 @@ export class PaymentsService {
         "El checkout real no está disponible con el proveedor mock.",
       );
     }
+
+    assertRealPaymentsEnabled();
 
     const providerForDatabase = databaseProvider(provider.name);
 
