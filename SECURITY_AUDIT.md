@@ -102,7 +102,7 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | Distributed tracing | 🔴 | Falta OpenTelemetry o equivalente |
 | Alertas | 🔴 | No hay reglas/canales operativos |
 | Runbooks de incidentes | 🔴 | Falta account takeover, secret leak, DB exposure, dependency compromise, DDoS |
-| Política de retención | 🟡 | `docs/RETENTION_POLICY.md` define baseline y plazos; faltan cleanup/anonimización/purga automáticos |
+| Política de retención | 🟡 | Cleanup/anonimización y purga de AuditLog implementados con dry-run, kill switch, tests y timer preparado; faltan legal hold, logs centralizados, validación offsite y revisión legal/fiscal |
 | Privacy inventory/notice | 🟡 | Inventario técnico documentado; falta aviso de privacidad legal/final y validación de plazos regulatorios |
 | Incident contacts | 🔴 | No definidos |
 | ASVS baseline | 🔴 | No existe matriz verificable |
@@ -183,6 +183,7 @@ Pendiente antes de habilitar pagos reales:
 21. Docker non-root y redes internas.
 22. Backup cifrado + restore drill.
 23. Kill switch de pagos reales.
+24. Retention cleanup seguro con dry-run, anonimización y purga programable.
 
 ## Próximo orden recomendado
 
@@ -196,8 +197,8 @@ Pendiente antes de habilitar pagos reales:
 
 ### Fase 3 — Privacidad y ciclo de vida de datos
 
-4. Implementar cleanup/anonimización según `docs/RETENTION_POLICY.md`.
-5. Definir aviso de privacidad final y validar obligaciones legales/fiscales antes de producción.
+4. Validar los plazos de retención y el aviso de privacidad antes de producción.
+5. Implementar legal/incident hold por registro y alerta de fallo del cleanup.
 
 ### Fase 4 — Observabilidad
 
@@ -228,7 +229,7 @@ Pendiente antes de habilitar pagos reales:
 
 ## Próximo control
 
-La **password blocklist** y el **image scanning con Trivy** ya están implementados y validados. El benchmark Argon2id queda pendiente hasta disponer del VPS objetivo. Mientras tanto, el **threat model** y el **inventario de datos** ya están documentados. El siguiente control de código recomendado es **automatizar retención/cleanup** y después observabilidad.
+La **password blocklist** y el **image scanning con Trivy** ya están implementados y validados. El benchmark Argon2id queda pendiente hasta disponer del VPS objetivo. Mientras tanto, el **threat model** y el **inventario de datos** ya están documentados. El cleanup de retención ya está implementado con dry-run, tests y timer preparado. El siguiente bloque técnico recomendado es **observabilidad + alertas**.
 
 ## Nota sobre branch protection
 
