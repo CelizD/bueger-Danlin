@@ -358,6 +358,25 @@ Guía:
 - Trivy sobre las imágenes de API, Web y Backup, bloqueando HIGH/CRITICAL corregibles;
 - CycloneDX SBOM en `main`.
 
+## Retención de datos
+
+El repositorio incluye cleanup seguro de datos:
+
+```powershell
+pnpm retention:dry-run
+```
+
+Para aplicar cambios se requiere habilitación explícita:
+
+```powershell
+$env:RETENTION_CLEANUP_ENABLED="true"
+pnpm retention:apply
+```
+
+En producción existe un servicio Docker y timer systemd diario preparado. El timer no debe habilitarse hasta validar los plazos legales/fiscales y revisar primero un dry-run.
+
+Consulta `docs/RETENTION_POLICY.md`.
+
 ## Producción y recuperación
 
 El repositorio incluye:
@@ -395,8 +414,8 @@ Documentación:
 Los siguientes bloques todavía sí están pendientes:
 
 1. ejecutar el benchmark Argon2id en el hardware objetivo y registrar el resultado;
-2. automatizar cleanup/anonimización según la política de retención;
-3. aviso de privacidad final y validación legal/fiscal antes de producción;
+2. aviso de privacidad final y validación legal/fiscal de retención antes de producción;
+3. legal/incident hold por registro y alerta de fallo del cleanup;
 4. métricas, tracing, alertas y logs centralizados;
 5. runbooks de incidentes;
 6. ADRs;
