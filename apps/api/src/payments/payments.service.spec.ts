@@ -13,6 +13,7 @@ import {
 } from "vitest";
 import type { PrismaService } from "../database/prisma.service.js";
 import type { InventoryService } from "../inventory/inventory.service.js";
+import { PaymentProviderRegistry } from "./payment-provider.registry.js";
 import { MockPaymentProvider } from "./providers/mock/mock-payment.provider.js";
 import { PaymentsService } from "./payments.service.js";
 
@@ -76,6 +77,9 @@ function harness(
   } as unknown as InventoryService;
 
   const mockPaymentProvider = new MockPaymentProvider();
+  const paymentProviderRegistry = new PaymentProviderRegistry(
+    mockPaymentProvider,
+  );
   const createCheckoutSpy = vi.spyOn(
     mockPaymentProvider,
     "createCheckout",
@@ -85,7 +89,7 @@ function harness(
     service: new PaymentsService(
       prisma,
       inventory,
-      mockPaymentProvider,
+      paymentProviderRegistry,
     ),
     prisma,
     inventory,
