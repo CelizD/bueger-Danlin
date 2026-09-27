@@ -1,11 +1,16 @@
 import {
   afterEach,
+  beforeEach,
   describe,
   expect,
   it,
   vi,
 } from "vitest";
 import { MercadoPagoApiClient } from "./mercadopago-api.client.js";
+
+beforeEach(() => {
+  vi.stubEnv("ENABLE_REAL_PAYMENTS", "true");
+});
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -30,6 +35,23 @@ function orderInput() {
 }
 
 describe("MercadoPagoApiClient", () => {
+  it("no hace tráfico aunque exista token si los pagos reales están deshabilitados", async () => {
+    vi.stubEnv("ENABLE_REAL_PAYMENTS", "false");
+    vi.stubEnv(
+      "MERCADOPAGO_ACCESS_TOKEN",
+      "APP_USR-test-access-token-long-enough",
+    );
+
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      new MercadoPagoApiClient().createOrder(orderInput()),
+    ).rejects.toThrow("Real payment calls are disabled");
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("crea una order usando auth e idempotencia", async () => {
     vi.stubEnv(
       "MERCADOPAGO_ACCESS_TOKEN",
