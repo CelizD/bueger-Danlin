@@ -286,17 +286,9 @@ Endpoints públicos principales:
 - `POST /orders/:orderCode/cancel`
 - `POST /payments/mock/:orderCode/confirm`
 
-El endpoint de creación requiere:
+El endpoint de creación requiere el header `Idempotency-Key` con un valor único de 16 a 128 caracteres, normalmente generado por el cliente.
 
-```text
-Idempotency-Key: clave-de-16-a-128-caracteres
-```
-
-Las operaciones privadas del cliente requieren:
-
-```text
-X-Order-Token: token-opaco-del-pedido
-```
+Las operaciones privadas del cliente requieren el header `X-Order-Token` con el token opaco devuelto al crear el pedido.
 
 ## Tests y CI
 
