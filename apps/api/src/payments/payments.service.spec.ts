@@ -105,12 +105,19 @@ function harness(
 }
 
 const originalNodeEnv = process.env.NODE_ENV;
+const originalPaymentProvider = process.env.PAYMENT_PROVIDER;
 
 afterEach(() => {
   if (originalNodeEnv === undefined) {
     delete process.env.NODE_ENV;
   } else {
     process.env.NODE_ENV = originalNodeEnv;
+  }
+
+  if (originalPaymentProvider === undefined) {
+    delete process.env.PAYMENT_PROVIDER;
+  } else {
+    process.env.PAYMENT_PROVIDER = originalPaymentProvider;
   }
 });
 
@@ -244,5 +251,232 @@ describe("PaymentsService", () => {
       currency: "MXN",
       paid: true,
     });
+  });
+});
+
+
+function payment(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "payment-1",
+    orderId: "order-1",
+    provider: "MERCADOPAGO",
+    status: "PENDING",
+    amountCents: 13000,
+    currency: "MXN",
+    externalId: null,
+    idempotencyKey: "mercadopago:order-1",
+    metadata: {
+      checkoutState: "PENDING",
+    },
+    paidAt: null,
+    refundedAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+function checkoutHarness(options?: {
+  existingPayment?: ReturnType<typeof payment> | null;
+  createOrderError?: Error;
+}) {
+  const pendingOrder = order();
+  const createdPayment = payment();
+  let transactionOpen = false;
+
+  const tx = {
+    $queryRaw: vi.fn().mockResolvedValue([
+      { id: pendingOrder.id },
+    ]),
+    order: {
+      findUnique: vi.fn().mockResolvedValue(pendingOrder),
+    },
+    payment: {
+      findUnique: vi.fn().mockResolvedValue(
+        options?.existingPayment ?? null,
+      ),
+      create: vi.fn().mockResolvedValue(createdPayment),
+    },
+  };
+
+  const updatedPayment = {
+    ...createdPayment,
+    externalId: "ORDTST01",
+    metadata: {
+      checkoutState: "CREATED",
+      checkoutUrl:
+        "https://www.mercadopago.com.mx/checkout/v1/redirect?order_id=ORDTST01",
+    },
+  };
+
+  const prisma = {
+    order: {
+      findUnique: vi.fn().mockResolvedValue(pendingOrder),
+    },
+    payment: {
+      update: vi.fn().mockResolvedValue(updatedPayment),
+    },
+    $transaction: vi.fn(
+      async (callback: (transaction: typeof tx) => unknown) => {
+        transactionOpen = true;
+
+        try {
+          return await callback(tx);
+        } finally {
+          transactionOpen = false;
+        }
+      },
+    ),
+  } as unknown as PrismaService;
+
+  const inventory = {
+    commitOrder: vi.fn().mockResolvedValue(undefined),
+  } as unknown as InventoryService;
+
+  const createOrder = vi.fn().mockImplementation(async () => {
+    expect(transactionOpen).toBe(false);
+
+    if (options?.createOrderError) {
+      throw options.createOrderError;
+    }
+
+    return {
+      id: "ORDTST01",
+      status: "created",
+      status_detail: "created",
+      checkout_url:
+        "https://www.mercadopago.com.mx/checkout/v1/redirect?order_id=ORDTST01",
+      total_amount: "130.00",
+      external_reference: "H-A1B2C3D4",
+    };
+  });
+
+  const mercadoPagoProvider = new MercadoPagoProvider({
+    createOrder,
+  } as unknown as MercadoPagoApiClient);
+
+  const registry = new PaymentProviderRegistry(
+    new MockPaymentProvider(),
+    mercadoPagoProvider,
+  );
+
+  return {
+    service: new PaymentsService(prisma, inventory, registry),
+    prisma,
+    inventory,
+    tx,
+    createOrder,
+    createdPayment,
+  };
+}
+
+describe("PaymentsService.createCheckout", () => {
+  it("crea Payment PENDING antes de llamar a Mercado Pago y no marca la orden como pagada", async () => {
+    process.env.NODE_ENV = "test";
+    process.env.PAYMENT_PROVIDER = "mercadopago";
+
+    const {
+      service,
+      prisma,
+      tx,
+      createOrder,
+    } = checkoutHarness();
+
+    const result = await service.createCheckout(
+      "H-A1B2C3D4",
+      TOKEN,
+    );
+
+    expect(tx.payment.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        orderId: "order-1",
+        provider: "MERCADOPAGO",
+        status: "PENDING",
+        amountCents: 13000,
+        currency: "MXN",
+        idempotencyKey: "mercadopago:order-1",
+      }),
+    });
+
+    expect(createOrder).toHaveBeenCalledTimes(1);
+    expect(prisma.payment.update).toHaveBeenCalledWith({
+      where: { id: "payment-1" },
+      data: expect.objectContaining({
+        externalId: "ORDTST01",
+        status: "PENDING",
+      }),
+    });
+
+    expect(result).toMatchObject({
+      orderCode: "H-A1B2C3D4",
+      orderStatus: "PENDING_PAYMENT",
+      paymentId: "payment-1",
+      paymentStatus: "PENDING",
+      provider: "mercadopago",
+      checkoutUrl:
+        "https://www.mercadopago.com.mx/checkout/v1/redirect?order_id=ORDTST01",
+    });
+  });
+
+  it("reutiliza el checkout persistido sin crear otra orden externa", async () => {
+    process.env.NODE_ENV = "test";
+    process.env.PAYMENT_PROVIDER = "mercadopago";
+
+    const existingPayment = payment({
+      externalId: "ORDTST01",
+      metadata: {
+        checkoutState: "CREATED",
+        checkoutUrl:
+          "https://www.mercadopago.com.mx/checkout/v1/redirect?order_id=ORDTST01",
+      },
+    });
+
+    const {
+      service,
+      prisma,
+      tx,
+      createOrder,
+    } = checkoutHarness({ existingPayment });
+
+    const result = await service.createCheckout(
+      "H-A1B2C3D4",
+      TOKEN,
+    );
+
+    expect(tx.payment.create).not.toHaveBeenCalled();
+    expect(createOrder).not.toHaveBeenCalled();
+    expect(prisma.payment.update).not.toHaveBeenCalled();
+    expect(result.checkoutUrl).toContain("ORDTST01");
+  });
+
+  it("deja el Payment PENDING si Mercado Pago falla para poder reintentar con la misma idempotency key", async () => {
+    process.env.NODE_ENV = "test";
+    process.env.PAYMENT_PROVIDER = "mercadopago";
+
+    const {
+      service,
+      prisma,
+      tx,
+    } = checkoutHarness({
+      createOrderError: new Error("Mercado Pago unavailable"),
+    });
+
+    await expect(
+      service.createCheckout("H-A1B2C3D4", TOKEN),
+    ).rejects.toThrow("Mercado Pago unavailable");
+
+    expect(tx.payment.create).toHaveBeenCalledTimes(1);
+    expect(prisma.payment.update).not.toHaveBeenCalled();
+  });
+
+  it("rechaza el checkout real cuando el proveedor configurado es mock", async () => {
+    process.env.NODE_ENV = "test";
+    process.env.PAYMENT_PROVIDER = "mock";
+
+    const { service } = checkoutHarness();
+
+    await expect(
+      service.createCheckout("H-A1B2C3D4", TOKEN),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 });
