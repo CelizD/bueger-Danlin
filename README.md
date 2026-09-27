@@ -1,21 +1,23 @@
 # Burger Danlin
 
-Plataforma de pedidos para venta de hamburguesas por preventa y entrega programada.
+Plataforma web de preventa de hamburguesas con pedidos programados para sábado, control de capacidad, inventario, cocina, entrega por QR y panel administrativo.
 
 ## Estado actual
 
-El MVP ya permite probar en local:
+El flujo principal ya funciona de extremo a extremo con PostgreSQL, NestJS, Next.js y Playwright reales:
 
-1. cargar catálogo;
-2. consultar el evento del sábado;
-3. personalizar varios combos por pedido;
-4. agregar extras y Coca-Cola;
-5. capturar nombre, teléfono y correo opcional;
-6. crear un pedido con precio recalculado por el backend;
-7. reservar capacidad durante 15 minutos;
-8. impedir vender más de 50 combos;
-9. simular el pago local;
-10. pasar el pedido de `PENDING_PAYMENT` a `PAID`.
+1. el cliente carga catálogo, fecha e inventario;
+2. personaliza uno o varios combos;
+3. captura nombre, teléfono y correo opcional;
+4. el backend recalcula el precio;
+5. se reserva capacidad e inventario durante 15 minutos;
+6. el pago local `MOCK` cambia la orden a `PAID`;
+7. Cocina mueve `PAID -> PREPARING -> READY`;
+8. el cliente presenta un QR sin PII;
+9. Entrega valida el QR contra el API;
+10. la orden termina en `DELIVERED`.
+
+Este flujo se ejecuta automáticamente en CI con una base PostgreSQL temporal.
 
 ## Producto inicial
 
@@ -26,38 +28,200 @@ El MVP ya permite probar en local:
 - Papas extra: **+$25**
 - Coca-Cola en lata: **$30 MXN**
 
-## Reglas
+## Reglas de negocio
 
 - Máximo **50 combos** por sábado.
-- Cierre: **viernes 9:00 p. m.**
+- Cierre operativo esperado: **viernes 9:00 p. m.**
 - Zona horaria: **America/Tijuana**.
 - Punto inicial: **Universidad**.
 - Pago obligatorio.
 - Nombre y teléfono obligatorios.
 - Correo opcional.
-- Cancelación automática permitida hasta el cierre.
 - Cada combo se personaliza de forma independiente.
 - El backend es la autoridad del precio.
-- Una reserva pendiente ocupa capacidad por 15 minutos.
-- Una reserva expirada libera automáticamente su capacidad.
+- Una orden pendiente reserva capacidad e inventario durante 15 minutos.
+- Una reserva expirada libera automáticamente inventario y capacidad.
+- Las cancelaciones antes del cierre liberan cupo e inventario.
+- Los pagos `MOCK` cancelados se reembolsan de forma simulada e idempotente.
 
 ## Arquitectura
 
-- `apps/web`: Next.js + TypeScript
+Burger Danlin se mantiene como **monolito modular**, suficiente para el MVP y más simple de operar que una arquitectura distribuida prematura.
+
+- `apps/web`: Next.js + React + TypeScript
 - `apps/api`: NestJS + TypeScript
 - `packages/types`: tipos compartidos
 - `database/prisma`: PostgreSQL + Prisma 7
-- `docker-compose.yml`: PostgreSQL, Redis y Mailpit
-- pagos previstos para producción: Stripe + Mercado Pago
+- `docker-compose.yml`: PostgreSQL, Redis y Mailpit para desarrollo
+- `docker-compose.prod.yml`: despliegue endurecido para producción
+- `deploy/`: Nginx, backups, restore drills, preflight y documentación operativa
 
-Redis queda preparado pero no es fuente de verdad ni participa todavía en el flujo crítico.
+PostgreSQL es la fuente de verdad. Redis está preparado para infraestructura futura, pero no participa actualmente en el flujo crítico de pedidos.
+
+## Funcionalidad implementada
+
+### Cliente
+
+- catálogo dinámico;
+- fecha de entrega activa;
+- disponibilidad de inventario;
+- múltiples combos personalizados;
+- extras y bebidas;
+- precio estimado en frontend y precio final recalculado en backend;
+- creación de pedidos idempotente;
+- reserva de 15 minutos;
+- pago local `MOCK`;
+- QR de entrega;
+- consulta segura del pedido mediante `X-Order-Token`;
+- cancelación y reembolso local simulado.
+
+### Cocina
+
+Ruta:
+
+`/admin/cocina`
+
+Roles permitidos:
+
+- `ADMIN`
+- `KITCHEN`
+
+Flujo:
+
+`PAID/CONFIRMED -> PREPARING -> READY`
+
+### Entrega
+
+Ruta:
+
+`/admin/entrega`
+
+Roles permitidos:
+
+- `ADMIN`
+- `DELIVERY`
+
+El QR usa el formato:
+
+`BD1:<orderCode>:<verificationToken>`
+
+El API valida el token contra el hash almacenado. Un QR reutilizado no genera una segunda entrega.
+
+### Administración
+
+Rutas principales:
+
+- `/admin/dashboard`
+- `/admin/pedidos`
+- `/admin/sabados`
+- `/admin/inventario`
+- `/admin/personal`
+- `/admin/cocina`
+- `/admin/entrega`
+
+Incluye:
+
+- dashboard de ventas;
+- administración de sábados;
+- inventario;
+- cuentas de personal;
+- roles `ADMIN`, `KITCHEN` y `DELIVERY`;
+- historial de estados;
+- `AuditLog` para múltiples operaciones administrativas.
+
+## Inventario y capacidad
+
+El backend usa transacciones y locks de PostgreSQL para evitar sobreventa.
+
+Artículos base:
+
+- carne;
+- queso;
+- tocino;
+- papas;
+- Coca-Cola.
+
+Flujo:
+
+1. al crear una orden se bloquean las filas necesarias;
+2. se valida stock;
+3. se descuenta y se crea `InventoryAllocation=RESERVED`;
+4. al pagar pasa a `COMMITTED`;
+5. si la reserva vence o la orden se cancela, el stock regresa exactamente una vez.
+
+La capacidad del evento también cuenta órdenes pagadas y reservas pendientes todavía vigentes.
+
+## Autenticación y seguridad
+
+El acceso del personal incluye:
+
+- Argon2id;
+- bloqueo persistente tras 5 intentos fallidos durante 15 minutos;
+- JWT con algoritmo, issuer y audience explícitos;
+- cookie HttpOnly;
+- `Secure` + `SameSite=Strict` en producción;
+- invalidación de sesiones después de cambio de contraseña;
+- RBAC validado en servidor;
+- MFA obligatorio para `ADMIN`;
+- TOTP de 6 dígitos;
+- secreto MFA cifrado con AES-256-GCM;
+- códigos de recuperación de un solo uso.
+
+Protecciones HTTP:
+
+- Helmet;
+- CSP en producción desde Next.js;
+- HSTS;
+- CORS restringido a `APP_ORIGIN`;
+- protección CSRF para mutaciones autenticadas;
+- límites explícitos de body;
+- `FORCE_HTTPS`;
+- error filter global;
+- errores 5xx sin stack/SQL/rutas internas;
+- `X-Request-Id`;
+- logs HTTP estructurados sin bodies, cookies ni secretos;
+- rate limiting global y reforzado en login.
+
+Consulta `SECURITY_AUDIT.md` para el estado detallado.
+
+## Pagos
+
+Los pagos reales están **intencionalmente deshabilitados** mientras el resto del producto termina de validarse.
+
+Desarrollo:
+
+```text
+PAYMENT_PROVIDER=mock
+ENABLE_REAL_PAYMENTS=false
+```
+
+Existe arquitectura desacoplada mediante `PaymentProvider` y `PaymentProviderRegistry`.
+
+Actualmente:
+
+- `MockPaymentProvider`: activo para desarrollo/tests;
+- Mercado Pago: cliente Orders API y creación de checkout preparados;
+- Stripe: reservado en la arquitectura;
+- `ENABLE_REAL_PAYMENTS=false`: kill switch global;
+- el backend bloquea tráfico real antes de persistir checkout y antes de cualquier `fetch` al proveedor.
+
+Todavía pendientes antes de pagos reales:
+
+- webhook real;
+- deduplicación persistente de eventos;
+- `getPayment()`;
+- reembolsos reales;
+- reconciliación;
+- sandbox end-to-end;
+- pruebas de fallo/reintentos;
+- activación explícita de `ENABLE_REAL_PAYMENTS=true`.
 
 ## Desarrollo local
 
-Requisitos:
+### Requisitos
 
-- Node.js 22+
-- pnpm
+- Node.js >= 22.12
+- pnpm 10
 - Docker Desktop
 
 ### 1. Variables
@@ -68,705 +232,209 @@ PowerShell:
 Copy-Item .env.example .env
 ```
 
-macOS/Linux:
-
-```bash
-cp .env.example .env
-```
-
 ### 2. Infraestructura
 
-```bash
+```powershell
 docker compose up -d
 ```
 
 ### 3. Dependencias
 
-```bash
+```powershell
 pnpm install
 ```
 
 ### 4. Base de datos
 
-```bash
+```powershell
 pnpm db:generate
 pnpm db:migrate
 pnpm db:seed
 ```
 
-Cuando Prisma pida el nombre de la primera migración puedes usar:
-
-```text
-init
-```
-
 ### 5. Aplicación
 
-```bash
+```powershell
 pnpm dev
 ```
 
 ## URLs locales
 
-- Web: http://localhost:3000
-- API: http://localhost:4000/api/v1
-- Health: http://localhost:4000/api/v1/health
-- Catálogo: http://localhost:4000/api/v1/catalog
-- Evento actual: http://localhost:4000/api/v1/pickup-events/current
-- Mailpit: http://localhost:8025
+- Web: `http://localhost:3000`
+- API: `http://localhost:4000/api/v1`
+- Liveness: `http://localhost:4000/api/v1/health/live`
+- Readiness: `http://localhost:4000/api/v1/health/ready`
+- Swagger UI: `http://localhost:4000/api/v1/docs`
+- OpenAPI JSON: `http://localhost:4000/api/v1/docs-json`
+- Mailpit: `http://localhost:8025`
 
-## Endpoints implementados
+La documentación OpenAPI se deshabilita en producción salvo que `ENABLE_API_DOCS=true`.
 
-### Crear pedido
+## API
 
-`POST /api/v1/orders`
+Prefijo:
 
-Requiere:
+`/api/v1`
 
-```text
-Idempotency-Key: UUID-o-clave-de-16-a-128-caracteres
-```
+Endpoints públicos principales:
 
-El servidor:
+- `GET /catalog`
+- `GET /pickup-events/current`
+- `GET /inventory/availability`
+- `POST /orders`
+- `GET /orders/:orderCode`
+- `POST /orders/:orderCode/cancel`
+- `POST /payments/mock/:orderCode/confirm`
 
-- consulta precios desde PostgreSQL;
-- valida que modificadores pertenezcan al producto;
-- bloquea el evento mientras valida capacidad;
-- impide exceder 50 combos;
-- genera código de pedido;
-- reserva capacidad por 15 minutos.
-
-### Pago local
-
-`POST /api/v1/payments/mock/:orderCode/confirm`
-
-Requiere:
+El endpoint de creación requiere:
 
 ```text
-X-Order-Token: token-devuelto-al-crear-el-pedido
+Idempotency-Key: clave-de-16-a-128-caracteres
 ```
 
-Este endpoint funciona únicamente fuera de producción y permite probar el flujo sin cobrar dinero real.
+Las operaciones privadas del cliente requieren:
 
-## Siguiente bloque
+```text
+X-Order-Token: token-opaco-del-pedido
+```
 
-- QR visual y comprobante del pedido.
-- Vista Cocina.
-- Vista Entregas.
-- Panel administrador.
-- Autenticación y roles.
-- Cancelaciones/reembolsos.
-- Stripe.
-- Mercado Pago.
+## Tests y CI
 
+### Unitarios e integración
+
+```powershell
+pnpm test
+```
+
+### Smoke E2E de frontend
+
+Usan Playwright con API simulada para validación rápida de UI:
+
+```powershell
+pnpm --filter @burger/web test:e2e
+```
+
+### E2E integrado real
+
+La suite integrada levanta:
+
+- PostgreSQL de test;
+- NestJS real;
+- Next.js real;
+- Chromium real;
+- seed determinista.
+
+Valida:
+
+`cliente -> pedido -> pago MOCK -> cocina -> READY -> QR -> entrega -> DELIVERED`
+
+El seed integrado se niega a ejecutarse si:
+
+- `NODE_ENV` no es `test`;
+- el nombre de la base no contiene `test`.
+
+Guía:
+
+`apps/web/e2e/README.md`
+
+### GitHub Actions
+
+`.github/workflows/ci.yml` ejecuta en PR/push a `main`:
+
+1. instalación con lockfile;
+2. Prisma generate;
+3. migraciones;
+4. typecheck;
+5. tests;
+6. build;
+7. seed E2E;
+8. instalación de Chromium;
+9. E2E integrado.
+
+`.github/workflows/security.yml` ejecuta:
+
+- `pnpm audit`;
+- Gitleaks;
+- Semgrep;
+- CycloneDX SBOM en `main`.
+
+## Producción y recuperación
+
+El repositorio incluye:
+
+- Dockerfiles multi-stage;
+- procesos Node non-root;
+- PostgreSQL/Redis sin puertos públicos en Compose de producción;
+- Nginx de referencia;
+- HTTPS enforcement;
+- health/readiness;
+- backup PostgreSQL cifrado con `age`;
+- checksum SHA-256;
+- copia offsite S3-compatible preparada;
+- Versioning/Object Lock checks;
+- restore drill aislado;
+- timers systemd;
+- preflight y go-live gate.
+
+Objetivos técnicos iniciales:
+
+- RPO <= 1 hora;
+- RTO <= 4 horas.
+
+El RTO todavía debe medirse mediante un simulacro de pérdida total del VPS.
+
+Documentación:
+
+- `deploy/PRODUCTION.md`
+- `deploy/DR.md`
+- `deploy/OFFSITE_BACKUP.md`
+- `deploy/GO_LIVE_CHECKLIST.md`
+
+## Pendientes prioritarios
+
+Los siguientes bloques todavía sí están pendientes:
+
+1. password blocklist + benchmark Argon2id en hardware objetivo;
+2. image scanning de contenedores;
+3. threat model + inventario de datos + política de retención;
+4. métricas, tracing, alertas y logs centralizados;
+5. runbooks de incidentes;
+6. ADRs;
+7. load/stress testing;
+8. staging y rollback probado;
+9. DAST;
+10. infraestructura real: dominio, TLS, WAF/CDN y backup offsite real;
+11. simulacro completo de pérdida del VPS;
+12. pentest prelaunch;
+13. integración completa de pagos reales.
+
+No se planean microservicios ni Kubernetes para el MVP salvo que una necesidad técnica real lo justifique.
 
 ## Solución de problemas en Windows
 
-### Corepack: Cannot find matching keyid
+### Corepack / pnpm
 
-Node.js 22.13.1 puede incluir una versión antigua de Corepack que no reconoce las firmas actuales de pnpm.
+Si Corepack no reconoce las firmas de pnpm:
 
 ```powershell
 npm install -g corepack@latest
-corepack enable
-corepack prepare pnpm@10.17.1 --activate
+corepack enable pnpm
 pnpm --version
 ```
 
-Después:
+### Docker Desktop
 
-```powershell
-pnpm install
-```
-
-### Docker: dockerDesktopLinuxEngine pipe not found
-
-Abre Docker Desktop y espera a que el motor esté ejecutándose. Verifica:
+Si aparece `dockerDesktopLinuxEngine pipe not found`:
 
 ```powershell
 docker version
-```
-
-Debe aparecer tanto Client como Server. Si el Server no aparece, verifica WSL:
-
-```powershell
 wsl --version
 wsl -l -v
 wsl --update
 ```
 
-Luego reinicia Docker Desktop y vuelve a ejecutar:
+Después reinicia Docker Desktop y vuelve a ejecutar:
 
 ```powershell
 docker compose up -d
 ```
-
-
-## Panel administrativo
-
-Rutas:
-
-- Login: http://localhost:3000/admin/login
-- Pedidos: http://localhost:3000/admin/pedidos
-
-El acceso de personal usa:
-
-- contraseñas almacenadas con Argon2id;
-- parámetros Argon2id: 19 MiB de memoria, 2 iteraciones y paralelismo 1;
-- JWT de sesión de 8 horas;
-- JWT almacenado en cookie HttpOnly;
-- cookie SameSite=Lax;
-- cookie Secure en producción;
-- verificación en servidor de que el usuario sigue activo;
-- autorización por rol ADMIN para consultar pedidos.
-
-### Crear el administrador local
-
-No se guardan contraseñas en Git.
-
-Agrega en tu archivo `.env`:
-
-```text
-AUTH_JWT_SECRET=<secreto-aleatorio-de-al-menos-32-caracteres>
-ADMIN_SEED_EMAIL=<tu-correo-admin>
-ADMIN_SEED_PASSWORD=<tu-contraseña-de-al-menos-12-caracteres>
-ADMIN_SEED_NAME=<tu-nombre>
-```
-
-Después vuelve a ejecutar:
-
-```powershell
-& "$env:APPDATA\npm\pnpm.cmd" db:seed
-```
-
-El seed crea o actualiza la cuenta ADMIN y almacena únicamente el hash Argon2id de la contraseña.
-
-
-## Entrega por QR
-
-Flujo local:
-
-1. El cliente crea y paga el pedido.
-2. Después del pago aparece un QR de retiro sin datos personales.
-3. Cocina mueve el pedido de `PAID` a `PREPARING` y luego a `READY`.
-4. En `/admin/entrega`, personal autorizado abre la cámara y escanea el QR.
-5. El API valida el token contra el hash almacenado y, solo si el pedido está pagado y `READY`, lo mueve a `DELIVERED`.
-6. Un segundo escaneo del mismo QR no genera una segunda entrega.
-
-El escáner usa la cámara del navegador. En desarrollo funciona en `localhost`; para usar la cámara desde otro dispositivo por red local se recomienda servir la aplicación mediante HTTPS, ya que `getUserMedia()` requiere un contexto seguro.
-
-
-## Administración de sábados
-
-El calendario de entregas ya no se administra desde `seed.ts`.
-
-Panel:
-
-- `/admin/sabados`
-
-Desde esa pantalla un usuario `ADMIN` puede:
-
-- crear una nueva entrega de sábado como borrador;
-- cambiar lugar, fecha, hora de entrega y hora límite;
-- cambiar el límite de combos;
-- abrir o cerrar pedidos;
-- ver combos pagados, reservas pendientes y cupo restante;
-- reabrir una fecha cerrada mientras su cierre y entrega sigan en el futuro.
-
-Reglas:
-
-- solo puede existir una fecha `OPEN` / `SOLD_OUT` activa para clientes;
-- al abrir otra fecha, la anterior se cierra;
-- no se permite bajar el límite por debajo de los combos ya reservados/pagados;
-- las fechas se interpretan en `America/Tijuana`;
-- la fecha de entrega debe ser sábado;
-- al vencer la hora límite, el evento se normaliza a `CLOSED`;
-- si expiran reservas pendientes y vuelve a haber cupo, `SOLD_OUT` vuelve a `OPEN`;
-- el cliente obtiene fecha, hora, lugar y disponibilidad directamente del evento activo.
-
-El seed sigue sirviendo para catálogo y creación/actualización del administrador local, pero no crea ni modifica `PickupEvent`.
-
-
-## Cancelaciones de clientes
-
-El cliente puede administrar su pedido desde el enlace seguro generado después de crear la orden:
-
-- `/pedido/:orderCode#token=...`
-
-El token viaja en el fragmento de URL, no en la query string, y se guarda localmente en el navegador después de abrir el enlace. El API siempre vuelve a validar el token contra el hash guardado en la orden.
-
-Reglas:
-
-- la cancelación solo se permite antes de `PickupEvent.closesAt` (normalmente viernes 9:00 p. m.);
-- cancelar una orden pendiente libera inmediatamente su reserva de capacidad;
-- cancelar una orden pagada también libera el cupo;
-- con `MOCK`, el reembolso se completa inmediatamente y la orden termina en `REFUNDED`;
-- para Stripe/Mercado Pago, mientras no estén integrados, se persiste una solicitud de reembolso en los metadatos del pago y la orden queda `CANCELLED` con reembolso pendiente;
-- repetir la misma cancelación es idempotente y no crea un segundo reembolso;
-- si un evento estaba `SOLD_OUT` y una cancelación libera espacio antes del cierre, vuelve a `OPEN`;
-- cada cancelación/reembolso crea registros en `OrderStatusHistory` y `AuditLog`.
-
-El panel `/admin/pedidos` incluye filtros de cancelados/reembolsados y muestra el historial de estados de cada pedido.
-
-
-## Usuarios del personal
-
-Panel:
-
-- `/admin/personal`
-
-Solo un usuario con rol `ADMIN` puede administrar cuentas del personal.
-
-Funciones:
-
-- crear cuentas `ADMIN`, `KITCHEN` y `DELIVERY`;
-- activar o desactivar cuentas;
-- cambiar el rol de una cuenta;
-- cambiar contraseñas;
-- buscar y filtrar personal;
-- ver una matriz de permisos por rol.
-
-Reglas de seguridad:
-
-- contraseñas con Argon2id;
-- mínimo 12 caracteres para nuevas contraseñas;
-- cada cambio queda registrado en `AuditLog`;
-- un administrador no puede desactivar su propia cuenta;
-- un administrador no puede quitarse a sí mismo el rol `ADMIN`;
-- al desactivar una cuenta, su sesión deja de ser válida en la siguiente petición;
-- un cambio de rol entra en vigor inmediatamente porque el guard consulta el usuario actual en PostgreSQL;
-- un cambio de contraseña invalida los JWT anteriores de esa cuenta mediante una versión derivada de la credencial.
-
-Permisos actuales:
-
-- `ADMIN`: Dashboard, Pedidos, Cocina, Entrega, Sábados, Inventario y Personal.
-- `KITCHEN`: solo Cocina; puede mover pedidos pagados a `PREPARING` y `READY`.
-- `DELIVERY`: solo Entrega; puede validar QR y mover `READY` a `DELIVERED`.
-
-Los permisos no dependen del frontend: también están validados por guards en el API.
-
-
-## Dashboard de ventas
-
-Panel:
-
-- `/admin/dashboard`
-
-Solo `ADMIN` puede acceder.
-
-Métricas:
-
-- ingresos de pedidos pagados no cancelados/reembolsados;
-- combos vendidos;
-- Coca-Colas vendidas;
-- ticket promedio;
-- pedidos cancelados;
-- pedidos reembolsados;
-- pedidos `NO_SHOW`;
-- ranking de extras vendidos;
-- ventas agrupadas por sábado.
-
-El dashboard puede filtrarse por un `PickupEvent` específico o mostrar el acumulado de todos los sábados.
-
-Los pedidos `NO_SHOW` siguen contando como venta cuando están pagados y no tienen reembolso, de acuerdo con la regla operativa de no reembolso automático.
-
-
-## Inventario
-
-Panel:
-
-- `/admin/inventario`
-
-Artículos controlados inicialmente:
-
-- Coca-Cola por lata;
-- Carne por porción;
-- Queso por porción;
-- Tocino por porción;
-- Papas por porción.
-
-Reglas de consumo:
-
-- cada combo reserva 1 porción de carne y 1 porción de papas;
-- queso y tocino incluidos solo consumen stock si el cliente no los quita;
-- carne extra, queso extra, tocino extra y papas extra consumen 1 porción adicional;
-- cada Coca-Cola consume 1 lata.
-
-Flujo de inventario:
-
-1. Al crear un pedido, el API bloquea las filas de inventario necesarias.
-2. Si existe stock, lo descuenta y crea una reserva por 15 minutos.
-3. Al pagar, la reserva pasa a `COMMITTED`.
-4. Si el cliente cancela, el stock regresa automáticamente.
-5. Si una reserva pendiente vence, se libera automáticamente la siguiente vez que se consulta o reserva inventario.
-6. Si no existe stock suficiente, el pedido completo se revierte y no se vende.
-
-El panel permite cambiar el stock disponible, el umbral de stock bajo y activar/desactivar el control de cada artículo. Los cambios manuales quedan registrados en `AuditLog`.
-
-La página del cliente consulta `/inventory/availability` para limitar combos, Coca-Colas y extras antes del checkout. El backend vuelve a validar dentro de la transacción, por lo que la protección no depende del frontend.
-
-Después de aplicar la migración por primera vez, ejecuta el seed para crear las cinco definiciones y sus reglas de consumo. El seed crea el stock inicial en 0 y en ejecuciones posteriores no sobrescribe las cantidades que hayas configurado desde el panel.
-
-
-### CRUD de inventario
-
-El panel `/admin/inventario` permite:
-
-- crear artículos;
-- editar nombre y unidad;
-- cambiar stock disponible;
-- cambiar umbral de stock bajo;
-- activar/desactivar control;
-- eliminar artículos cuando no estén vinculados a ventas ni tengan historial.
-
-Los artículos base de Burger Danlin están vinculados a reglas de consumo, por lo que no se eliminan físicamente; se desactivan si dejan de usarse. Los artículos nuevos creados manualmente comienzan como inventario general y pueden eliminarse mientras no tengan movimientos o reglas asociadas.
-
-Endpoints administrativos:
-
-- `GET /admin/inventory`
-- `POST /admin/inventory`
-- `PATCH /admin/inventory/:id`
-- `DELETE /admin/inventory/:id`
-
-Todos requieren rol `ADMIN` y los cambios se registran en `AuditLog`.
-
-
-## Seguridad de producción
-
-El API incluye las siguientes protecciones:
-
-- rate limiting global y límite reforzado para `POST /auth/login`;
-- bloqueo persistente de cuentas después de 5 intentos fallidos durante 15 minutos;
-- contraseña verificada con Argon2id y comparación contra hash dummy para reducir enumeración/timing;
-- cookies de sesión `HttpOnly`, `Secure` y `SameSite=Strict` en producción;
-- invalidación de sesiones antiguas después de cambiar contraseña;
-- protección CSRF para mutaciones del panel mediante origen permitido y Fetch Metadata;
-- CORS restringido a `APP_ORIGIN`;
-- Helmet en el API;
-- headers de seguridad en Next.js y `X-Powered-By` deshabilitado;
-- HSTS en producción;
-- `FORCE_HTTPS` para rechazar/redirigir tráfico inseguro cuando el API está detrás del reverse proxy;
-- validación de secretos al arrancar en `NODE_ENV=production`;
-- logs HTTP estructurados con `X-Request-Id`, método, ruta, estado y duración, sin registrar bodies ni secretos;
-- soporte de raw body para validación de firmas de webhook;
-- verificadores HMAC con comparación en tiempo constante y ventana anti-replay para Stripe y Mercado Pago.
-
-### Variables de producción
-
-Como mínimo:
-
-```text
-NODE_ENV=production
-APP_ORIGIN=https://app.tudominio.com
-FORCE_HTTPS=true
-
-DATABASE_URL=postgresql://...
-AUTH_JWT_SECRET=<secreto aleatorio de 48+ caracteres>
-QR_TOKEN_SECRET=<otro secreto aleatorio de 48+ caracteres>
-
-PAYMENT_PROVIDER=stripe
-STRIPE_SECRET_KEY=...
-STRIPE_WEBHOOK_SECRET=...
-```
-
-`AUTH_JWT_SECRET` y `QR_TOKEN_SECRET` deben ser diferentes. El arranque de producción falla si encuentra valores débiles o placeholders conocidos.
-
-Puedes generar secretos aleatorios desde Node:
-
-```powershell
-node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
-```
-
-Ejecuta el comando dos veces y usa valores diferentes.
-
-### Rate limiting y bloqueo de login
-
-- API general: 120 solicitudes por minuto por IP/proceso.
-- Login: máximo 5 solicitudes por minuto por IP.
-- Cuenta: después de 5 credenciales incorrectas se guarda `lockedUntil` en PostgreSQL y se bloquea durante 15 minutos.
-- Un login correcto reinicia el contador y registra `lastLoginAt`.
-
-El bloqueo de cuenta es persistente y funciona aunque reinicies el API. El rate limiting de IP usa almacenamiento en memoria; si en el futuro ejecutas varias réplicas del API, conviene mover el almacenamiento del throttler a Redis.
-
-### CSRF
-
-Las mutaciones autenticadas del panel y login/logout validan el header `Origin` contra `APP_ORIGIN` y rechazan solicitudes con `Sec-Fetch-Site: cross-site`. Esto se combina con cookies `SameSite=Strict` en producción.
-
-Pedidos públicos, consultas públicas y futuros webhooks de proveedores no dependen de la cookie de personal y no usan esta validación CSRF.
-
-### HTTPS
-
-Nest confía en un único reverse proxy en producción y `FORCE_HTTPS=true` exige HTTPS. El proxy debe enviar `X-Forwarded-Proto: https`.
-
-Existe un ejemplo en:
-
-- `deploy/nginx/burger-danlin.conf.example`
-
-Configura certificados reales (por ejemplo Let's Encrypt) antes de habilitarlo.
-
-### Logs
-
-Cada petición genera un `X-Request-Id` y un log con:
-
-- request ID;
-- método;
-- path sin query string;
-- status HTTP;
-- duración;
-- IP;
-- User-Agent truncado.
-
-No se registran request bodies, contraseñas, tokens, cookies ni secretos.
-
-### Webhooks
-
-`WebhookSecurityService` implementa validación de firma para futuros handlers reales:
-
-- Stripe: valida `Stripe-Signature` sobre el raw body, HMAC-SHA256, timestamp y tolerancia de 5 minutos.
-- Mercado Pago: valida `x-signature`, `x-request-id` y `data.id` con el manifest oficial y HMAC-SHA256.
-- ambas comparaciones usan `timingSafeEqual`.
-
-Los endpoints reales de Stripe/Mercado Pago todavía no se publican hasta implementar el flujo de pagos. Esto evita aceptar un webhook válido sin procesar correctamente el pago.
-
-
-## MFA de administradores
-
-Las cuentas con rol `ADMIN` requieren segundo factor TOTP antes de recibir una sesión administrativa.
-
-Flujo:
-
-1. correo + contraseña;
-2. el API crea un challenge HttpOnly de 5 minutos;
-3. si es el primer acceso, se muestra un QR `otpauth://`;
-4. el administrador confirma un código TOTP de 6 dígitos;
-5. el API habilita MFA y entrega 8 códigos de recuperación de un solo uso;
-6. solo después de MFA se emite la cookie de sesión administrativa.
-
-Seguridad:
-
-- secreto TOTP aleatorio de 160 bits;
-- secreto almacenado cifrado con AES-256-GCM;
-- `MFA_ENCRYPTION_KEY` separada de `AUTH_JWT_SECRET`;
-- códigos TOTP con periodo de 30 segundos y tolerancia ±1 ventana;
-- el mismo timestep TOTP no puede reutilizarse;
-- códigos de recuperación guardados únicamente como SHA-256;
-- challenge MFA firmado, HttpOnly y con expiración de 5 minutos;
-- respuestas de enrollment MFA llevan `Cache-Control: no-store`;
-- el guard rechaza cualquier sesión `ADMIN` si MFA no está habilitado;
-- otro administrador puede restablecer el MFA desde `/admin/personal`;
-- un administrador no puede restablecer su propio MFA desde una sesión activa.
-
-Para desarrollo genera una clave MFA:
-
-```powershell
-node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
-```
-
-y colócala en:
-
-```text
-MFA_ENCRYPTION_KEY=<resultado>
-```
-
-En producción esta variable es obligatoria y debe mantenerse en el gestor de secretos de la infraestructura.
-
-
-## Health/readiness
-
-Endpoints operativos del API:
-
-- `GET /api/v1/health`: compatibilidad; responde el mismo liveness check.
-- `GET /api/v1/health/live`: confirma que el proceso Nest está vivo.
-- `GET /api/v1/health/ready`: comprueba PostgreSQL mediante `SELECT 1`.
-
-`/health/ready` devuelve HTTP `503` cuando PostgreSQL no está disponible, para que un reverse proxy, monitor o futuro orquestador pueda retirar la instancia del tráfico sin confundir “proceso vivo” con “aplicación lista”.
-
-Los health checks llevan `Cache-Control: no-store` y no consumen la cuota global de rate limiting.
-
-
-## Formato de errores del API
-
-Las excepciones HTTP pasan por un filtro global. La respuesta pública usa un formato consistente:
-
-```json
-{
-  "error": {
-    "code": "BAD_REQUEST",
-    "message": "Mensaje seguro para el cliente",
-    "requestId": "..."
-  }
-}
-```
-
-Los errores `5xx` nunca exponen el mensaje técnico de la excepción, stack trace, SQL ni rutas internas. El detalle mínimo de diagnóstico se envía al log del servidor asociado al mismo `requestId`.
-
-
-## OpenAPI y límites de payload
-
-El API limita explícitamente el tamaño de cuerpos antes de la validación de DTO:
-
-- JSON: `256kb` por defecto.
-- URL encoded: `64kb` por defecto.
-
-Pueden ajustarse con:
-
-```text
-JSON_BODY_LIMIT=256kb
-URLENCODED_BODY_LIMIT=64kb
-```
-
-Nest mantiene `rawBody: true`, por lo que la validación futura de firmas de webhooks sigue teniendo acceso al cuerpo original.
-
-En desarrollo, Swagger/OpenAPI está habilitado por defecto:
-
-- UI: `http://localhost:4000/api/v1/docs`
-- JSON OpenAPI: `http://localhost:4000/api/v1/docs-json`
-
-En producción la documentación queda deshabilitada salvo que se defina explícitamente `ENABLE_API_DOCS=true`.
-
-El plugin de Swagger reutiliza los DTO y decoradores de `class-validator` para generar schemas del contrato HTTP.
-
-
-## CI y tests críticos
-
-El workflow `.github/workflows/ci.yml` se ejecuta en pushes y pull requests hacia `main`.
-
-La verificación crea un PostgreSQL temporal y ejecuta:
-
-1. `pnpm install --frozen-lockfile`
-2. `pnpm db:generate`
-3. `pnpm db:migrate:deploy`
-4. `pnpm lint`
-5. `pnpm test`
-6. `pnpm build`
-
-Tests críticos iniciales:
-
-- `authorization.guard.spec.ts`: comprueba que ADMIN, KITCHEN y DELIVERY no crucen permisos definidos por guards.
-- `orders.concurrency.spec.ts`: lanza operaciones concurrentes reales contra PostgreSQL.
-  - dos clientes compiten por el último combo y solo uno puede reservarlo;
-  - dos eventos distintos compiten por una sola unidad de inventario y solo uno puede venderla.
-
-Los tests de concurrencia usan registros con identificadores únicos y eliminan sus datos al finalizar.
-
-
-## Seguridad automática del repositorio
-
-El repositorio incluye `.github/workflows/security.yml` y `.github/dependabot.yml`.
-
-### Dependabot
-
-Dependabot revisa:
-
-- dependencias pnpm del monorepo semanalmente;
-- GitHub Actions semanalmente;
-- imágenes de Docker Compose mensualmente.
-
-Las actualizaciones llegan como pull requests para poder pasar por CI antes de entrar a `main`.
-
-### SCA
-
-En cada push/PR hacia `main` se ejecuta:
-
-```bash
-pnpm audit --prod --audit-level=high
-```
-
-El job falla si existe una vulnerabilidad `high` o `critical` conocida en una dependencia de producción.
-
-### Secret scanning
-
-Gitleaks v3 escanea el historial Git completo para detectar secretos, tokens, llaves y credenciales hardcodeadas.
-
-Nunca se debe resolver un hallazgo agregando el secreto a una allowlist solo para que el workflow quede verde. Primero se rota/elimina el secreto y luego, si es realmente un falso positivo, se documenta la excepción.
-
-### SAST
-
-Semgrep OSS `1.177.0` ejecuta análisis estático sobre el repositorio en:
-
-- pull requests;
-- pushes a `main`;
-- ejecución semanal;
-- ejecución manual.
-
-Se usa `--config auto` para seleccionar reglas según los lenguajes detectados. El job falla cuando Semgrep encuentra un hallazgo que debe atenderse.
-
-CodeQL no se usa actualmente porque este repositorio es privado y GitHub Code Security no está habilitado. Si en el futuro se habilita esa licencia, puede añadirse CodeQL como segunda capa de SAST.
-
-### SBOM
-
-En cada push a `main` y ejecución manual se genera un SBOM CycloneDX mediante Anchore/Syft:
-
-```text
-sbom.cdx.json
-```
-
-El SBOM se publica como artefacto del workflow para conocer qué componentes y versiones forman parte del software en ese commit.
-
-### Política
-
-Un cambio no debería considerarse listo para producción mientras estén fallando:
-
-- CI;
-- dependency audit;
-- secret scan;
-- SAST.
-
-El SBOM es informativo y forma parte de la trazabilidad del release.
-
-
-## Docker de producción y recuperación
-
-Hay dos Compose con propósitos distintos:
-
-- `docker-compose.yml`: **solo desarrollo local**. Publica PostgreSQL, Redis y Mailpit para facilitar el desarrollo.
-- `docker-compose.prod.yml`: **producción**. PostgreSQL y Redis no publican puertos al host.
-
-El Compose de producción incluye:
-
-- API y Web construidos con Dockerfiles multi-stage;
-- procesos Node ejecutados como usuario `node`, no root;
-- `no-new-privileges` y capabilities eliminadas para API/Web;
-- API y Web expuestos únicamente en `127.0.0.1` para Nginx del host;
-- red de datos Docker marcada como `internal`;
-- PostgreSQL con SCRAM-SHA-256;
-- Redis protegido con contraseña y usado solo como caché;
-- healthchecks;
-- migraciones mediante `prisma migrate deploy`;
-- rotación básica de logs Docker;
-- backup PostgreSQL cifrado con `age`;
-- checksum SHA-256 del backup cifrado;
-- retención configurable;
-- restore drill contra PostgreSQL temporal;
-- timers systemd de backup y restore drill.
-
-Guía completa:
-
-- `deploy/PRODUCTION.md`
-- `deploy/DR.md`
-
-Importante: el backup local cifrado todavía debe replicarse a almacenamiento independiente/offsite antes del lanzamiento. RPO y RTO permanecen pendientes de aprobación según impacto del negocio.
-
-
-### Backup offsite inmutable
-
-Producción incluye un flujo S3-compatible para una segunda copia fuera del VPS:
-
-- backup PostgreSQL cifrado con `age`;
-- upload del `.dump.age` y `.sha256`;
-- verificación previa de Versioning + Object Lock + retención;
-- verificación de tamaño del objeto remoto;
-- recuperación del backup más reciente desde Object Storage;
-- timer de backup cada hora;
-- restore drill mensual.
-
-La integración está preparada para IONOS Object Storage, pero el bucket y sus credenciales se configuran fuera del repositorio.
-
-Objetivos técnicos iniciales de recuperación:
-
-- RPO <= 1 hora;
-- RTO <= 4 horas.
-
-El RTO todavía requiere un simulacro real de pérdida total del VPS.
-
-Consulta `deploy/OFFSITE_BACKUP.md`, `deploy/DR.md` y `deploy/PRODUCTION.md`.
