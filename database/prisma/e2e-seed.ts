@@ -81,6 +81,7 @@ async function main() {
   await prisma.order.deleteMany();
   await prisma.customer.deleteMany();
   await prisma.pickupEvent.deleteMany();
+  await prisma.pickupPoint.deleteMany();
 
   const inventory = await prisma.inventoryItem.findMany({
     select: { id: true },
@@ -101,15 +102,27 @@ async function main() {
 
   const now = Date.now();
 
+  const pickupPoint = await prisma.pickupPoint.create({
+    data: {
+      code: "UNIVERSIDAD-E2E",
+      name: "Universidad",
+      address: "Punto de entrega E2E",
+      active: true,
+    },
+  });
+
   await prisma.pickupEvent.create({
     data: {
       code: "E2E-INTEGRATED",
       name: "Sábado E2E integrado",
-      locationLabel: "Universidad",
+      locationLabel: pickupPoint.name,
+      pickupPointId: pickupPoint.id,
       timezone: "America/Tijuana",
       closesAt: new Date(now + 2 * 60 * 60 * 1000),
       startsAt: new Date(now + 4 * 60 * 60 * 1000),
       maxCombos: 50,
+      freeDeliveryMinPaidOrders: 5,
+      transportCostCents: 10000,
       status: "OPEN",
     },
   });
