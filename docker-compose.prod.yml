@@ -387,6 +387,7 @@ services:
 
   prometheus:
     image: prom/prometheus:v3.15.0
+    restart: unless-stopped
     profiles:
       - observability
     command:
@@ -417,6 +418,7 @@ services:
 
   loki:
     image: grafana/loki:3.7.8
+    restart: unless-stopped
     profiles:
       - observability
     command:
@@ -442,6 +444,7 @@ services:
 
   alloy:
     image: grafana/alloy:v1.20.0
+    restart: unless-stopped
     profiles:
       - observability
     depends_on:
@@ -474,6 +477,7 @@ services:
 
   node-exporter:
     image: prom/node-exporter:v1.12.1
+    restart: unless-stopped
     profiles:
       - observability
     command:
@@ -501,6 +505,7 @@ services:
 
   grafana:
     image: grafana/grafana:13.2.2
+    restart: unless-stopped
     profiles:
       - observability
     depends_on:
