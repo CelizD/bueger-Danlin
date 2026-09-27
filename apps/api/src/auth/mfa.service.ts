@@ -514,11 +514,14 @@ export class MfaService {
 
     try {
       const decipher = createDecipheriv(
-  "aes-256-gcm",
-  this.encryptionKey(),
-  Buffer.from(ivValue, "base64url"),
-  { authTagLength: 16 },
-);
+        "aes-256-gcm",
+        this.encryptionKey(),
+        Buffer.from(ivValue, "base64url"),
+        { authTagLength: 16 },
+      );
+      decipher.setAuthTag(
+        Buffer.from(tagValue, "base64url"),
+      );
 
       return Buffer.concat([
         decipher.update(
