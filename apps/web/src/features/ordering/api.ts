@@ -10,10 +10,10 @@ import type {
 } from "./types";
 
 export async function loadOrderingData() {
-  const [catalogResponse, eventResponse, inventoryResponse] =
+  const [catalogResponse, eventsResponse, inventoryResponse] =
     await Promise.all([
       apiFetch("/catalog", { cache: "no-store" }),
-      apiFetch("/pickup-events/current", { cache: "no-store" }),
+      apiFetch("/pickup-events/open", { cache: "no-store" }),
       apiFetch("/inventory/availability", { cache: "no-store" }),
     ]);
 
@@ -21,21 +21,18 @@ export async function loadOrderingData() {
     throw new Error("No se pudo cargar el menú.");
   }
 
-  if (!eventResponse.ok && eventResponse.status !== 404) {
-    throw new Error("No se pudo consultar la fecha de entrega.");
+  if (!eventsResponse.ok) {
+    throw new Error("No se pudieron consultar los puntos de entrega.");
   }
 
   const catalog = (await catalogResponse.json()) as CatalogProduct[];
-  const event =
-    eventResponse.status === 404
-      ? null
-      : ((await eventResponse.json()) as PickupEvent);
+  const events = (await eventsResponse.json()) as PickupEvent[];
   const inventory =
     (await inventoryResponse.json()) as InventoryAvailability;
 
   return {
     catalog,
-    event,
+    events,
     inventory,
   };
 }
