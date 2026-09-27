@@ -13,6 +13,7 @@ import {
 } from "vitest";
 import type { PrismaService } from "../database/prisma.service.js";
 import type { InventoryService } from "../inventory/inventory.service.js";
+import { MockPaymentProvider } from "./providers/mock/mock-payment.provider.js";
 import { PaymentsService } from "./payments.service.js";
 
 const TOKEN = "order-token-valid-for-payment-tests";
@@ -31,6 +32,11 @@ function order(overrides: Record<string, unknown> = {}) {
     totalCents: 13000,
     currency: "MXN",
     pickupEvent: { id: "event-1" },
+    customer: {
+      name: "Cliente de prueba",
+      email: "cliente@example.com",
+      phone: "+526641234567",
+    },
     ...overrides,
   };
 }
@@ -69,10 +75,22 @@ function harness(
     commitOrder: vi.fn().mockResolvedValue(undefined),
   } as unknown as InventoryService;
 
+  const mockPaymentProvider = new MockPaymentProvider();
+  const createCheckoutSpy = vi.spyOn(
+    mockPaymentProvider,
+    "createCheckout",
+  );
+
   return {
-    service: new PaymentsService(prisma, inventory),
+    service: new PaymentsService(
+      prisma,
+      inventory,
+      mockPaymentProvider,
+    ),
     prisma,
     inventory,
+    mockPaymentProvider,
+    createCheckoutSpy,
     tx,
   };
 }
@@ -118,10 +136,12 @@ describe("PaymentsService", () => {
       paymentStatus: "PAID",
       reservationExpiresAt: null,
     });
-    const { service, tx, inventory } = harness(
-      paidOrder,
-      paidOrder,
-    );
+    const {
+      service,
+      tx,
+      inventory,
+      createCheckoutSpy,
+    } = harness(paidOrder, paidOrder);
 
     const result = await service.confirmMockPayment(
       "H-A1B2C3D4",
@@ -134,6 +154,7 @@ describe("PaymentsService", () => {
       paymentStatus: "PAID",
       paid: true,
     });
+    expect(createCheckoutSpy).not.toHaveBeenCalled();
     expect(tx.payment.upsert).not.toHaveBeenCalled();
     expect(tx.order.update).not.toHaveBeenCalled();
     expect(inventory.commitOrder).not.toHaveBeenCalled();
@@ -144,15 +165,18 @@ describe("PaymentsService", () => {
     const expired = order({
       reservationExpiresAt: new Date(Date.now() - 1_000),
     });
-    const { service, tx, inventory } = harness(
-      expired,
-      expired,
-    );
+    const {
+      service,
+      tx,
+      inventory,
+      createCheckoutSpy,
+    } = harness(expired, expired);
 
     await expect(
       service.confirmMockPayment("H-A1B2C3D4", TOKEN),
     ).rejects.toBeInstanceOf(ConflictException);
 
+    expect(createCheckoutSpy).not.toHaveBeenCalled();
     expect(tx.payment.upsert).not.toHaveBeenCalled();
     expect(inventory.commitOrder).not.toHaveBeenCalled();
   });
@@ -160,19 +184,33 @@ describe("PaymentsService", () => {
   it("confirma una sola vez el pago, la orden y el inventario", async () => {
     process.env.NODE_ENV = "test";
     const pending = order();
-    const { service, tx, inventory } = harness(
-      pending,
-      pending,
-    );
+    const {
+      service,
+      tx,
+      inventory,
+      createCheckoutSpy,
+    } = harness(pending, pending);
 
     const result = await service.confirmMockPayment(
       "H-A1B2C3D4",
       TOKEN,
     );
 
+    expect(createCheckoutSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        paymentId: "order-1",
+        orderCode: "H-A1B2C3D4",
+        amountCents: 13000,
+        currency: "MXN",
+        idempotencyKey: "mock:order-1",
+      }),
+    );
     expect(tx.payment.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { idempotencyKey: "mock:order-1" },
+        create: expect.objectContaining({
+          externalId: "LOCAL-order-1",
+        }),
       }),
     );
     expect(tx.order.update).toHaveBeenCalledWith(
