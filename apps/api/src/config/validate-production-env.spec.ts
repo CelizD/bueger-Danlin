@@ -22,6 +22,7 @@ function setValidProductionEnvironment() {
     "postgresql://runtime:strong-password@postgres:5432/burger_danlin",
   );
   vi.stubEnv("PAYMENT_PROVIDER", "stripe");
+  vi.stubEnv("ENABLE_REAL_PAYMENTS", "true");
   vi.stubEnv("STRIPE_SECRET_KEY", "S".repeat(24));
   vi.stubEnv("STRIPE_WEBHOOK_SECRET", "W".repeat(24));
 }
@@ -53,8 +54,24 @@ describe("validateProductionEnvironment", () => {
     },
   );
 
-  it("acepta Stripe con secretos configurados", () => {
+  it("acepta Stripe con secretos configurados cuando pagos reales están habilitados", () => {
     expect(() => validateProductionEnvironment()).not.toThrow();
+  });
+
+  it("permite arrancar producción sin credenciales del proveedor cuando pagos reales están deshabilitados", () => {
+    vi.stubEnv("ENABLE_REAL_PAYMENTS", "false");
+    vi.stubEnv("STRIPE_SECRET_KEY", "");
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "");
+
+    expect(() => validateProductionEnvironment()).not.toThrow();
+  });
+
+  it("rechaza valores ambiguos para ENABLE_REAL_PAYMENTS en producción", () => {
+    vi.stubEnv("ENABLE_REAL_PAYMENTS", "yes");
+
+    expect(() => validateProductionEnvironment()).toThrow(
+      "ENABLE_REAL_PAYMENTS must be either true or false in production",
+    );
   });
 
   it("rechaza Stripe sin sus secretos", () => {
