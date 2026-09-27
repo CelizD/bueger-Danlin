@@ -26,7 +26,7 @@ RUN DATABASE_URL="postgresql://prisma_build:prisma_build@127.0.0.1:5432/prisma_b
 FROM build AS prod-deps
 
 RUN rm -rf node_modules apps/*/node_modules packages/*/node_modules \
-  && pnpm --filter @burger/api... install --prod --frozen-lockfile --offline
+  && pnpm --filter @burger/api... install --prod --no-optional --frozen-lockfile --offline
 
 FROM node:24-bookworm-slim AS runtime
 
