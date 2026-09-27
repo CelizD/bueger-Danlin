@@ -21,14 +21,17 @@ RUN pnpm install --frozen-lockfile
 
 RUN DATABASE_URL="postgresql://prisma_build:prisma_build@127.0.0.1:5432/prisma_build?schema=public" pnpm db:generate \
   && pnpm --filter @burger/types build \
-  && pnpm --filter @burger/api build \
-  && pnpm --filter @burger/api --prod deploy --legacy /prod/api \
-  && cp -R apps/api/dist /prod/api/dist
+  && pnpm --filter @burger/api build
+
+FROM build AS prod-deps
+
+RUN rm -rf node_modules apps/*/node_modules packages/*/node_modules \
+  && pnpm --filter @burger/api... install --prod --frozen-lockfile --offline
 
 FROM node:24-bookworm-slim AS runtime
 
 ENV NODE_ENV=production
-WORKDIR /app
+WORKDIR /app/apps/api
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates openssl \
@@ -36,7 +39,12 @@ RUN apt-get update \
   && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v1.22.22 \
   && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg /usr/local/bin/pnpm /usr/local/bin/pnpx
 
-COPY --from=build --chown=node:node /prod/api ./
+COPY --from=prod-deps --chown=node:node /app/node_modules /app/node_modules
+COPY --from=prod-deps --chown=node:node /app/apps/api /app/apps/api
+COPY --from=prod-deps --chown=node:node /app/packages /app/packages
+COPY --from=prod-deps --chown=node:node /app/database /app/database
+COPY --from=prod-deps --chown=node:node /app/prisma.config.ts /app/prisma.config.ts
+COPY --from=prod-deps --chown=node:node /app/package.json /app/package.json
 
 USER node
 
