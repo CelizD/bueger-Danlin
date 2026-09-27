@@ -24,6 +24,8 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [x] VPS preflight script.
 - [x] Go-live environment gate.
 - [x] Objetivos técnicos iniciales RPO/RTO documentados.
+- [x] Retention cleanup con dry-run, kill switch y tests.
+- [x] Timer systemd diario de retención preparado.
 
 ## Pendiente hasta tener VPS/dominio/proveedores
 
@@ -80,7 +82,12 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 
 ### Operación
 
+- [ ] Validar plazos legales/fiscales de retención.
+- [ ] Ejecutar retention cleanup en dry-run y revisar candidatos.
+- [ ] Cambiar RETENTION_CLEANUP_ENABLED=true solo después de esa revisión.
+- [ ] Ejecutar una aplicación manual controlada y revisar el resultado.
 - [ ] Instalar/activar timers systemd.
+- [ ] Confirmar primera ejecución del timer de retención.
 - [ ] Confirmar primer backup horario.
 - [ ] Confirmar primer restore drill.
 - [ ] Configurar alertas de fallo de backups/timers.
