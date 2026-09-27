@@ -48,7 +48,7 @@ function escapeLabel(value: string) {
     .replaceAll('"', '\\"');
 }
 
-function labelsText(labels: Record<string, string>) {
+function labelsText(labels: object) {
   return Object.entries(labels)
     .map(
       ([key, value]) =>
