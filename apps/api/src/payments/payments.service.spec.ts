@@ -106,6 +106,7 @@ function harness(
 
 const originalNodeEnv = process.env.NODE_ENV;
 const originalPaymentProvider = process.env.PAYMENT_PROVIDER;
+const originalEnableRealPayments = process.env.ENABLE_REAL_PAYMENTS;
 
 afterEach(() => {
   if (originalNodeEnv === undefined) {
@@ -118,6 +119,12 @@ afterEach(() => {
     delete process.env.PAYMENT_PROVIDER;
   } else {
     process.env.PAYMENT_PROVIDER = originalPaymentProvider;
+  }
+
+  if (originalEnableRealPayments === undefined) {
+    delete process.env.ENABLE_REAL_PAYMENTS;
+  } else {
+    process.env.ENABLE_REAL_PAYMENTS = originalEnableRealPayments;
   }
 });
 
@@ -371,9 +378,26 @@ function checkoutHarness(options?: {
 }
 
 describe("PaymentsService.createCheckout", () => {
+  it("bloquea pagos reales antes de crear Payment cuando el kill switch está apagado", async () => {
+    process.env.NODE_ENV = "test";
+    process.env.PAYMENT_PROVIDER = "mercadopago";
+    process.env.ENABLE_REAL_PAYMENTS = "false";
+
+    const { service, prisma, tx, createOrder } = checkoutHarness();
+
+    await expect(
+      service.createCheckout("H-A1B2C3D4", TOKEN),
+    ).rejects.toThrow("Real payment calls are disabled");
+
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(tx.payment.create).not.toHaveBeenCalled();
+    expect(createOrder).not.toHaveBeenCalled();
+  });
+
   it("crea Payment PENDING antes de llamar a Mercado Pago y no marca la orden como pagada", async () => {
     process.env.NODE_ENV = "test";
     process.env.PAYMENT_PROVIDER = "mercadopago";
+    process.env.ENABLE_REAL_PAYMENTS = "true";
 
     const {
       service,
@@ -452,6 +476,7 @@ describe("PaymentsService.createCheckout", () => {
   it("deja el Payment PENDING si Mercado Pago falla para poder reintentar con la misma idempotency key", async () => {
     process.env.NODE_ENV = "test";
     process.env.PAYMENT_PROVIDER = "mercadopago";
+    process.env.ENABLE_REAL_PAYMENTS = "true";
 
     const {
       service,
