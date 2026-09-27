@@ -13,6 +13,10 @@ type StatusNotice = OrderNotice & {
   status: "PREPARING" | "READY" | "DELIVERED";
 };
 
+type CancellationNotice = OrderNotice & {
+  refundStatus?: "PENDING" | "REFUNDED" | null;
+};
+
 function enabled(name: string, fallback = true) {
   const value = process.env[name];
 
@@ -120,6 +124,31 @@ export class TelegramNotificationService {
         `Combos: ${order.comboQuantity}`,
         `Total: ${money(order.totalCents, order.currency)}`,
       ].join("\n"),
+    );
+  }
+
+  notifyCancelled(order: CancellationNotice) {
+    if (!enabled("TELEGRAM_NOTIFY_CANCELLED")) return;
+
+    const heading =
+      order.refundStatus === "REFUNDED"
+        ? "↩️ Pedido cancelado y reembolsado"
+        : order.refundStatus === "PENDING"
+          ? "⚠️ Pedido cancelado — reembolso pendiente"
+          : "❌ Pedido cancelado";
+
+    this.dispatch(
+      [
+        heading,
+        `Pedido: ${order.orderCode}`,
+        `Combos: ${order.comboQuantity}`,
+        `Total: ${money(order.totalCents, order.currency)}`,
+        order.locationLabel
+          ? `Entrega: ${order.locationLabel}`
+          : undefined,
+      ]
+        .filter(Boolean)
+        .join("\n"),
     );
   }
 
