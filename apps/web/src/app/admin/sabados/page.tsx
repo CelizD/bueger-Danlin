@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminSidebar } from "@/features/staff/components/admin-sidebar";
+import { PickupPointQrModal } from "@/features/staff/components/pickup-point-qr-modal";
 import { API_URL, apiFetch } from "@/lib/api/browser";
 import {
   Boxes,
@@ -13,6 +14,7 @@ import {
   MapPin,
   Package,
   Plus,
+  QrCode,
   RefreshCw,
   Save,
   ShoppingBag,
@@ -36,6 +38,15 @@ type PickupEvent = {
   code: string;
   name: string;
   locationLabel: string;
+  pickupPoint: {
+    id: string;
+    code: string;
+    name: string;
+    address: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    active: boolean;
+  };
   timezone: string;
   startsAt: string;
   closesAt: string;
@@ -221,6 +232,8 @@ export default function SaturdaysPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [qrEvent, setQrEvent] = useState<PickupEvent | null>(null);
+  const [customerOrigin, setCustomerOrigin] = useState("");
 
   async function load(showRefresh = false) {
     if (showRefresh) setRefreshing(true);
@@ -269,6 +282,7 @@ export default function SaturdaysPage() {
   }
 
   useEffect(() => {
+    setCustomerOrigin(window.location.origin);
     void load();
   }, []);
 
@@ -783,6 +797,15 @@ export default function SaturdaysPage() {
                   <div className="saturday-card-actions">
                     <button
                       type="button"
+                      className="saturday-qr"
+                      onClick={() => setQrEvent(event)}
+                    >
+                      <QrCode size={16} />
+                      QR del punto
+                    </button>
+
+                    <button
+                      type="button"
                       className="saturday-edit"
                       onClick={() => openEdit(event)}
                       disabled={
@@ -824,6 +847,19 @@ export default function SaturdaysPage() {
           )}
         </section>
       </section>
+
+      {qrEvent && customerOrigin && (
+        <PickupPointQrModal
+          pointName={qrEvent.pickupPoint.name}
+          pointCode={qrEvent.pickupPoint.code}
+          url={
+            customerOrigin +
+            "/?pickup=" +
+            encodeURIComponent(qrEvent.pickupPoint.code)
+          }
+          onClose={() => setQrEvent(null)}
+        />
+      )}
     </main>
   );
 }
