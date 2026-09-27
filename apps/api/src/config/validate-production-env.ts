@@ -78,6 +78,16 @@ export function validateProductionEnvironment() {
 
   const provider =
     process.env.PAYMENT_PROVIDER?.trim().toLowerCase() ?? "";
+  const realPaymentsSetting =
+    process.env.ENABLE_REAL_PAYMENTS?.trim().toLowerCase() || "false";
+
+  if (!["true", "false"].includes(realPaymentsSetting)) {
+    throw new Error(
+      "ENABLE_REAL_PAYMENTS must be either true or false in production",
+    );
+  }
+
+  const realPaymentsEnabled = realPaymentsSetting === "true";
 
   if (!productionPaymentProviders.has(provider)) {
     throw new Error(
@@ -85,12 +95,12 @@ export function validateProductionEnvironment() {
     );
   }
 
-  if (provider === "stripe") {
+  if (realPaymentsEnabled && provider === "stripe") {
     requireStrongSecret("STRIPE_SECRET_KEY", 24);
     requireStrongSecret("STRIPE_WEBHOOK_SECRET", 24);
   }
 
-  if (provider === "mercadopago") {
+  if (realPaymentsEnabled && provider === "mercadopago") {
     requireStrongSecret("MERCADOPAGO_ACCESS_TOKEN", 24);
     requireStrongSecret("MERCADOPAGO_WEBHOOK_SECRET", 24);
   }
