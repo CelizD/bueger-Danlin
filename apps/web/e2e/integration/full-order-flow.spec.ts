@@ -52,9 +52,18 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     .getByLabel("Correo (opcional)")
     .fill("cliente.e2e@example.test");
 
+  const continueButton = page.getByRole("button", {
+    name: "Continuar al pago",
+  });
+
+  await expect(continueButton).toBeDisabled();
+
   await page
-    .getByRole("button", { name: "Continuar al pago" })
-    .click();
+    .getByLabel(/Entiendo y acepto que/)
+    .check();
+
+  await expect(continueButton).toBeEnabled();
+  await continueButton.click();
 
   const orderHeading = page
     .getByRole("heading", { level: 1 })
