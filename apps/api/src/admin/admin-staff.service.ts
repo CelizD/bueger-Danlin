@@ -5,19 +5,15 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import * as argon2 from "argon2";
 import { PrismaService } from "../database/prisma.service.js";
+import {
+  hashStaffPassword,
+  staffPasswordPolicyIssue,
+} from "../auth/password-security.js";
 import { Prisma } from "../generated/prisma/client.js";
 import { CreateStaffUserDto } from "./dto/create-staff-user.dto.js";
 import { ResetStaffPasswordDto } from "./dto/reset-staff-password.dto.js";
 import { UpdateStaffUserDto } from "./dto/update-staff-user.dto.js";
-
-const ARGON2_OPTIONS = {
-  type: argon2.argon2id,
-  memoryCost: 19456,
-  timeCost: 2,
-  parallelism: 1,
-} as const;
 
 @Injectable()
 export class AdminStaffService {
@@ -57,7 +53,13 @@ export class AdminStaffService {
       throw new ConflictException("Ya existe una cuenta con ese correo.");
     }
 
-    const passwordHash = await argon2.hash(dto.password, ARGON2_OPTIONS);
+    const passwordIssue = staffPasswordPolicyIssue(dto.password);
+
+    if (passwordIssue) {
+      throw new BadRequestException(passwordIssue);
+    }
+
+    const passwordHash = await hashStaffPassword(dto.password);
 
     const created = await this.prisma.user.create({
       data: {
@@ -278,7 +280,13 @@ export class AdminStaffService {
       throw new NotFoundException("La cuenta de personal no existe.");
     }
 
-    const passwordHash = await argon2.hash(dto.password, ARGON2_OPTIONS);
+    const passwordIssue = staffPasswordPolicyIssue(dto.password);
+
+    if (passwordIssue) {
+      throw new BadRequestException(passwordIssue);
+    }
+
+    const passwordHash = await hashStaffPassword(dto.password);
 
     await this.prisma.user.update({
       where: { id },
