@@ -76,6 +76,30 @@ export function validateProductionEnvironment() {
     );
   }
 
+  const telegramSetting =
+    process.env.TELEGRAM_NOTIFICATIONS_ENABLED
+      ?.trim()
+      .toLowerCase() || "false";
+
+  if (!["true", "false"].includes(telegramSetting)) {
+    throw new Error(
+      "TELEGRAM_NOTIFICATIONS_ENABLED must be either true or false in production",
+    );
+  }
+
+  if (telegramSetting === "true") {
+    requireStrongSecret("TELEGRAM_BOT_TOKEN", 20);
+
+    const telegramChatId =
+      process.env.TELEGRAM_CHAT_ID?.trim() ?? "";
+
+    if (!/^-?\d+$/.test(telegramChatId)) {
+      throw new Error(
+        "TELEGRAM_CHAT_ID must be a numeric Telegram chat ID",
+      );
+    }
+  }
+
   const provider =
     process.env.PAYMENT_PROVIDER?.trim().toLowerCase() ?? "";
   const realPaymentsSetting =
