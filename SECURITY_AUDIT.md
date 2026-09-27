@@ -29,6 +29,7 @@ Desde la auditoría inicial se cerraron varios gaps importantes:
 - SCA con `pnpm audit`;
 - Gitleaks;
 - SBOM CycloneDX;
+- image scanning con Trivy para API, Web y backups;
 - Docker non-root;
 - DB/Redis privados en Compose de producción;
 - backups cifrados y restore drill;
@@ -126,7 +127,7 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | IaC scanning | 🔵 | No existe IaC completo todavía |
 | Artifact signing | 🔴 | No implementado |
 | Docker app non-root | ✅ | API/Web como usuario no-root; hardening adicional en Compose |
-| Image scan | 🔴 | No configurado |
+| Image scan | ✅ | Trivy v0.36.0 escanea las imágenes de API, Web y Backup; bloquea vulnerabilidades corregibles HIGH/CRITICAL y la corrida validada del 2026-09-27 quedó verde |
 | Imagen por digest | 🔴 | Imágenes de aplicación/release no fijadas por digest |
 | DAST | 🔴 | Pendiente staging |
 | Deploy con OIDC | 🔴 | No existe pipeline de producción |
@@ -191,8 +192,7 @@ Pendiente antes de habilitar pagos reales:
 
 ### Fase 2 — Supply chain
 
-2. Image scan de contenedores.
-3. Artifact/image signing cuando exista pipeline de release.
+2. Artifact/image signing cuando exista pipeline de release.
 
 ### Fase 3 — Privacidad y threat model
 
@@ -230,7 +230,7 @@ Pendiente antes de habilitar pagos reales:
 
 ## Próximo control
 
-La **password blocklist ya está implementada**. Falta ejecutar el benchmark Argon2id en el hardware objetivo. Después, el siguiente cambio de código recomendado es **image scanning** y luego threat model/privacidad.
+La **password blocklist** y el **image scanning con Trivy** ya están implementados y validados. El benchmark Argon2id queda pendiente hasta disponer del VPS objetivo. Mientras tanto, el siguiente bloque recomendado es **threat model + inventario de datos + política de retención/privacidad**.
 
 ## Nota sobre branch protection
 
