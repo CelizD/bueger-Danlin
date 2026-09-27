@@ -1,0 +1,39 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+loki.source.file "docker_logs" {
+  targets = [
+    {
+      "__path__" = "/var/lib/docker/containers/*/*-json.log",
+      "job"      = "docker",
+    },
+  ]
+
+  forward_to   = [loki.process.docker_logs.receiver]
+  tail_from_end = true
+
+  file_match {
+    enabled     = true
+    sync_period = "5s"
+  }
+}
+
+loki.process "docker_logs" {
+  stage.docker {}
+  stage.decolorize {}
+
+  stage.drop {
+    longer_than         = "256KB"
+    drop_counter_reason = "oversized_log_line"
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
