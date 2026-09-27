@@ -358,6 +358,32 @@ Guía:
 - Trivy sobre las imágenes de API, Web y Backup, bloqueando HIGH/CRITICAL corregibles;
 - CycloneDX SBOM en `main`.
 
+## Observabilidad
+
+El repositorio incluye una pila preparada para producción con:
+
+- Grafana;
+- Prometheus;
+- Loki;
+- Grafana Alloy;
+- Node Exporter.
+
+El API expone métricas internas en `/api/v1/metrics`, pero Nginx bloquea ese endpoint desde Internet. Prometheus lo consulta directamente por la red privada de Docker.
+
+Grafana queda en:
+
+```text
+127.0.0.1:3001
+```
+
+y se recomienda acceder mediante túnel SSH.
+
+Guía completa:
+
+```text
+deploy/observability/README.md
+```
+
 ## Retención de datos
 
 El repositorio incluye cleanup seguro de datos:
@@ -416,16 +442,17 @@ Los siguientes bloques todavía sí están pendientes:
 1. ejecutar el benchmark Argon2id en el hardware objetivo y registrar el resultado;
 2. aviso de privacidad final y validación legal/fiscal de retención antes de producción;
 3. legal/incident hold por registro y alerta de fallo del cleanup;
-4. métricas, tracing, alertas y logs centralizados;
-5. runbooks de incidentes;
-6. ADRs;
-7. load/stress testing;
-8. staging y rollback probado;
-9. DAST;
-10. infraestructura real: dominio, TLS, WAF/CDN y backup offsite real;
-11. simulacro completo de pérdida del VPS;
-12. pentest prelaunch;
-13. integración completa de pagos reales.
+4. validar Grafana/Prometheus/Loki/Alloy en el VPS y definir canal de notificaciones;
+5. distributed tracing con OpenTelemetry/Tempo si se requiere;
+6. runbooks de incidentes;
+7. ADRs;
+8. load/stress testing;
+9. staging y rollback probado;
+10. DAST;
+11. infraestructura real: dominio, TLS, WAF/CDN y backup offsite real;
+12. simulacro completo de pérdida del VPS;
+13. pentest prelaunch;
+14. integración completa de pagos reales.
 
 No se planean microservicios ni Kubernetes para el MVP salvo que una necesidad técnica real lo justifique.
 
