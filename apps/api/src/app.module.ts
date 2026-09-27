@@ -7,6 +7,8 @@ import { CatalogModule } from "./catalog/catalog.module.js";
 import { DatabaseModule } from "./database/database.module.js";
 import { HealthController } from "./health/health.controller.js";
 import { InventoryModule } from "./inventory/inventory.module.js";
+import { MetricsController } from "./metrics/metrics.controller.js";
+import { MetricsService } from "./metrics/metrics.service.js";
 import { OrdersModule } from "./orders/orders.module.js";
 import { PaymentsModule } from "./payments/payments.module.js";
 import { PickupEventsModule } from "./pickup-events/pickup-events.module.js";
@@ -32,8 +34,9 @@ import { TelemetryController } from "./telemetry/telemetry.controller.js";
       },
     ]),
   ],
-  controllers: [HealthController, TelemetryController],
+  controllers: [HealthController, TelemetryController, MetricsController],
   providers: [
+    MetricsService,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
