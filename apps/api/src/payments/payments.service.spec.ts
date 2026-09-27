@@ -14,6 +14,7 @@ import {
 import type { PrismaService } from "../database/prisma.service.js";
 import type { InventoryService } from "../inventory/inventory.service.js";
 import { PaymentProviderRegistry } from "./payment-provider.registry.js";
+import { MercadoPagoProvider } from "./providers/mercadopago/mercadopago.provider.js";
 import { MockPaymentProvider } from "./providers/mock/mock-payment.provider.js";
 import { PaymentsService } from "./payments.service.js";
 
@@ -79,6 +80,7 @@ function harness(
   const mockPaymentProvider = new MockPaymentProvider();
   const paymentProviderRegistry = new PaymentProviderRegistry(
     mockPaymentProvider,
+    new MercadoPagoProvider(),
   );
   const createCheckoutSpy = vi.spyOn(
     mockPaymentProvider,
