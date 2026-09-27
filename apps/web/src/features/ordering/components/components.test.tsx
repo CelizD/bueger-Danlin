@@ -3,9 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 import { BurgerBuilder } from "./burger-builder";
 import { CustomerFields } from "./customer-fields";
 import { DrinkSelector } from "./drink-selector";
+import { PickupPointSelector } from "./pickup-point-selector";
 import type {
   InventoryAvailability,
   ModifierOption,
+  PickupEvent,
 } from "../types";
 
 const removable: ModifierOption[] = [
@@ -25,6 +27,68 @@ const extras: ModifierOption[] = [
     kind: "EXTRA",
     priceDeltaCents: 1_500,
     defaultSelected: false,
+  },
+];
+
+
+const pickupEvents: PickupEvent[] = [
+  {
+    id: "event-universidad",
+    code: "SAT-UNIVERSIDAD",
+    name: "Universidad",
+    locationLabel: "Universidad",
+    pickupPoint: {
+      id: "point-universidad",
+      code: "UNIVERSIDAD",
+      name: "Universidad",
+      address: "Entrada principal",
+      latitude: null,
+      longitude: null,
+    },
+    timezone: "America/Tijuana",
+    startsAt: "2026-10-03T17:00:00.000Z",
+    closesAt: "2026-10-03T04:00:00.000Z",
+    maxCombos: 50,
+    reservedCombos: 3,
+    remainingCombos: 47,
+    status: "OPEN",
+    groupDelivery: {
+      minPaidOrders: 5,
+      paidOrderCount: 3,
+      remainingPaidOrders: 2,
+      transportCostCents: 10000,
+      estimatedDeliveryFeeCents: 3334,
+      freeDeliveryUnlocked: false,
+    },
+  },
+  {
+    id: "event-cucapa",
+    code: "SAT-CUCAPA",
+    name: "Cucapá",
+    locationLabel: "Cucapá",
+    pickupPoint: {
+      id: "point-cucapa",
+      code: "CUCAPA",
+      name: "Cucapá",
+      address: null,
+      latitude: null,
+      longitude: null,
+    },
+    timezone: "America/Tijuana",
+    startsAt: "2026-10-03T19:00:00.000Z",
+    closesAt: "2026-10-03T04:00:00.000Z",
+    maxCombos: 50,
+    reservedCombos: 5,
+    remainingCombos: 45,
+    status: "OPEN",
+    groupDelivery: {
+      minPaidOrders: 5,
+      paidOrderCount: 5,
+      remainingPaidOrders: 0,
+      transportCostCents: 10000,
+      estimatedDeliveryFeeCents: 0,
+      freeDeliveryUnlocked: true,
+    },
   },
 ];
 
@@ -97,6 +161,22 @@ describe("ordering components", () => {
     expect(html).toContain("Lechuga · Agotado");
     expect(html).toContain("Tocino extra · Agotado");
     expect((html.match(/disabled/g) ?? []).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("muestra puntos, progreso grupal y envío gratis", () => {
+    const html = renderToStaticMarkup(
+      <PickupPointSelector
+        events={pickupEvents}
+        selectedEventId="event-universidad"
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain("Universidad");
+    expect(html).toContain("Cucapá");
+    expect(html).toContain("3 de 5 pedidos pagados");
+    expect(html).toContain("Envío gratis desbloqueado");
+    expect(html).toContain("Punto seleccionado");
   });
 
   it("deshabilita agregar combo al alcanzar la capacidad disponible", () => {
