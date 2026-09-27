@@ -48,7 +48,7 @@ export type PickupEvent = {
     paidOrderCount: number;
     remainingPaidOrders: number;
     transportCostCents: number;
-    estimatedDeliveryFeeCents: number;
+    estimatedDeliveryFeeCents: number | null;
     freeDeliveryUnlocked: boolean;
   };
 };
