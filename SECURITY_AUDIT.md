@@ -87,8 +87,8 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 
 | Control | Estado | Evidencia actual / brecha |
 |---|---|---|
-| Threat model | 🔴 | Falta documento formal de activos, trust boundaries y amenazas |
-| Inventario de datos | 🔴 | Falta mapa formal de nombre/teléfono/email/pedidos/logs/proveedores |
+| Threat model | ✅ | `docs/THREAT_MODEL.md` documenta activos, actores, trust boundaries, escenarios de abuso, amenazas y riesgo residual |
+| Inventario de datos | ✅ | `docs/DATA_INVENTORY.md` clasifica PII, secretos, pagos, logs, backups, flujos y accesos por rol |
 | Tenant isolation | 🔵 | No aplica mientras sea un solo negocio |
 | OIDC/PKCE | 🔵 | No hay IdP/SSO |
 | Session invalidation | ✅ | Cambio de contraseña/estado invalida sesiones anteriores |
@@ -102,8 +102,8 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | Distributed tracing | 🔴 | Falta OpenTelemetry o equivalente |
 | Alertas | 🔴 | No hay reglas/canales operativos |
 | Runbooks de incidentes | 🔴 | Falta account takeover, secret leak, DB exposure, dependency compromise, DDoS |
-| Política de retención | 🔴 | No definida formalmente |
-| Privacy inventory/notice | 🔴 | Falta documentar tratamiento de PII |
+| Política de retención | 🟡 | `docs/RETENTION_POLICY.md` define baseline y plazos; faltan cleanup/anonimización/purga automáticos |
+| Privacy inventory/notice | 🟡 | Inventario técnico documentado; falta aviso de privacidad legal/final y validación de plazos regulatorios |
 | Incident contacts | 🔴 | No definidos |
 | ASVS baseline | 🔴 | No existe matriz verificable |
 | SSRF controls | 🔵 | No existe fetch arbitrario de URLs |
@@ -194,12 +194,10 @@ Pendiente antes de habilitar pagos reales:
 
 2. Artifact/image signing cuando exista pipeline de release.
 
-### Fase 3 — Privacidad y threat model
+### Fase 3 — Privacidad y ciclo de vida de datos
 
-4. Threat model.
-5. Inventario de datos.
-6. Política de retención/eliminación.
-7. Privacy notice.
+4. Implementar cleanup/anonimización según `docs/RETENTION_POLICY.md`.
+5. Definir aviso de privacidad final y validar obligaciones legales/fiscales antes de producción.
 
 ### Fase 4 — Observabilidad
 
@@ -230,7 +228,7 @@ Pendiente antes de habilitar pagos reales:
 
 ## Próximo control
 
-La **password blocklist** y el **image scanning con Trivy** ya están implementados y validados. El benchmark Argon2id queda pendiente hasta disponer del VPS objetivo. Mientras tanto, el siguiente bloque recomendado es **threat model + inventario de datos + política de retención/privacidad**.
+La **password blocklist** y el **image scanning con Trivy** ya están implementados y validados. El benchmark Argon2id queda pendiente hasta disponer del VPS objetivo. Mientras tanto, el **threat model** y el **inventario de datos** ya están documentados. El siguiente control de código recomendado es **automatizar retención/cleanup** y después observabilidad.
 
 ## Nota sobre branch protection
 
