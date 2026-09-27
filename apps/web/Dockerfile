@@ -23,20 +23,26 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN pnpm --filter @burger/types build \
-  && pnpm --filter @burger/web build \
-  && pnpm --filter @burger/web --prod deploy --legacy /prod/web \
-  && cp -R apps/web/.next /prod/web/.next
+  && pnpm --filter @burger/web build
+
+FROM build AS prod-deps
+
+RUN rm -rf node_modules apps/*/node_modules packages/*/node_modules \
+  && pnpm --filter @burger/web... install --prod --frozen-lockfile --offline
 
 FROM node:24-bookworm-slim AS runtime
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-WORKDIR /app
+WORKDIR /app/apps/web
 
 RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v1.22.22 \
   && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg /usr/local/bin/pnpm /usr/local/bin/pnpx
 
-COPY --from=build --chown=node:node /prod/web ./
+COPY --from=prod-deps --chown=node:node /app/node_modules /app/node_modules
+COPY --from=prod-deps --chown=node:node /app/apps/web /app/apps/web
+COPY --from=prod-deps --chown=node:node /app/packages /app/packages
+COPY --from=prod-deps --chown=node:node /app/package.json /app/package.json
 
 USER node
 
