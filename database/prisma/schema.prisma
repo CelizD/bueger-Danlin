@@ -170,21 +170,42 @@ model ProductModifierGroup {
   @@id([productId, modifierGroupId])
 }
 
+model PickupPoint {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  address   String?
+  latitude  Float?
+  longitude Float?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events PickupEvent[]
+
+  @@index([active, name])
+}
+
 model PickupEvent {
-  id            String            @id @default(cuid())
-  code          String            @unique
-  name          String
-  locationLabel String
-  timezone      String            @default("America/Tijuana")
-  startsAt      DateTime
-  closesAt      DateTime
-  maxCombos     Int               @default(50)
-  status        PickupEventStatus @default(DRAFT)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  id                        String            @id @default(cuid())
+  code                      String            @unique
+  name                      String
+  locationLabel             String
+  pickupPointId             String
+  timezone                  String            @default("America/Tijuana")
+  startsAt                  DateTime
+  closesAt                  DateTime
+  maxCombos                 Int               @default(50)
+  freeDeliveryMinPaidOrders Int               @default(5)
+  transportCostCents        Int               @default(0)
+  status                    PickupEventStatus @default(DRAFT)
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
 
-  orders Order[]
+  pickupPoint PickupPoint @relation(fields: [pickupPointId], references: [id], onDelete: Restrict)
+  orders      Order[]
 
+  @@index([pickupPointId, startsAt])
   @@index([startsAt])
   @@index([status, closesAt])
 }
