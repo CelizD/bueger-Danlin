@@ -11,7 +11,7 @@ loki.source.file "docker_logs" {
     },
   ]
 
-  forward_to   = [loki.process.docker_logs.receiver]
+  forward_to    = [loki.process.docker_logs.receiver]
   tail_from_end = true
 
   file_match {
@@ -21,7 +21,27 @@ loki.source.file "docker_logs" {
 }
 
 loki.process "docker_logs" {
+  stage.json {
+    expressions = {
+      attrs = "",
+    }
+  }
+
   stage.docker {}
+
+  stage.json {
+    expressions = {
+      container = "tag",
+    }
+    source = "attrs"
+  }
+
+  stage.labels {
+    values = {
+      container = "",
+    }
+  }
+
   stage.decolorize {}
 
   stage.drop {
