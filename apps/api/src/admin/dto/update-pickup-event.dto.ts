@@ -1,6 +1,7 @@
 import {
   IsISO8601,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   Max,
@@ -17,6 +18,23 @@ export class UpdatePickupEventDto {
   locationLabel?: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(220)
+  locationAddress?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(-90)
+  @Max(90)
+  latitude?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(-180)
+  @Max(180)
+  longitude?: number;
+
+  @IsOptional()
   @IsISO8601()
   startsAt?: string;
 
@@ -29,6 +47,18 @@ export class UpdatePickupEventDto {
   @Min(1)
   @Max(500)
   maxCombos?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  freeDeliveryMinPaidOrders?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100000)
+  transportCostCents?: number;
 
   @IsOptional()
   @IsString()
