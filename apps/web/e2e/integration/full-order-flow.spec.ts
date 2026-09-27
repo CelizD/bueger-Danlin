@@ -27,7 +27,7 @@ async function staffLogin(
     .getByRole("button", { name: "Entrar al panel" })
     .click();
 
-  await expect(page).toHaveURL(new RegExp(`${expectedPath}$`));
+  await expect(page).toHaveURL((url) => url.pathname === expectedPath);
 }
 
 test("pedido real recorre cliente, cocina, QR y entrega", async ({
