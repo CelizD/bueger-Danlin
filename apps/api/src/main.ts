@@ -26,19 +26,7 @@ function metricRoute(request: any) {
     return `${base}${routePath}` || "/";
   }
 
-  return String(
-    request.originalUrl ?? request.url ?? "/",
-  )
-    .split("?")[0]
-    .replace(
-      /\/H-[A-Za-z0-9-]+(?=\/|$)/g,
-      "/:orderCode",
-    )
-    .replace(
-      /\/[A-Za-z0-9_-]{20,}(?=\/|$)/g,
-      "/:id",
-    )
-    .replace(/\/\d+(?=\/|$)/g, "/:id");
+  return "/__unmatched__";
 }
 
 function allowedOrigins() {
