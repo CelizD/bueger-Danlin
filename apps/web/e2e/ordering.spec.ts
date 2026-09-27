@@ -16,6 +16,21 @@ test("cliente crea pedido, paga y obtiene QR", async ({
     }),
   ).toBeVisible();
 
+  await expect(
+    page.getByRole("heading", {
+      name: "¿Dónde quieres recibir tu pedido?",
+    }),
+  ).toBeVisible();
+
+  await expect(page.getByText("3 de 5 pedidos pagados")).toBeVisible();
+  await expect(page.getByText("4 de 5 pedidos pagados")).toBeVisible();
+
+  await page
+    .getByRole("button", {
+      name: "Elegir Universidad",
+    })
+    .click();
+
   await expect(page.getByText("Combo 1")).toBeVisible();
 
   await page.getByLabel("Nombre *").fill("Daniel");
@@ -65,6 +80,24 @@ test("cliente crea pedido, paga y obtiene QR", async ({
   await expect(
     page.getByLabel("QR de entrega"),
   ).toBeVisible();
+});
+
+test("preselecciona el punto desde ?pickup para QR/cartel futuro", async ({
+  page,
+}) => {
+  await page.goto("/?pickup=CUCAPA");
+
+  await expect(
+    page.getByRole("button", {
+      name: "Punto seleccionado",
+    }),
+  ).toBeVisible();
+
+  await expect(
+    page.getByText("Entrega", { exact: false }),
+  ).toBeVisible();
+
+  await expect(page.getByText("Cucapá", { exact: true }).first()).toBeVisible();
 });
 
 test("la navegación por teclado empieza en el skip link", async ({
