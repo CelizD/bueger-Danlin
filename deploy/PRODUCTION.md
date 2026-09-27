@@ -372,6 +372,14 @@ sudo cp \
 sudo cp \
   deploy/systemd/burger-danlin-restore-drill.timer \
   /etc/systemd/system/
+
+sudo cp \
+  deploy/systemd/burger-danlin-retention-cleanup.service \
+  /etc/systemd/system/
+
+sudo cp \
+  deploy/systemd/burger-danlin-retention-cleanup.timer \
+  /etc/systemd/system/
 ```
 
 Recarga systemd:
@@ -380,11 +388,42 @@ Recarga systemd:
 sudo systemctl daemon-reload
 ```
 
-Activa los timers:
+Activa primero backup y restore:
 
 ```bash
 sudo systemctl enable --now burger-danlin-backup.timer
 sudo systemctl enable --now burger-danlin-restore-drill.timer
+```
+
+Antes de activar retención, deja `RETENTION_CLEANUP_ENABLED=false` y ejecuta un dry-run:
+
+```bash
+docker compose \
+  --env-file /etc/burger-danlin/production.env \
+  -f docker-compose.prod.yml \
+  run --rm retention-cleanup \
+  node dist/scripts/retention-cleanup.js
+```
+
+Revisa el JSON, valida los plazos legales/fiscales y después cambia:
+
+```text
+RETENTION_CLEANUP_ENABLED=true
+```
+
+Ejecuta una aplicación manual controlada:
+
+```bash
+docker compose \
+  --env-file /etc/burger-danlin/production.env \
+  -f docker-compose.prod.yml \
+  run --rm retention-cleanup
+```
+
+Solo después habilita el timer diario:
+
+```bash
+sudo systemctl enable --now burger-danlin-retention-cleanup.timer
 ```
 
 Comprueba calendarios:
@@ -396,7 +435,8 @@ systemctl list-timers 'burger-danlin-*'
 Baseline incluido:
 
 - backup local + copia offsite cada hora;
-- restore drill el primer domingo de cada mes.
+- restore drill el primer domingo de cada mes;
+- retention cleanup diario a las 03:40 con retraso aleatorio de hasta 15 minutos.
 
 Objetivos técnicos iniciales:
 
@@ -426,6 +466,12 @@ Logs del restore drill:
 
 ```bash
 journalctl -u burger-danlin-restore-drill.service
+```
+
+Logs de retención:
+
+```bash
+journalctl -u burger-danlin-retention-cleanup.service
 ```
 
 Docker aplica rotación local de logs para evitar crecimiento ilimitado.
