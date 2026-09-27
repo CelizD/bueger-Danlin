@@ -19,7 +19,7 @@ jobs:
   verify:
     name: Lint, test and build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     services:
       postgres:
@@ -42,7 +42,10 @@ jobs:
       QR_TOKEN_SECRET: ci-only-qr-token-secret-not-used-in-production-123456789
       AUTH_JWT_SECRET: ci-only-auth-jwt-secret-not-used-in-production-123456789
       PAYMENT_PROVIDER: mock
+      ENABLE_REAL_PAYMENTS: "false"
       APP_TIMEZONE: America/Tijuana
+      E2E_KITCHEN_PASSWORD: ci-only-kitchen-e2e-passphrase-2026
+      E2E_DELIVERY_PASSWORD: ci-only-delivery-e2e-passphrase-2026
 
     steps:
       - name: Checkout
@@ -77,3 +80,14 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Seed integrated E2E data
+        run: |
+          pnpm db:seed
+          pnpm db:seed:e2e
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @burger/web exec playwright install --with-deps chromium
+
+      - name: Integrated E2E
+        run: pnpm --filter @burger/web test:e2e:integration
