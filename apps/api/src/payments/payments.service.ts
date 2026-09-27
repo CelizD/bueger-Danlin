@@ -7,6 +7,7 @@ import {
 import { createHash, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../database/prisma.service.js";
 import { InventoryService } from "../inventory/inventory.service.js";
+import { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
 import type { PaymentProviderName } from "./domain/payment-provider.types.js";
 import { PaymentProviderRegistry } from "./payment-provider.registry.js";
 import { assertRealPaymentsEnabled } from "./real-payments.guard.js";
@@ -47,6 +48,7 @@ export class PaymentsService {
     private readonly prisma: PrismaService,
     private readonly inventory: InventoryService,
     private readonly paymentProviderRegistry: PaymentProviderRegistry,
+    private readonly telegram?: TelegramNotificationService,
   ) {}
 
   async createCheckout(
@@ -269,7 +271,17 @@ export class PaymentsService {
       verificationToken,
     );
 
-    return this.prisma.$transaction(async (tx) => {
+    let paymentNotice:
+      | {
+          orderCode: string;
+          comboQuantity: number;
+          totalCents: number;
+          currency: string;
+          locationLabel?: string;
+        }
+      | undefined;
+
+    const result = await this.prisma.$transaction(async (tx) => {
       const locked = await tx.$queryRaw<Array<{ id: string }>>`
         SELECT "id"
         FROM "Order"
@@ -393,6 +405,14 @@ export class PaymentsService {
         },
       });
 
+      paymentNotice = {
+        orderCode: order.orderCode,
+        comboQuantity: order.comboQuantity,
+        totalCents: order.totalCents,
+        currency: order.currency,
+        locationLabel: order.pickupEvent.locationLabel,
+      };
+
       return {
         orderCode: order.orderCode,
         status: "PAID",
@@ -402,6 +422,12 @@ export class PaymentsService {
         paid: true,
       };
     });
+
+    if (paymentNotice) {
+      this.telegram?.notifyPaymentConfirmed(paymentNotice);
+    }
+
+    return result;
   }
 
   private assertVerificationToken(
