@@ -7,7 +7,7 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends python3 make g++ ca-certificates openssl \
   && rm -rf /var/lib/apt/lists/* \
   && corepack enable \
-  && corepack prepare pnpm@10.17.1 --activate
+  && corepack prepare pnpm@10.34.5 --activate
 
 WORKDIR /app
 
@@ -21,23 +21,22 @@ RUN pnpm install --frozen-lockfile
 
 RUN DATABASE_URL="postgresql://prisma_build:prisma_build@127.0.0.1:5432/prisma_build?schema=public" pnpm db:generate \
   && pnpm --filter @burger/types build \
-  && pnpm --filter @burger/api build
+  && pnpm --filter @burger/api build \
+  && pnpm --filter @burger/api --prod deploy --legacy /prod/api \
+  && cp -R apps/api/dist /prod/api/dist
 
 FROM node:24-bookworm-slim AS runtime
 
 ENV NODE_ENV=production
-WORKDIR /app/apps/api
+WORKDIR /app
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates openssl \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v1.22.22 \
+  && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg /usr/local/bin/pnpm /usr/local/bin/pnpx
 
-COPY --from=build --chown=node:node /app/node_modules /app/node_modules
-COPY --from=build --chown=node:node /app/apps/api /app/apps/api
-COPY --from=build --chown=node:node /app/packages /app/packages
-COPY --from=build --chown=node:node /app/database /app/database
-COPY --from=build --chown=node:node /app/prisma.config.ts /app/prisma.config.ts
-COPY --from=build --chown=node:node /app/package.json /app/package.json
+COPY --from=build --chown=node:node /prod/api ./
 
 USER node
 
