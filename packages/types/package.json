@@ -10,5 +10,5 @@
     "lint": "tsc -p tsconfig.json --noEmit",
     "test": "echo \"No tests yet\""
   },
-  "devDependencies": { "typescript": "^5.9.2" }
+  "devDependencies": { "typescript": "^7.0.2" }
 }
