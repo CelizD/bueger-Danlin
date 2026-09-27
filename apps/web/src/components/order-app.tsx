@@ -9,6 +9,7 @@ import {
 import { BurgerBuilder } from "@/features/ordering/components/burger-builder";
 import { CustomerFields } from "@/features/ordering/components/customer-fields";
 import { DrinkSelector } from "@/features/ordering/components/drink-selector";
+import { PickupPointSelector } from "@/features/ordering/components/pickup-point-selector";
 import {
   formatPickup,
   money,
@@ -50,6 +51,7 @@ const OrderConfirmation = dynamic(
 
 export function OrderApp() {
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
+  const [events, setEvents] = useState<PickupEvent[]>([]);
   const [event, setEvent] = useState<PickupEvent | null>(null);
   const [inventory, setInventory] = useState<InventoryAvailability | null>(null);
   const [burgers, setBurgers] = useState<BurgerSelection[]>([]);
@@ -72,7 +74,7 @@ export function OrderApp() {
       try {
         const {
           catalog: catalogData,
-          event: eventData,
+          events: eventData,
           inventory: inventoryData,
         } = await loadOrderingData();
 
@@ -90,12 +92,30 @@ export function OrderApp() {
         );
 
         if (!cancelled) {
+          const pickupCode =
+            new URLSearchParams(window.location.search)
+              .get("pickup")
+              ?.trim()
+              .toUpperCase() ?? "";
+
+          const preselected =
+            eventData.find(
+              (item) =>
+                item.status === "OPEN" &&
+                (item.pickupPoint.code.toUpperCase() === pickupCode ||
+                  item.code.toUpperCase() === pickupCode),
+            ) ??
+            (eventData.length === 1 && eventData[0]?.status === "OPEN"
+              ? eventData[0]
+              : null);
+
           setCatalog(catalogData);
           setInventory(inventoryData);
-          setEvent(eventData);
+          setEvents(eventData);
+          setEvent(preselected);
           setBurgers(
-            eventData &&
-              eventData.remainingCombos > 0 &&
+            preselected &&
+              preselected.remainingCombos > 0 &&
               comboInventoryLimit > 0
               ? [newBurger(unavailableIncludedIds)]
               : [],
@@ -156,6 +176,42 @@ export function OrderApp() {
       ),
     [burgers, combo, coke, cokes, extraOptions],
   );
+
+  function selectPickupEvent(nextEvent: PickupEvent) {
+    if (nextEvent.status !== "OPEN") return;
+
+    const nextLimit = availableComboLimit(
+      nextEvent,
+      comboInventoryLimit,
+    );
+
+    setEvent(nextEvent);
+    setError("");
+    setBurgers((current) => {
+      if (nextLimit <= 0) return [];
+
+      if (current.length === 0) {
+        return [
+          newBurger(
+            unavailableIncludedModifierIds(
+              combo,
+              inventory ?? {
+                items: [],
+                productLimits: {},
+                modifierLimits: {},
+              },
+            ),
+          ),
+        ];
+      }
+
+      return current.slice(0, nextLimit);
+    });
+
+    const url = new URL(window.location.href);
+    url.searchParams.set("pickup", nextEvent.pickupPoint.code);
+    window.history.replaceState(null, "", url);
+  }
 
   function toggleRemoved(burgerId: string, optionId: string) {
     const limit = inventory?.modifierLimits[optionId];
@@ -429,11 +485,19 @@ export function OrderApp() {
               {" "}Entrega {formatPickup(event)} en{" "}
               <strong>{event.locationLabel}</strong>.
             </>
+          ) : events.length > 0 ? (
+            <> Selecciona tu punto de entrega para continuar.</>
           ) : (
             <> Próxima fecha por anunciar.</>
           )}
         </p>
       </section>
+
+      <PickupPointSelector
+        events={events}
+        selectedEventId={event?.id ?? null}
+        onSelect={selectPickupEvent}
+      />
 
       {error && (
             <div className="alert" role="alert" aria-live="assertive">
@@ -441,13 +505,18 @@ export function OrderApp() {
             </div>
           )}
 
-      {!event ? (
+      {events.length === 0 ? (
         <section className="sold-out">
           <p className="eyebrow">Pedidos cerrados</p>
           <h2>Por ahora no hay una fecha de entrega abierta.</h2>
           <p className="lead">
             Cuando abramos el siguiente sábado podrás hacer tu pedido desde aquí.
           </p>
+        </section>
+      ) : !event ? (
+        <section className="pickup-selection-note">
+          <strong>Selecciona un punto para empezar tu pedido.</strong>
+          <span>La disponibilidad, horario y progreso de envío se calculan por ubicación.</span>
         </section>
       ) : event.status === "SOLD_OUT" || comboInventoryLimit <= 0 ? (
         <section className="sold-out">
