@@ -82,6 +82,14 @@ const pickupEvent: PickupEvent = {
   code: "SAT-001",
   name: "Sábado",
   locationLabel: "Universidad",
+  pickupPoint: {
+    id: "point-1",
+    code: "UNIVERSIDAD",
+    name: "Universidad",
+    address: null,
+    latitude: null,
+    longitude: null,
+  },
   timezone: "America/Tijuana",
   startsAt: "2026-09-26T19:00:00.000Z",
   closesAt: "2026-09-26T04:00:00.000Z",
@@ -89,6 +97,14 @@ const pickupEvent: PickupEvent = {
   reservedCombos: 46,
   remainingCombos: 4,
   status: "OPEN",
+  groupDelivery: {
+    minPaidOrders: 5,
+    paidOrderCount: 3,
+    remainingPaidOrders: 2,
+    transportCostCents: 10_000,
+    estimatedDeliveryFeeCents: 3_334,
+    freeDeliveryUnlocked: false,
+  },
 };
 
 describe("ordering selectors", () => {
