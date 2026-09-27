@@ -7,12 +7,14 @@ import {
 import { createHash, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../database/prisma.service.js";
 import { InventoryService } from "../inventory/inventory.service.js";
+import { MockPaymentProvider } from "./providers/mock/mock-payment.provider.js";
 
 @Injectable()
 export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly inventory: InventoryService,
+    private readonly mockPaymentProvider: MockPaymentProvider,
   ) {}
 
   async confirmMockPayment(orderCode: string, verificationToken: string) {
@@ -47,7 +49,10 @@ export class PaymentsService {
 
       const order = await tx.order.findUnique({
         where: { orderCode },
-        include: { pickupEvent: true },
+        include: {
+          pickupEvent: true,
+          customer: true,
+        },
       });
 
       if (!order) {
@@ -87,8 +92,31 @@ export class PaymentsService {
         );
       }
 
+      const idempotencyKey = `mock:${order.id}`;
+      const providerPayment =
+        await this.mockPaymentProvider.createCheckout({
+          paymentId: order.id,
+          orderCode: order.orderCode,
+          amountCents: order.totalCents,
+          currency: order.currency,
+          description: `Pedido ${order.orderCode} - Burger Danlin`,
+          idempotencyKey,
+          expiresAt: order.reservationExpiresAt,
+          customer: {
+            name: order.customer.name,
+            email: order.customer.email,
+            phone: order.customer.phone,
+          },
+        });
+
+      if (providerPayment.status !== "PAID") {
+        throw new ConflictException(
+          "El pago simulado no fue aprobado.",
+        );
+      }
+
       await tx.payment.upsert({
-        where: { idempotencyKey: `mock:${order.id}` },
+        where: { idempotencyKey },
         update: {
           status: "PAID",
           amountCents: order.totalCents,
@@ -100,8 +128,8 @@ export class PaymentsService {
           status: "PAID",
           amountCents: order.totalCents,
           currency: order.currency,
-          externalId: `LOCAL-${order.id}`,
-          idempotencyKey: `mock:${order.id}`,
+          externalId: providerPayment.externalId,
+          idempotencyKey,
           paidAt: now,
           metadata: {
             environment: "local",
