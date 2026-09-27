@@ -20,7 +20,8 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "ci": "pnpm lint && pnpm test && pnpm build",
     "bundle:report": "pnpm --filter @burger/web bundle:report",
-    "db:seed:e2e": "tsx database/prisma/e2e-seed.ts"
+    "db:seed:e2e": "tsx database/prisma/e2e-seed.ts",
+    "security:benchmark-argon2": "tsx scripts/benchmark-argon2.ts"
   },
   "devDependencies": {
     "dotenv": "^17.2.2",
