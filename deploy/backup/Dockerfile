@@ -1,6 +1,7 @@
 FROM postgres:18-alpine
 
-RUN apk add --no-cache age aws-cli ca-certificates tzdata
+RUN apk add --no-cache age aws-cli ca-certificates tzdata \
+  && rm -f /usr/local/bin/gosu
 
 RUN addgroup -S -g 10001 backup \
   && adduser -S -D -u 10001 -G backup -h /home/backup backup \
