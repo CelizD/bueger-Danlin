@@ -43,27 +43,35 @@ export class CustomerOrdersService {
 
     const now = new Date();
     const canCancel =
+      !order.pickupEvent.groupDeliveryFinalizedAt &&
+      order.pickupEvent.status !== "CLOSED" &&
       now < order.pickupEvent.closesAt &&
       !TERMINAL_STATUSES.includes(order.status as (typeof TERMINAL_STATUSES)[number]);
 
     const latestPayment = order.payments[0] ?? null;
     const refundRequested = this.hasRefundRequest(latestPayment?.metadata);
 
-    const paidOrderCount = await this.prisma.order.count({
-      where: {
-        pickupEventId: order.pickupEventId,
-        paymentStatus: "PAID",
-        status: {
-          notIn: ["CANCELLED", "REFUNDED"],
-        },
-      },
-    });
+    const finalized = !!order.pickupEvent.groupDeliveryFinalizedAt;
 
-    const freeDeliveryUnlocked =
-      paidOrderCount >= order.pickupEvent.freeDeliveryMinPaidOrders;
+    const paidOrderCount = finalized
+      ? order.pickupEvent.groupDeliveryFinalPaidOrders ?? 0
+      : await this.prisma.order.count({
+          where: {
+            pickupEventId: order.pickupEventId,
+            paymentStatus: "PAID",
+            status: {
+              notIn: ["CANCELLED", "REFUNDED"],
+            },
+          },
+        });
 
-    const estimatedDeliveryFeeCents =
-      freeDeliveryUnlocked
+    const freeDeliveryUnlocked = finalized
+      ? order.pickupEvent.groupDeliveryFinalFreeUnlocked ?? false
+      : paidOrderCount >= order.pickupEvent.freeDeliveryMinPaidOrders;
+
+    const estimatedDeliveryFeeCents = finalized
+      ? order.groupDeliveryFinalFeeCents
+      : freeDeliveryUnlocked
         ? 0
         : paidOrderCount > 0
           ? Math.ceil(
@@ -106,9 +114,15 @@ export class CustomerOrdersService {
           0,
           order.pickupEvent.freeDeliveryMinPaidOrders - paidOrderCount,
         ),
-        transportCostCents: order.pickupEvent.transportCostCents,
+        transportCostCents: finalized
+          ? order.pickupEvent.groupDeliveryFinalTransportCostCents ??
+            order.pickupEvent.transportCostCents
+          : order.pickupEvent.transportCostCents,
         estimatedDeliveryFeeCents,
         freeDeliveryUnlocked,
+        finalized,
+        finalizedAt: order.pickupEvent.groupDeliveryFinalizedAt,
+        finalFeeCents: order.groupDeliveryFinalFeeCents,
       },
       items: order.items.map((item) => ({
         id: item.id,
@@ -154,7 +168,11 @@ export class CustomerOrdersService {
       const order = await tx.order.findUnique({
         where: { orderCode },
         include: {
-          pickupEvent: true,
+          pickupEvent: {
+          include: {
+            pickupPoint: true,
+          },
+        },
           payments: { orderBy: { createdAt: "desc" } },
         },
       });
@@ -184,8 +202,14 @@ export class CustomerOrdersService {
 
       const now = new Date();
 
-      if (now >= order.pickupEvent.closesAt) {
-        throw new ConflictException("El tiempo para cancelar este pedido ya terminó.");
+      if (
+        order.pickupEvent.groupDeliveryFinalizedAt ||
+        order.pickupEvent.status === "CLOSED" ||
+        now >= order.pickupEvent.closesAt
+      ) {
+        throw new ConflictException(
+          "El punto de entrega ya cerró y este pedido ya no puede cancelarse.",
+        );
       }
 
       const fromStatus = order.status;

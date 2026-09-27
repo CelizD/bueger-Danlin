@@ -24,6 +24,30 @@ describe("GroupDeliveryProgress", () => {
     expect(html).toContain("$25");
   });
 
+  it("muestra cargo final congelado después del cierre", () => {
+    const html = renderToStaticMarkup(
+      <GroupDeliveryProgress
+        pointName="Universidad"
+        paymentStatus="PAID"
+        group={{
+          minPaidOrders: 5,
+          paidOrderCount: 3,
+          remainingPaidOrders: 2,
+          transportCostCents: 10_000,
+          estimatedDeliveryFeeCents: 3_334,
+          freeDeliveryUnlocked: false,
+          finalized: true,
+          finalizedAt: "2026-10-03T04:00:00.000Z",
+          finalFeeCents: 3_334,
+        }}
+      />,
+    );
+
+    expect(html).toContain("Cargo final de envío");
+    expect(html).toContain("$33");
+    expect(html).toContain("ya no cambiará");
+  });
+
   it("muestra envío gratis al completar la meta", () => {
     const html = renderToStaticMarkup(
       <GroupDeliveryProgress

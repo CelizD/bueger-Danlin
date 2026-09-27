@@ -24,6 +24,7 @@
     "security:benchmark-argon2": "tsx apps/api/src/scripts/benchmark-argon2.ts",
     "retention:dry-run": "tsx apps/api/src/scripts/retention-cleanup.ts",
     "retention:apply": "tsx apps/api/src/scripts/retention-cleanup.ts --apply",
+    "group-delivery:settle": "tsx apps/api/src/scripts/settle-group-deliveries.ts",
     "telegram:test": "tsx apps/api/src/scripts/test-telegram.ts"
   },
   "devDependencies": {

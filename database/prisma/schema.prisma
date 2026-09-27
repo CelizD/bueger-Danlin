@@ -196,9 +196,14 @@ model PickupEvent {
   startsAt                  DateTime
   closesAt                  DateTime
   maxCombos                 Int               @default(50)
-  freeDeliveryMinPaidOrders Int               @default(5)
-  transportCostCents        Int               @default(0)
-  status                    PickupEventStatus @default(DRAFT)
+  freeDeliveryMinPaidOrders              Int               @default(5)
+  transportCostCents                     Int               @default(0)
+  groupDeliveryFinalizedAt               DateTime?
+  groupDeliveryFinalPaidOrders           Int?
+  groupDeliveryFinalTransportCostCents   Int?
+  groupDeliveryFinalAssignedCents        Int?
+  groupDeliveryFinalFreeUnlocked         Boolean?
+  status                                 PickupEventStatus @default(DRAFT)
   createdAt                 DateTime          @default(now())
   updatedAt                 DateTime          @updatedAt
 
@@ -208,6 +213,7 @@ model PickupEvent {
   @@index([pickupPointId, startsAt])
   @@index([startsAt])
   @@index([status, closesAt])
+  @@index([groupDeliveryFinalizedAt, closesAt])
 }
 
 model Order {
@@ -233,7 +239,9 @@ model Order {
   groupDeliveryTransportCostCentsAtOrder  Int?
   groupDeliveryPaidOrdersAtOrder          Int?
   groupDeliveryEstimatedFeeCentsAtOrder   Int?
-  createdAt                               DateTime      @default(now())
+  groupDeliveryFinalFeeCents               Int?
+  groupDeliveryFinalizedAt                 DateTime?
+  createdAt                                DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 
   customer      Customer            @relation(fields: [customerId], references: [id])

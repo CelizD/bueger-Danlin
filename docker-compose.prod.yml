@@ -209,6 +209,33 @@ services:
       - dist/scripts/retention-cleanup.js
       - --apply
 
+
+  group-delivery-settlement:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    profiles:
+      - ops
+    depends_on:
+      db-bootstrap:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_RUNTIME_USER:?POSTGRES_RUNTIME_USER is required}:${POSTGRES_RUNTIME_PASSWORD:?POSTGRES_RUNTIME_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}?schema=public
+    networks:
+      - data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    working_dir: /app/apps/api
+    command:
+      - node
+      - dist/scripts/settle-group-deliveries.js
+
   web:
     build:
       context: .

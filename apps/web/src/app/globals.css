@@ -5170,3 +5170,22 @@ textarea:focus-visible,
     gap: 7px;
   }
 }
+
+
+.group-delivery-final {
+  display: grid;
+  gap: 5px;
+  padding: 12px 13px;
+  border-radius: 11px;
+  background: #efe9df;
+  color: #3e3932;
+}
+
+.group-delivery-final strong {
+  font-size: 12px;
+}
+
+.group-delivery-final span {
+  font-size: 10px;
+  line-height: 1.5;
+}

@@ -96,6 +96,7 @@ export class PaymentsService {
         where: { orderCode },
         include: {
           customer: true,
+          pickupEvent: true,
         },
       });
 
@@ -121,6 +122,16 @@ export class PaymentsService {
       }
 
       const now = new Date();
+
+      if (
+        order.pickupEvent.groupDeliveryFinalizedAt ||
+        !["OPEN", "SOLD_OUT"].includes(order.pickupEvent.status) ||
+        now >= order.pickupEvent.closesAt
+      ) {
+        throw new ConflictException(
+          "El punto de entrega ya cerró y este pedido ya no puede pagarse.",
+        );
+      }
 
       if (
         !order.reservationExpiresAt ||
@@ -328,6 +339,16 @@ export class PaymentsService {
       }
 
       const now = new Date();
+
+      if (
+        order.pickupEvent.groupDeliveryFinalizedAt ||
+        !["OPEN", "SOLD_OUT"].includes(order.pickupEvent.status) ||
+        now >= order.pickupEvent.closesAt
+      ) {
+        throw new ConflictException(
+          "El punto de entrega ya cerró y este pedido ya no puede pagarse.",
+        );
+      }
 
       if (
         !order.reservationExpiresAt ||

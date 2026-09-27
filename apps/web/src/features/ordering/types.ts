@@ -30,6 +30,9 @@ export type GroupDeliveryStatus = {
   transportCostCents: number;
   estimatedDeliveryFeeCents: number | null;
   freeDeliveryUnlocked: boolean;
+  finalized?: boolean;
+  finalizedAt?: string | null;
+  finalFeeCents?: number | null;
 };
 
 export type PickupEvent = {

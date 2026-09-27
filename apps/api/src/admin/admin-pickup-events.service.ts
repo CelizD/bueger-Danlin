@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { PrismaService } from "../database/prisma.service.js";
+import { GroupDeliverySettlementService } from "../group-delivery/group-delivery-settlement.service.js";
 import { CreatePickupEventDto } from "./dto/create-pickup-event.dto.js";
 import { UpdatePickupEventDto } from "./dto/update-pickup-event.dto.js";
 
@@ -30,10 +31,15 @@ type PickupPointInput = {
 
 @Injectable()
 export class AdminPickupEventsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly groupDeliverySettlement: GroupDeliverySettlementService,
+  ) {}
 
   async list() {
     const now = new Date();
+
+    await this.groupDeliverySettlement.settleExpired(now);
 
     const events = await this.prisma.pickupEvent.findMany({
       orderBy: { startsAt: "desc" },
@@ -163,8 +169,28 @@ export class AdminPickupEventsService {
             ),
             transportCostCents:
               event.transportCostCents,
-            estimatedDeliveryFeeCents,
-            freeDeliveryUnlocked,
+            estimatedDeliveryFeeCents:
+              event.groupDeliveryFinalizedAt &&
+              event.groupDeliveryFinalAssignedCents != null &&
+              event.groupDeliveryFinalPaidOrders &&
+              event.groupDeliveryFinalPaidOrders > 0
+                ? Math.ceil(
+                    event.groupDeliveryFinalAssignedCents /
+                      event.groupDeliveryFinalPaidOrders,
+                  )
+                : estimatedDeliveryFeeCents,
+            freeDeliveryUnlocked:
+              event.groupDeliveryFinalizedAt
+                ? event.groupDeliveryFinalFreeUnlocked ?? false
+                : freeDeliveryUnlocked,
+            finalized: !!event.groupDeliveryFinalizedAt,
+            finalizedAt: event.groupDeliveryFinalizedAt,
+            finalPaidOrderCount:
+              event.groupDeliveryFinalPaidOrders,
+            finalTransportCostCents:
+              event.groupDeliveryFinalTransportCostCents,
+            finalAssignedCents:
+              event.groupDeliveryFinalAssignedCents,
           },
           createdAt: event.createdAt,
           updatedAt: event.updatedAt,
@@ -295,7 +321,8 @@ export class AdminPickupEventsService {
 
       if (
         event.status === "COMPLETED" ||
-        event.status === "CANCELLED"
+        event.status === "CANCELLED" ||
+        event.groupDeliveryFinalizedAt
       ) {
         throw new ConflictException(
           "Una entrega completada o cancelada ya no puede editarse.",
@@ -539,7 +566,8 @@ export class AdminPickupEventsService {
 
         if (
           event.status === "COMPLETED" ||
-          event.status === "CANCELLED"
+          event.status === "CANCELLED" ||
+          event.groupDeliveryFinalizedAt
         ) {
           throw new ConflictException(
             "Esta entrega ya no puede volver a abrirse.",
@@ -622,48 +650,11 @@ export class AdminPickupEventsService {
   }
 
   async close(id: string, userId: string) {
-    const event =
-      await this.prisma.pickupEvent.findUnique({
-        where: { id },
-      });
-
-    if (!event) {
-      throw new NotFoundException(
-        "La entrega no existe.",
-      );
-    }
-
-    if (
-      event.status === "COMPLETED" ||
-      event.status === "CANCELLED"
-    ) {
-      throw new ConflictException(
-        "Esta entrega ya no puede cambiarse de estado.",
-      );
-    }
-
-    const updated =
-      await this.prisma.pickupEvent.update({
-        where: { id },
-        data: { status: "CLOSED" },
-      });
-
-    await this.prisma.auditLog.create({
-      data: {
-        userId,
-        action: "PICKUP_EVENT_CLOSED",
-        entityType: "PickupEvent",
-        entityId: id,
-        before: {
-          status: event.status,
-        },
-        after: {
-          status: "CLOSED",
-        },
-      },
+    return this.groupDeliverySettlement.settleEvent(id, {
+      force: true,
+      actorUserId: userId,
+      reason: "manual",
     });
-
-    return updated;
   }
 
   private async ensurePickupPoint(

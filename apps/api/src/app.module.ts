@@ -5,6 +5,7 @@ import { AdminModule } from "./admin/admin.module.js";
 import { AuthModule } from "./auth/auth.module.js";
 import { CatalogModule } from "./catalog/catalog.module.js";
 import { DatabaseModule } from "./database/database.module.js";
+import { GroupDeliveryModule } from "./group-delivery/group-delivery.module.js";
 import { HealthController } from "./health/health.controller.js";
 import { InventoryModule } from "./inventory/inventory.module.js";
 import { MetricsController } from "./metrics/metrics.controller.js";
@@ -21,6 +22,7 @@ import { TelemetryController } from "./telemetry/telemetry.controller.js";
     NotificationsModule,
     DatabaseModule,
     InventoryModule,
+    GroupDeliveryModule,
     AuthModule,
     AdminModule,
     CatalogModule,

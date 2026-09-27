@@ -1,0 +1,11 @@
+[Unit]
+Description=Burger Danlin finalize group delivery costs
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/burger-danlin
+TimeoutStartSec=5min
+ExecStart=/usr/bin/docker compose --env-file /etc/burger-danlin/production.env -f /opt/burger-danlin/docker-compose.prod.yml run --rm group-delivery-settlement

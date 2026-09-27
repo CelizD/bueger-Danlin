@@ -133,6 +133,9 @@ describe("CustomerOrdersService.getOrder", () => {
       transportCostCents: 10_000,
       estimatedDeliveryFeeCents: 2_500,
       freeDeliveryUnlocked: false,
+      finalized: false,
+      finalizedAt: undefined,
+      finalFeeCents: undefined,
     });
     expect(result.pickup.pickupPoint).toEqual({
       code: "UNIVERSIDAD",
@@ -140,9 +143,95 @@ describe("CustomerOrdersService.getOrder", () => {
       address: "Entrada principal",
     });
   });
+
+  it("devuelve el cargo final congelado después del cierre", async () => {
+    const finalizedAt = new Date("2026-10-03T04:00:00.000Z");
+    const prisma = {
+      order: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "order-1",
+          orderCode: "H-A1B2C3D4",
+          pickupEventId: "event-1",
+          verificationTokenHash: TOKEN_HASH,
+          status: "PAID",
+          paymentStatus: "PAID",
+          currency: "MXN",
+          totalCents: 13_000,
+          comboQuantity: 1,
+          createdAt: new Date(),
+          cancelledAt: null,
+          groupDeliveryFinalFeeCents: 3_334,
+          payments: [],
+          items: [],
+          pickupEvent: {
+            id: "event-1",
+            locationLabel: "Universidad",
+            startsAt: new Date(Date.now() + 2 * 60 * 60_000),
+            closesAt: new Date(Date.now() - 60_000),
+            timezone: "America/Tijuana",
+            freeDeliveryMinPaidOrders: 5,
+            transportCostCents: 10_000,
+            groupDeliveryFinalizedAt: finalizedAt,
+            groupDeliveryFinalPaidOrders: 3,
+            groupDeliveryFinalTransportCostCents: 10_000,
+            groupDeliveryFinalFreeUnlocked: false,
+            pickupPoint: {
+              code: "UNIVERSIDAD",
+              name: "Universidad",
+              address: "Entrada principal",
+            },
+          },
+        }),
+        count: vi.fn(),
+      },
+    } as unknown as PrismaService;
+
+    const service = new CustomerOrdersService(
+      prisma,
+      {} as InventoryService,
+    );
+
+    const result = await service.getOrder(
+      "H-A1B2C3D4",
+      TOKEN,
+    );
+
+    expect(result.groupDelivery).toEqual({
+      minPaidOrders: 5,
+      paidOrderCount: 3,
+      remainingPaidOrders: 2,
+      transportCostCents: 10_000,
+      estimatedDeliveryFeeCents: 3_334,
+      freeDeliveryUnlocked: false,
+      finalized: true,
+      finalizedAt,
+      finalFeeCents: 3_334,
+    });
+    expect(prisma.order.count).not.toHaveBeenCalled();
+  });
 });
 
 describe("CustomerOrdersService.cancel", () => {
+  it("rechaza cancelar cuando el grupo ya fue finalizado", async () => {
+    const current = order({
+      pickupEvent: {
+        id: "event-1",
+        status: "CLOSED",
+        maxCombos: 50,
+        closesAt: new Date(Date.now() + 60 * 60_000),
+        groupDeliveryFinalizedAt: new Date(),
+      },
+    });
+    const { service, tx, inventory } = harness(current);
+
+    await expect(
+      service.cancel("H-A1B2C3D4", TOKEN),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    expect(tx.order.update).not.toHaveBeenCalled();
+    expect(inventory.releaseOrder).not.toHaveBeenCalled();
+  });
+
   it("rechaza el token antes de modificar el pedido", async () => {
     const current = order();
     const { service, tx, inventory } = harness(current);

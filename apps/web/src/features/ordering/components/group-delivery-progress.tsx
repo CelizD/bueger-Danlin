@@ -57,7 +57,25 @@ export function GroupDeliveryProgress({
         </strong>
       </div>
 
-      {group.freeDeliveryUnlocked ? (
+      {group.finalized ? (
+        group.freeDeliveryUnlocked ? (
+          <div className="group-delivery-free">
+            <strong>Envío gratis confirmado</strong>
+            <span>El grupo ya cerró y tu cargo final de envío es $0.</span>
+          </div>
+        ) : (
+          <div className="group-delivery-final">
+            <strong>Cargo final de envío</strong>
+            <span>
+              Debes pagar{" "}
+              <b>
+                {money.format((group.finalFeeCents ?? 0) / 100)}
+              </b>{" "}
+              en efectivo al momento de la entrega.
+            </span>
+          </div>
+        )
+      ) : group.freeDeliveryUnlocked ? (
         <div className="group-delivery-free">
           <strong>Envío gratis desbloqueado</strong>
           <span>Tu cargo estimado de envío es $0.</span>
@@ -85,18 +103,22 @@ export function GroupDeliveryProgress({
         </div>
       )}
 
-      {!paid && (
+      {!group.finalized && !paid && (
         <p className="group-delivery-progress-note">
           Tu pedido se sumará a la meta cuando el pago quede confirmado.
         </p>
       )}
 
-      {!group.freeDeliveryUnlocked && (
+      {group.finalized ? (
+        <p className="group-delivery-progress-note">
+          El grupo ya cerró. Este monto es definitivo y ya no cambiará.
+        </p>
+      ) : !group.freeDeliveryUnlocked ? (
         <p className="group-delivery-progress-note">
           Este importe es estimado y puede cambiar hasta que cierre el punto
           de entrega.
         </p>
-      )}
+      ) : null}
     </section>
   );
 }

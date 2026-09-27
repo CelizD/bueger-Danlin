@@ -34,7 +34,12 @@ function order(overrides: Record<string, unknown> = {}) {
     reservationExpiresAt: new Date(Date.now() + 15 * 60_000),
     totalCents: 13000,
     currency: "MXN",
-    pickupEvent: { id: "event-1" },
+    pickupEvent: {
+      id: "event-1",
+      status: "OPEN",
+      closesAt: new Date(Date.now() + 60 * 60_000),
+      groupDeliveryFinalizedAt: null,
+    },
     customer: {
       name: "Cliente de prueba",
       email: "cliente@example.com",
@@ -180,6 +185,32 @@ describe("PaymentsService", () => {
     expect(createCheckoutSpy).not.toHaveBeenCalled();
     expect(tx.payment.upsert).not.toHaveBeenCalled();
     expect(tx.order.update).not.toHaveBeenCalled();
+    expect(inventory.commitOrder).not.toHaveBeenCalled();
+  });
+
+  it("rechaza el pago cuando el punto de entrega ya cerró", async () => {
+    process.env.NODE_ENV = "test";
+    const closed = order({
+      pickupEvent: {
+        id: "event-1",
+        status: "CLOSED",
+        closesAt: new Date(Date.now() - 1_000),
+        groupDeliveryFinalizedAt: new Date(),
+      },
+    });
+    const {
+      service,
+      tx,
+      inventory,
+      createCheckoutSpy,
+    } = harness(closed, closed);
+
+    await expect(
+      service.confirmMockPayment("H-A1B2C3D4", TOKEN),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    expect(createCheckoutSpy).not.toHaveBeenCalled();
+    expect(tx.payment.upsert).not.toHaveBeenCalled();
     expect(inventory.commitOrder).not.toHaveBeenCalled();
   });
 
@@ -390,6 +421,30 @@ describe("PaymentsService.createCheckout", () => {
     ).rejects.toThrow("Real payment calls are disabled");
 
     expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(tx.payment.create).not.toHaveBeenCalled();
+    expect(createOrder).not.toHaveBeenCalled();
+  });
+
+  it("rechaza checkout real cuando el punto ya cerró", async () => {
+    process.env.NODE_ENV = "test";
+    process.env.PAYMENT_PROVIDER = "mercadopago";
+    process.env.ENABLE_REAL_PAYMENTS = "true";
+
+    const { service, tx, createOrder } = checkoutHarness();
+    tx.order.findUnique.mockResolvedValue({
+      ...order(),
+      pickupEvent: {
+        id: "event-1",
+        status: "CLOSED",
+        closesAt: new Date(Date.now() - 1_000),
+        groupDeliveryFinalizedAt: new Date(),
+      },
+    });
+
+    await expect(
+      service.createCheckout("H-A1B2C3D4", TOKEN),
+    ).rejects.toBeInstanceOf(ConflictException);
+
     expect(tx.payment.create).not.toHaveBeenCalled();
     expect(createOrder).not.toHaveBeenCalled();
   });

@@ -1,0 +1,11 @@
+[Unit]
+Description=Finalize Burger Danlin group deliveries every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+AccuracySec=10s
+Persistent=true
+Unit=burger-danlin-group-delivery-settlement.service
+
+[Install]
+WantedBy=timers.target

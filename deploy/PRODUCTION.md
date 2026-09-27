@@ -427,6 +427,14 @@ sudo cp \
 sudo cp \
   deploy/systemd/burger-danlin-retention-cleanup.timer \
   /etc/systemd/system/
+
+sudo cp \
+  deploy/systemd/burger-danlin-group-delivery-settlement.service \
+  /etc/systemd/system/
+
+sudo cp \
+  deploy/systemd/burger-danlin-group-delivery-settlement.timer \
+  /etc/systemd/system/
 ```
 
 Recarga systemd:
@@ -440,6 +448,7 @@ Activa primero backup y restore:
 ```bash
 sudo systemctl enable --now burger-danlin-backup.timer
 sudo systemctl enable --now burger-danlin-restore-drill.timer
+sudo systemctl enable --now burger-danlin-group-delivery-settlement.timer
 ```
 
 Antes de activar retención, deja `RETENTION_CLEANUP_ENABLED=false` y ejecuta un dry-run:
@@ -483,7 +492,8 @@ Baseline incluido:
 
 - backup local + copia offsite cada hora;
 - restore drill el primer domingo de cada mes;
-- retention cleanup diario a las 03:40 con retraso aleatorio de hasta 15 minutos.
+- retention cleanup diario a las 03:40 con retraso aleatorio de hasta 15 minutos;
+- cierre/finalización de entregas grupales cada minuto. El job cancela pedidos sin pagar, libera sus reservas y congela el cargo final de envío de cada pedido pagado.
 
 Objetivos técnicos iniciales:
 
@@ -519,6 +529,21 @@ Logs de retención:
 
 ```bash
 journalctl -u burger-danlin-retention-cleanup.service
+```
+
+Logs de cierre grupal:
+
+```bash
+journalctl -u burger-danlin-group-delivery-settlement.service
+```
+
+Prueba manual del cierre automático:
+
+```bash
+docker compose \
+  --env-file /etc/burger-danlin/production.env \
+  -f docker-compose.prod.yml \
+  run --rm group-delivery-settlement
 ```
 
 Docker aplica rotación local de logs para evitar crecimiento ilimitado.
