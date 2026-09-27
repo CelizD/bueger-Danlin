@@ -155,7 +155,8 @@ La capacidad del evento también cuenta órdenes pagadas y reservas pendientes t
 
 El acceso del personal incluye:
 
-- Argon2id;
+- Argon2id con parámetros centralizados;
+- blocklist local para contraseñas comunes/triviales al crear o restablecer cuentas;
 - bloqueo persistente tras 5 intentos fallidos durante 15 minutos;
 - JWT con algoritmo, issuer y audience explícitos;
 - cookie HttpOnly;
@@ -386,7 +387,7 @@ Documentación:
 
 Los siguientes bloques todavía sí están pendientes:
 
-1. password blocklist + benchmark Argon2id en hardware objetivo;
+1. ejecutar el benchmark Argon2id en el hardware objetivo y registrar el resultado;
 2. image scanning de contenedores;
 3. threat model + inventario de datos + política de retención;
 4. métricas, tracing, alertas y logs centralizados;
@@ -430,3 +431,35 @@ Después reinicia Docker Desktop y vuelve a ejecutar:
 ```powershell
 docker compose up -d
 ```
+
+
+## Benchmark Argon2id
+
+Los parámetros de hashing de personal están centralizados en `apps/api/src/auth/password-security.ts`.
+
+Para medirlos en una máquina concreta:
+
+```powershell
+pnpm security:benchmark-argon2
+```
+
+El comando ejecuta warmups y varias muestras de hash/verify y devuelve un reporte JSON con:
+
+- algoritmo y parámetros;
+- modelo de CPU;
+- número de CPUs lógicas;
+- mínimo;
+- promedio;
+- p50;
+- p95;
+- máximo.
+
+Puedes cambiar el número de muestras:
+
+```powershell
+$env:ARGON2_BENCHMARK_RUNS="20"
+$env:ARGON2_BENCHMARK_WARMUPS="3"
+pnpm security:benchmark-argon2
+```
+
+El resultado del portátil o de GitHub Actions sirve como referencia, pero el benchmark que cierra el control de producción debe ejecutarse en el VPS/hardware objetivo.
