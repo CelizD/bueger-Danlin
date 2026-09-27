@@ -7,6 +7,7 @@ import {
 import { createHash, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../database/prisma.service.js";
 import { InventoryService } from "../inventory/inventory.service.js";
+import { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
 
 const TERMINAL_STATUSES = ["DELIVERED", "CANCELLED", "REFUNDED", "NO_SHOW"] as const;
 const CAPACITY_STATUSES = ["PAID", "CONFIRMED", "PREPARING", "READY", "DELIVERED"] as const;
@@ -16,6 +17,7 @@ export class CustomerOrdersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly inventory: InventoryService,
+    private readonly telegram?: TelegramNotificationService,
   ) {}
 
   async getOrder(orderCodeInput: string, verificationToken: string) {
@@ -84,7 +86,18 @@ export class CustomerOrdersService {
   async cancel(orderCodeInput: string, verificationToken: string) {
     const orderCode = orderCodeInput.trim().toUpperCase();
 
-    return this.prisma.$transaction(async (tx) => {
+    let cancellationNotice:
+      | {
+          orderCode: string;
+          comboQuantity: number;
+          totalCents: number;
+          currency: string;
+          locationLabel?: string;
+          refundStatus?: "PENDING" | "REFUNDED" | null;
+        }
+      | undefined;
+
+    const result = await this.prisma.$transaction(async (tx) => {
       const locked = await tx.$queryRaw<Array<{ id: string }>>`
         SELECT "id"
         FROM "Order"
@@ -183,6 +196,15 @@ export class CustomerOrdersService {
         await this.inventory.releaseOrder(tx, order.id);
         await this.reopenCapacityIfNeeded(tx, order.pickupEventId, order.pickupEvent);
 
+        cancellationNotice = {
+          orderCode: order.orderCode,
+          comboQuantity: order.comboQuantity,
+          totalCents: order.totalCents,
+          currency: order.currency,
+          locationLabel: order.pickupEvent.locationLabel,
+          refundStatus: null,
+        };
+
         return {
           orderCode: order.orderCode,
           status: "CANCELLED",
@@ -243,6 +265,15 @@ export class CustomerOrdersService {
         await this.inventory.releaseOrder(tx, order.id);
         await this.reopenCapacityIfNeeded(tx, order.pickupEventId, order.pickupEvent);
 
+        cancellationNotice = {
+          orderCode: order.orderCode,
+          comboQuantity: order.comboQuantity,
+          totalCents: order.totalCents,
+          currency: order.currency,
+          locationLabel: order.pickupEvent.locationLabel,
+          refundStatus: "REFUNDED",
+        };
+
         return {
           orderCode: order.orderCode,
           status: "REFUNDED",
@@ -298,6 +329,15 @@ export class CustomerOrdersService {
       await this.inventory.releaseOrder(tx, order.id);
       await this.reopenCapacityIfNeeded(tx, order.pickupEventId, order.pickupEvent);
 
+      cancellationNotice = {
+        orderCode: order.orderCode,
+        comboQuantity: order.comboQuantity,
+        totalCents: order.totalCents,
+        currency: order.currency,
+        locationLabel: order.pickupEvent.locationLabel,
+        refundStatus: "PENDING",
+      };
+
       return {
         orderCode: order.orderCode,
         status: "CANCELLED",
@@ -306,6 +346,12 @@ export class CustomerOrdersService {
         alreadyCancelled: false,
       };
     });
+
+    if (cancellationNotice) {
+      this.telegram?.notifyCancelled(cancellationNotice);
+    }
+
+    return result;
   }
 
   private async reopenCapacityIfNeeded(tx: any, pickupEventId: string, pickupEvent: { status: string; maxCombos: number; closesAt: Date }) {
