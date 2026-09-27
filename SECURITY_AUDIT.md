@@ -1,162 +1,238 @@
 # Auditoría de seguridad — Burger Danlin
 
-Fecha: 2026-09-19
+Fecha de actualización: 2026-09-27
 
-Base de evaluación: informe interno "Ciberseguridad para diseñar un SaaS seguro", especialmente el checklist de salida a producción de las páginas 33–34.
+Base de evaluación: controles del documento interno **"Ciberseguridad para diseñar un SaaS seguro"**, complementados con el estado real del repositorio y los workflows actuales.
 
 Leyenda:
 
-- ✅ Cubierto en código/configuración actual
-- 🟡 Parcial o requiere validación en infraestructura real
-- 🔴 Falta antes de producción
+- ✅ Cubierto en código/configuración y validado por tests/CI cuando aplica
+- 🟡 Implementado parcialmente o requiere validación en infraestructura real
+- 🔴 Pendiente antes de producción
 - 🔵 No aplica hoy / condicional
 
-> Burger Danlin es actualmente una plataforma de pedidos de un solo negocio, no un SaaS multi-tenant. Los controles de aislamiento de tenants se consideran condicionales hasta que el producto cambie de modelo.
+> Burger Danlin es actualmente una plataforma de pedidos para un solo negocio, no un SaaS multi-tenant. Los controles de aislamiento de tenants se consideran condicionales hasta que cambie el modelo del producto.
+
+## Resumen ejecutivo
+
+Desde la auditoría inicial se cerraron varios gaps importantes:
+
+- MFA administrativo;
+- JWT con algoritmo/issuer/audience explícitos;
+- exception filter seguro;
+- límites de request;
+- OpenAPI;
+- CSP en producción;
+- CI con PostgreSQL real;
+- E2E integrado real;
+- SAST con Semgrep;
+- SCA con `pnpm audit`;
+- Gitleaks;
+- SBOM CycloneDX;
+- Docker non-root;
+- DB/Redis privados en Compose de producción;
+- backups cifrados y restore drill;
+- copia offsite S3-compatible preparada;
+- kill switch de pagos reales.
+
+Los principales riesgos pendientes ya no están en el flujo básico del producto. Se concentran en **operación de producción, observabilidad, seguridad ofensiva, privacidad, respuesta a incidentes y validación de infraestructura real**.
 
 ## P0 — Bloqueantes antes de producción
 
 | Control | Estado | Evidencia actual / brecha |
 |---|---|---|
-| Autenticación de personal | ✅ | Login propio, Argon2id, sesión firmada, cuenta activa validada en cada request |
-| MFA administradores | 🟡 | TOTP obligatorio + códigos de recuperación implementados; pendiente aplicar migración y validar flujo local |
+| Autenticación de personal | ✅ | Login first-party, Argon2id, sesiones firmadas y cuenta activa validada en servidor |
+| MFA administradores | ✅ | TOTP obligatorio, AES-256-GCM, recovery codes, anti-reuse y tests |
 | Cookies seguras | ✅ | HttpOnly; Secure + SameSite=Strict en producción |
 | Argon2id | ✅ | 19 MiB, 2 iteraciones, paralelismo 1 |
-| Benchmark Argon2id en hardware prod | 🔴 | Parámetros cumplen baseline, pero no existe benchmark documentado |
-| Password blocklist | 🔴 | No se contrastan contraseñas comunes/comprometidas |
-| JWT algoritmo/issuer/audience explícitos | 🟡 | HS256, issuer y audience ya fijados en código; pendiente validación local del build/login |
+| Benchmark Argon2id en hardware prod | 🔴 | Falta medir latencia real en el VPS objetivo |
+| Password blocklist | 🔴 | Aún no se bloquean contraseñas comunes/comprometidas |
+| JWT algoritmo/issuer/audience explícitos | ✅ | Configurados y validados en AuthModule |
 | RBAC / least privilege | ✅ | ADMIN, KITCHEN, DELIVERY + guards server-side |
-| Secrets fuera del repo | ✅ | .env ignorado; no se guardan credenciales reales en Git |
-| Secret Manager / Vault | 🔴 | Producción todavía usa variables de entorno; falta gestor de secretos |
-| KMS para claves sensibles | 🔴 | No implementado |
-| TLS 1.2/1.3 | 🟡 | Nginx de referencia preparado; requiere desplegar certificados/configuración real |
-| DB no pública | ✅ | docker-compose.prod.yml validado con PostgreSQL sin host ports en red internal |
-| Redis no público | ✅ | docker-compose.prod.yml validado con Redis sin host ports, red internal y password |
-| Cifrado en reposo | 🟡 | Depende del proveedor de DB/backups; no hay evidencia/configuración en repo |
+| Secrets fuera del repo | ✅ | .env ignorado; Gitleaks verde en CI |
+| Secret Manager / Vault | 🔴 | Producción todavía depende de variables/archivo de entorno |
+| KMS para claves sensibles | 🔴 | No implementado; MFA usa clave separada en entorno |
+| TLS 1.2/1.3 | 🟡 | Nginx/configuración preparada; falta desplegar dominio/certificados reales |
+| DB no pública | ✅ | Compose de producción sin host ports; red interna |
+| Redis no público | ✅ | Sin host ports, red interna y password |
+| Cifrado en reposo | 🟡 | Backups cifrados; cifrado del volumen/infra depende del proveedor final |
 | Input validation server-side | ✅ | ValidationPipe whitelist + forbidNonWhitelisted + DTOs |
-| SQL parametrizado | 🟡 | Prisma domina el acceso; existen algunos raw queries parametrizados que deben mantenerse auditados |
+| SQL parametrizado | ✅ | Prisma domina acceso; raw SQL sensible usa parámetros/valores interpolados por Prisma |
 | Rate limit auth | ✅ | 5/min por IP + lockout persistente por cuenta |
-| Rate limit API | ✅ | límite global inicial 120/min |
-| Rate limits por endpoints caros | 🟡 | Login está especializado; otras operaciones costosas no tienen límites específicos |
-| CORS explícito | ✅ | APP_ORIGIN allowlist |
-| CSRF | ✅ | Origin + Fetch Metadata + SameSite en mutaciones de staff |
-| HTTPS obligatorio | 🟡 | FORCE_HTTPS y ejemplo Nginx listos; falta infraestructura/certificados reales |
-| Error handling central | 🟡 | Nest no expone stack 500 por defecto; falta exception filter propio + códigos consistentes |
-| CI con review obligatorio | 🔴 | No hay evidencia de pipeline/branch protection en el repo |
-| SCA dependencias | 🟡 | pnpm audit de producción + Dependabot configurados; pendiente primer workflow verde |
-| Secret scanning | 🟡 | Gitleaks v3 escanea historial en push/PR/schedule; pendiente primer workflow verde |
-| Backups automáticos cifrados | 🟡 | backup cifrado local validado; upload S3 con verificación de Versioning/Object Lock y timer horario implementados; falta prueba contra bucket real |
-| Restore test real | ✅ | drill aislado contra PostgreSQL temporal ejecutado correctamente |
-| RPO/RTO acordados | 🟡 | objetivos técnicos iniciales RPO <= 1h y RTO <= 4h documentados; falta simulacro completo y aprobación operativa |
+| Rate limit API | ✅ | límite global |
+| Rate limits por endpoints caros | 🟡 | Login está especializado; revisar endpoints caros al medir carga |
+| CORS explícito | ✅ | allowlist de APP_ORIGIN |
+| CSRF | ✅ | Origin + Fetch Metadata + SameSite para mutaciones de staff |
+| HTTPS obligatorio | 🟡 | FORCE_HTTPS listo; requiere reverse proxy/TLS real |
+| Error handling central | ✅ | HttpExceptionFilter, formato uniforme y 5xx sanitizados |
+| Límites de payload | ✅ | JSON 256kb y urlencoded 64kb por defecto |
+| OpenAPI / inventario de API | ✅ | Swagger UI + docs-json; deshabilitado en prod salvo opt-in |
+| CI lint/test/build | ✅ | Workflow activo en PR/push |
+| E2E integrado real | ✅ | PostgreSQL + Nest + Next + Chromium: pedido -> pago mock -> cocina -> QR -> entrega |
+| Branch protection / review obligatorio | 🟡 | El workflow existe; la integración actual no tiene permiso para confirmar la regla de protección de `main` |
+| SCA dependencias | ✅ | `pnpm audit --prod --audit-level=high` verde |
+| Secret scanning | ✅ | Gitleaks sobre historial completo verde |
+| SAST | ✅ | Semgrep OSS verde |
+| Backups automáticos cifrados | 🟡 | Scripts/timers listos; falta ejecutar contra infraestructura final |
+| Backup offsite | 🟡 | S3-compatible + Versioning/Object Lock preparados; falta bucket real |
+| Restore test aislado | ✅ | Restore drill contra PostgreSQL temporal |
+| RPO/RTO | 🟡 | Objetivos RPO <=1h / RTO <=4h; falta simulacro de pérdida total |
 | WAF / DDoS edge | 🔴 | No configurado |
+| DAST staging | 🔴 | No existe staging/DAST todavía |
 | Pentest prelaunch | 🔴 | No realizado |
-| Hallazgos críticos abiertos = 0 | 🔴 | Requiere pentest/DAST/SCA/SAST y proceso de cierre |
+| Hallazgos críticos abiertos = 0 | 🟡 | CI security está verde; falta DAST/pentest prelaunch |
 
-## P1 — MVP de seguridad recomendado
+## P1 — Seguridad de aplicación y operación
 
 | Control | Estado | Evidencia actual / brecha |
 |---|---|---|
-| Threat model | 🔴 | No existe documento formal de activos, trust boundaries y amenazas |
-| Inventario de datos | 🔴 | No existe mapa formal de PII/datos/proveedores/retención |
-| Tenant isolation | 🔵 | No aplica mientras Burger Danlin siga siendo un solo negocio |
-| OIDC/PKCE | 🔵 | Login propio first-party; aplicar si se introduce IdP/SSO |
-| Session invalidation | ✅ | Cambio de contraseña invalida JWT anterior mediante credentialVersion |
-| Bloqueo tras fallos | ✅ | 5 fallos → bloqueo 15 min persistido en PostgreSQL |
-| Headers de seguridad API | ✅ | Helmet + HSTS prod |
-| Headers de seguridad Next | ✅ | nosniff, DENY frame, Referrer, Permissions, COOP/CORP, HSTS prod |
-| Logs HTTP estructurados | ✅ | requestId, método, path, status, duración, IP, UA; sin body |
-| AuditLog de operaciones críticas | 🟡 | Muchos cambios admin/pedidos están auditados; falta cobertura completa de login success/failure, authz denied, rate-limit |
-| Logs centralizados/SIEM | 🔴 | Solo consola/DB local |
-| Alertas | 🔴 | No hay reglas ni canal de alertas |
-| Runbooks incidentes | 🔴 | No hay runbooks account takeover/breach/secret/DDoS |
-| Política de retención | 🔴 | No definida para pedidos, clientes, logs, AuditLog |
-| Privacy inventory/notice | 🔴 | No documentado para nombre/teléfono/email |
+| Threat model | 🔴 | Falta documento formal de activos, trust boundaries y amenazas |
+| Inventario de datos | 🔴 | Falta mapa formal de nombre/teléfono/email/pedidos/logs/proveedores |
+| Tenant isolation | 🔵 | No aplica mientras sea un solo negocio |
+| OIDC/PKCE | 🔵 | No hay IdP/SSO |
+| Session invalidation | ✅ | Cambio de contraseña/estado invalida sesiones anteriores |
+| Bloqueo tras fallos | ✅ | Persistido en PostgreSQL |
+| Headers API | ✅ | Helmet + HSTS prod |
+| Headers Web | ✅ | CSP prod, nosniff, DENY frame, Referrer, Permissions, COOP/CORP, HSTS |
+| Logs HTTP estructurados | ✅ | requestId, método, path, status, duración, IP y UA; sin bodies |
+| AuditLog | 🟡 | Cubre múltiples operaciones administrativas y de pedido; falta matriz formal de eventos obligatorios |
+| Logs centralizados/SIEM | 🔴 | No configurado |
+| Métricas | 🔴 | Falta instrumentación de backend/infra |
+| Distributed tracing | 🔴 | Falta OpenTelemetry o equivalente |
+| Alertas | 🔴 | No hay reglas/canales operativos |
+| Runbooks de incidentes | 🔴 | Falta account takeover, secret leak, DB exposure, dependency compromise, DDoS |
+| Política de retención | 🔴 | No definida formalmente |
+| Privacy inventory/notice | 🔴 | Falta documentar tratamiento de PII |
 | Incident contacts | 🔴 | No definidos |
-| ASVS baseline | 🔴 | No existe matriz ASVS verificable |
-| SSRF controls | 🔵 | No existe hoy funcionalidad que haga fetch arbitrario de URLs; revisar al agregar integraciones |
-| API inventory/versionado | 🟡 | API está bajo /api/v1; falta inventario machine-readable/OpenAPI |
-| Body size limits | 🔴 | No hay límite explícito de JSON/request documentado |
-| Webhook signature validation | ✅ | Servicio Stripe/Mercado Pago con HMAC, raw body, timestamp y timingSafeEqual |
-| Webhook idempotency real | 🟡 | Diseño de pagos usa idempotency; handlers reales aún no existen |
-| CSP | 🔴 | No se configuró CSP estricta; Helmet la tiene desactivada para evitar romper Next durante MVP |
+| ASVS baseline | 🔴 | No existe matriz verificable |
+| SSRF controls | 🔵 | No existe fetch arbitrario de URLs |
+| API versionado | ✅ | `/api/v1` |
+| Webhook signature validation | ✅ | Stripe/Mercado Pago HMAC + raw body + timestamp + timingSafeEqual |
+| Webhook idempotency real | 🟡 | Arquitectura preparada; handlers reales congelados |
+| CSP | ✅ | CSP se aplica en producción desde Next.js |
+| Pagos reales deshabilitados por defecto | ✅ | `ENABLE_REAL_PAYMENTS=false`; doble bloqueo antes de persistencia y antes de tráfico externo |
 
 ## P2 — DevSecOps / supply chain
 
 | Control | Estado | Evidencia actual / brecha |
 |---|---|---|
 | Lockfile | ✅ | pnpm-lock.yaml versionado |
-| SAST en PR | 🟡 | Semgrep OSS 1.177.0 configurado en push/PR/schedule; pendiente primer workflow verde |
-| SCA en PR | 🟡 | pnpm audit --prod --audit-level=high configurado; pendiente primer workflow verde |
-| Dependabot/equivalente | ✅ | monitorea pnpm, GitHub Actions y Docker Compose |
-| IaC scanning | 🔵 | Aplicará cuando haya IaC de producción |
-| SBOM por release | 🟡 | CycloneDX generado automáticamente en push a main y ejecución manual; falta asociarlo a releases formales |
+| Acciones GitHub fijadas | ✅ | acciones críticas pinneadas por SHA |
+| SAST en PR | ✅ | Semgrep |
+| SCA en PR | ✅ | pnpm audit |
+| Secret scan | ✅ | Gitleaks |
+| Dependabot | ✅ | dependencias/workflows/contenedores |
+| SBOM | ✅ | CycloneDX en push a main/manual |
+| IaC scanning | 🔵 | No existe IaC completo todavía |
 | Artifact signing | 🔴 | No implementado |
-| Docker app non-root | ✅ | API/Web construidos y ejecutados con USER node; no-new-privileges y cap_drop configurados |
+| Docker app non-root | ✅ | API/Web como usuario no-root; hardening adicional en Compose |
 | Image scan | 🔴 | No configurado |
-| Imagen por digest | 🔴 | No existe imagen de aplicación de producción |
-| DAST staging | 🔴 | No configurado |
-| Deploy con identidad OIDC | 🔴 | No existe pipeline de producción |
-| Kubernetes Restricted | 🔵 | No usamos Kubernetes y el informe recomienda no introducirlo sin necesidad |
+| Imagen por digest | 🔴 | Imágenes de aplicación/release no fijadas por digest |
+| DAST | 🔴 | Pendiente staging |
+| Deploy con OIDC | 🔴 | No existe pipeline de producción |
+| Kubernetes Restricted | 🔵 | No usamos Kubernetes |
+| Integrated E2E en CI | ✅ | Seed protegido + PostgreSQL + API + Web + Chromium reales |
 
-## Controles ya fuertes
+## Pagos
 
-1. Argon2id con baseline OWASP.
-2. Contraseñas nunca almacenadas en claro.
-3. Rate limit + bloqueo persistente de login.
-4. Roles ADMIN/KITCHEN/DELIVERY aplicados en API.
-5. Sesiones invalidadas al cambiar contraseña o desactivar usuario.
-6. Cookies HttpOnly y endurecidas en producción.
-7. CORS allowlist.
-8. Protección CSRF del panel.
-9. Headers Helmet/Next.
-10. HTTPS enforcement preparado.
-11. Validación server-side y precios calculados por backend.
-12. Idempotencia en creación/pagos.
-13. Inventario/capacidad con transacciones y locks.
-14. QR sin PII con token verificado.
-15. Validación fuerte de firmas de webhook preparada.
-16. Logs HTTP sin request bodies/secrets.
-17. AuditLog para múltiples operaciones administrativas.
+Estado actual:
 
-## Orden de implementación recomendado
+- `MockPaymentProvider` disponible para desarrollo/tests;
+- `PaymentProviderRegistry` desacopla proveedor y dominio;
+- Mercado Pago Orders API client preparado;
+- creación de checkout Mercado Pago implementada;
+- `ENABLE_REAL_PAYMENTS=false` por defecto;
+- producción puede arrancar con pagos reales deshabilitados;
+- ninguna credencial por sí sola habilita tráfico externo.
+
+Pendiente antes de habilitar pagos reales:
+
+1. webhook persistente e idempotente;
+2. deduplicación de eventos;
+3. `getPayment()`;
+4. refund real;
+5. reconciliación;
+6. sandbox end-to-end;
+7. pruebas de estados fallidos/reintentos;
+8. revisión de política operativa de expiración/refund;
+9. activar `ENABLE_REAL_PAYMENTS=true` únicamente después de validar todo lo anterior.
+
+## Controles fuertes actuales
+
+1. Argon2id.
+2. MFA obligatorio para administradores.
+3. AES-256-GCM para secreto TOTP.
+4. Rate limiting + lockout persistente.
+5. RBAC server-side.
+6. Cookies seguras.
+7. Invalidación de sesiones.
+8. CORS allowlist.
+9. CSRF para panel.
+10. CSP/HSTS/Helmet.
+11. Error filter y límites de body.
+12. OpenAPI.
+13. Idempotencia en creación de pedidos y capa de pagos.
+14. Transacciones/locks para capacidad e inventario.
+15. QR sin PII y capability token hasheado.
+16. Webhook signature verification preparada.
+17. Logs HTTP estructurados.
+18. AuditLog.
+19. SAST/SCA/Gitleaks/SBOM.
+20. E2E integrado real en CI.
+21. Docker non-root y redes internas.
+22. Backup cifrado + restore drill.
+23. Kill switch de pagos reales.
+
+## Próximo orden recomendado
 
 ### Fase 1 — Identidad
-1. MFA obligatorio para ADMIN.
-2. Fijar JWT algorithm + issuer + audience.
-3. Password blocklist y política de 15+ caracteres mientras no haya MFA.
-4. Benchmark Argon2id.
 
-### Fase 2 — API
-5. Exception filter seguro con requestId.
-6. Límites de tamaño de request.
-7. Rate limits específicos para endpoints críticos/caros.
-8. OpenAPI + inventario de endpoints.
-9. Tests negativos de autorización.
+1. Password blocklist.
+2. Benchmark Argon2id en hardware objetivo.
 
-### Fase 3 — CI/CD
-10. Workflow CI con lint/test/build.
-11. SCA/Dependabot.
-12. Secret scanning.
-13. SAST.
-14. SBOM.
-15. Dockerfiles production non-root + image scan.
+### Fase 2 — Supply chain
 
-### Fase 4 — Infraestructura
-16. Secret manager.
-17. DB/Redis solo red privada.
-18. TLS real.
-19. WAF/CDN.
-20. Backups cifrados automáticos.
-21. Restore drill y RPO/RTO.
+3. Image scan de contenedores.
+4. Artifact/image signing cuando exista pipeline de release.
 
-### Fase 5 — Operaciones de seguridad
-22. Logs centralizados.
-23. Alertas.
-24. Runbooks.
-25. Política de retención/privacidad.
-26. ASVS baseline.
-27. DAST + pentest prelaunch.
-28. Tabletop de incidente.
+### Fase 3 — Privacidad y threat model
+
+5. Threat model.
+6. Inventario de datos.
+7. Política de retención/eliminación.
+8. Privacy notice.
+
+### Fase 4 — Observabilidad
+
+9. Métricas.
+10. Tracing.
+11. Logs centralizados.
+12. Alertas.
+13. Runbooks e incident contacts.
+
+### Fase 5 — Preproducción
+
+14. ADRs.
+15. Load/stress test.
+16. Staging.
+17. Rollback probado.
+18. DAST.
+19. Infraestructura real: dominio/TLS/WAF.
+20. Backup offsite real.
+21. Simulacro completo de pérdida del VPS.
+22. Pentest.
+
+### Fase 6 — Pagos
+
+23. Completar flujo real de Mercado Pago.
+24. Sandbox.
+25. Webhooks/reconciliación/refunds.
+26. Activación explícita de pagos reales.
 
 ## Próximo control
 
-**Password blocklist + política de contraseñas** es el siguiente gap de identidad después de validar MFA. Luego siguen exception filter/límites de request y CI security.
+**Password blocklist + benchmark Argon2id** son ahora los siguientes gaps de identidad. Después conviene continuar con **image scanning** y luego threat model/privacidad.
+
+## Nota sobre branch protection
+
+El repositorio sí ejecuta CI y Security en PR/push a `main`, pero la integración usada para esta auditoría no tiene permisos para leer la configuración de branch protection de GitHub. Por eso el requisito de review/required checks se mantiene como 🟡 hasta verificarlo desde la configuración del repositorio.
