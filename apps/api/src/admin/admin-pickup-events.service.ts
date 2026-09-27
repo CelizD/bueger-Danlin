@@ -682,8 +682,18 @@ export class AdminPickupEventsService {
       this.buildPickupPointCode(name);
 
     const existing =
-      await db.pickupPoint.findUnique({
-        where: { code },
+      await db.pickupPoint.findFirst({
+        where: {
+          OR: [
+            { code },
+            {
+              name: {
+                equals: name,
+                mode: "insensitive",
+              },
+            },
+          ],
+        },
       });
 
     if (existing) {
