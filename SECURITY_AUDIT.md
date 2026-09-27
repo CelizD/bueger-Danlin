@@ -34,7 +34,8 @@ Desde la auditoría inicial se cerraron varios gaps importantes:
 - DB/Redis privados en Compose de producción;
 - backups cifrados y restore drill;
 - copia offsite S3-compatible preparada;
-- kill switch de pagos reales.
+- kill switch de pagos reales;
+- Prometheus + Loki + Grafana + Alloy preparados para observabilidad.
 
 Los principales riesgos pendientes ya no están en el flujo básico del producto. Se concentran en **operación de producción, observabilidad, seguridad ofensiva, privacidad, respuesta a incidentes y validación de infraestructura real**.
 
@@ -97,10 +98,10 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | Headers Web | ✅ | CSP prod, nosniff, DENY frame, Referrer, Permissions, COOP/CORP, HSTS |
 | Logs HTTP estructurados | ✅ | requestId, método, path, status, duración, IP y UA; sin bodies |
 | AuditLog | 🟡 | Cubre múltiples operaciones administrativas y de pedido; falta matriz formal de eventos obligatorios |
-| Logs centralizados/SIEM | 🔴 | No configurado |
-| Métricas | 🔴 | Falta instrumentación de backend/infra |
+| Logs centralizados/SIEM | 🟡 | Loki + Alloy configurados para logs Docker con retención de 30 días; falta validar ingestión y operación en el VPS real |
+| Métricas | 🟡 | API instrumentada + Prometheus + Node Exporter + dashboard Grafana preparados; falta validar targets y consumo en el VPS real |
 | Distributed tracing | 🔴 | Falta OpenTelemetry o equivalente |
-| Alertas | 🔴 | No hay reglas/canales operativos |
+| Alertas | 🟡 | Reglas Prometheus para API, DB, 5xx, p95, inventario, memoria y disco; falta canal de notificaciones/Alertmanager y validación real |
 | Runbooks de incidentes | 🔴 | Falta account takeover, secret leak, DB exposure, dependency compromise, DDoS |
 | Política de retención | 🟡 | Cleanup/anonimización y purga de AuditLog implementados con dry-run, kill switch, tests y timer preparado; faltan legal hold, logs centralizados, validación offsite y revisión legal/fiscal |
 | Privacy inventory/notice | 🟡 | Inventario técnico documentado; falta aviso de privacidad legal/final y validación de plazos regulatorios |
@@ -202,11 +203,10 @@ Pendiente antes de habilitar pagos reales:
 
 ### Fase 4 — Observabilidad
 
-8. Métricas.
-9. Tracing.
-10. Logs centralizados.
-11. Alertas.
-12. Runbooks e incident contacts.
+8. Validar Prometheus/Loki/Alloy/Grafana en el VPS.
+9. Añadir canal de notificaciones para alertas.
+10. Distributed tracing con OpenTelemetry/Tempo si se requiere.
+11. Runbooks e incident contacts.
 
 ### Fase 5 — Preproducción
 
@@ -229,7 +229,7 @@ Pendiente antes de habilitar pagos reales:
 
 ## Próximo control
 
-La **password blocklist** y el **image scanning con Trivy** ya están implementados y validados. El benchmark Argon2id queda pendiente hasta disponer del VPS objetivo. Mientras tanto, el **threat model** y el **inventario de datos** ya están documentados. El cleanup de retención ya está implementado con dry-run, tests y timer preparado. El siguiente bloque técnico recomendado es **observabilidad + alertas**.
+La **password blocklist** y el **image scanning con Trivy** ya están implementados y validados. El benchmark Argon2id queda pendiente hasta disponer del VPS objetivo. Mientras tanto, el **threat model** y el **inventario de datos** ya están documentados. El cleanup de retención ya está implementado con dry-run, tests y timer preparado. La observabilidad base con **Grafana + Prometheus + Loki + Alloy** ya está implementada en configuración. Falta validarla en el VPS y conectar notificaciones; después siguen tracing y runbooks.
 
 ## Nota sobre branch protection
 
