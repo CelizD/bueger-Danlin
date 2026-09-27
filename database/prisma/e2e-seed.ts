@@ -1,7 +1,10 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
-import * as argon2 from "argon2";
 import { PrismaClient } from "../../apps/api/src/generated/prisma/client.js";
+import {
+  hashStaffPassword,
+  staffPasswordPolicyIssue,
+} from "../../apps/api/src/auth/password-security.js";
 
 const connectionString = process.env.DATABASE_URL;
 const kitchenPassword = process.env.E2E_KITCHEN_PASSWORD;
@@ -35,20 +38,19 @@ const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString }),
 });
 
-const ARGON2_OPTIONS = {
-  type: argon2.argon2id,
-  memoryCost: 19456,
-  timeCost: 2,
-  parallelism: 1,
-} as const;
-
 async function upsertStaff(
   email: string,
   password: string,
   name: string,
   role: "KITCHEN" | "DELIVERY",
 ) {
-  const passwordHash = await argon2.hash(password, ARGON2_OPTIONS);
+  const passwordIssue = staffPasswordPolicyIssue(password);
+
+  if (passwordIssue) {
+    throw new Error(`Invalid E2E password: ${passwordIssue}`);
+  }
+
+  const passwordHash = await hashStaffPassword(password);
 
   await prisma.user.upsert({
     where: { email },

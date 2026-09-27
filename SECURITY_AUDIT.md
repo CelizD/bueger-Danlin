@@ -45,8 +45,8 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | MFA administradores | ✅ | TOTP obligatorio, AES-256-GCM, recovery codes, anti-reuse y tests |
 | Cookies seguras | ✅ | HttpOnly; Secure + SameSite=Strict en producción |
 | Argon2id | ✅ | 19 MiB, 2 iteraciones, paralelismo 1 |
-| Benchmark Argon2id en hardware prod | 🔴 | Falta medir latencia real en el VPS objetivo |
-| Password blocklist | 🔴 | Aún no se bloquean contraseñas comunes/comprometidas |
+| Benchmark Argon2id en hardware prod | 🟡 | Comando reproducible `pnpm security:benchmark-argon2` implementado; falta ejecutarlo y registrar p50/p95 en el VPS objetivo |
+| Password blocklist | ✅ | Política centralizada rechaza contraseñas comunes/triviales al crear/restablecer personal y en el admin seed; no realiza consultas externas de breach data |
 | JWT algoritmo/issuer/audience explícitos | ✅ | Configurados y validados en AuthModule |
 | RBAC / least privilege | ✅ | ADMIN, KITCHEN, DELIVERY + guards server-side |
 | Secrets fuera del repo | ✅ | .env ignorado; Gitleaks verde en CI |
@@ -187,51 +187,50 @@ Pendiente antes de habilitar pagos reales:
 
 ### Fase 1 — Identidad
 
-1. Password blocklist.
-2. Benchmark Argon2id en hardware objetivo.
+1. Ejecutar el benchmark Argon2id en el VPS objetivo y registrar p50/p95.
 
 ### Fase 2 — Supply chain
 
-3. Image scan de contenedores.
-4. Artifact/image signing cuando exista pipeline de release.
+2. Image scan de contenedores.
+3. Artifact/image signing cuando exista pipeline de release.
 
 ### Fase 3 — Privacidad y threat model
 
-5. Threat model.
-6. Inventario de datos.
-7. Política de retención/eliminación.
-8. Privacy notice.
+4. Threat model.
+5. Inventario de datos.
+6. Política de retención/eliminación.
+7. Privacy notice.
 
 ### Fase 4 — Observabilidad
 
-9. Métricas.
-10. Tracing.
-11. Logs centralizados.
-12. Alertas.
-13. Runbooks e incident contacts.
+8. Métricas.
+9. Tracing.
+10. Logs centralizados.
+11. Alertas.
+12. Runbooks e incident contacts.
 
 ### Fase 5 — Preproducción
 
-14. ADRs.
-15. Load/stress test.
-16. Staging.
-17. Rollback probado.
-18. DAST.
-19. Infraestructura real: dominio/TLS/WAF.
-20. Backup offsite real.
-21. Simulacro completo de pérdida del VPS.
-22. Pentest.
+13. ADRs.
+14. Load/stress test.
+15. Staging.
+16. Rollback probado.
+17. DAST.
+18. Infraestructura real: dominio/TLS/WAF.
+19. Backup offsite real.
+20. Simulacro completo de pérdida del VPS.
+21. Pentest.
 
 ### Fase 6 — Pagos
 
-23. Completar flujo real de Mercado Pago.
-24. Sandbox.
-25. Webhooks/reconciliación/refunds.
-26. Activación explícita de pagos reales.
+22. Completar flujo real de Mercado Pago.
+23. Sandbox.
+24. Webhooks/reconciliación/refunds.
+25. Activación explícita de pagos reales.
 
 ## Próximo control
 
-**Password blocklist + benchmark Argon2id** son ahora los siguientes gaps de identidad. Después conviene continuar con **image scanning** y luego threat model/privacidad.
+La **password blocklist ya está implementada**. Falta ejecutar el benchmark Argon2id en el hardware objetivo. Después, el siguiente cambio de código recomendado es **image scanning** y luego threat model/privacidad.
 
 ## Nota sobre branch protection
 

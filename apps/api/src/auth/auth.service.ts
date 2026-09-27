@@ -1,26 +1,21 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import * as argon2 from "argon2";
 import { PrismaService } from "../database/prisma.service.js";
 import type { StaffSession } from "./auth.types.js";
 import { credentialVersion } from "./credential-version.js";
 import { MfaService } from "./mfa.service.js";
+import {
+  hashStaffPassword,
+  verifyStaffPassword,
+} from "./password-security.js";
 
 const MAX_FAILED_LOGIN_ATTEMPTS = 5;
 const LOGIN_LOCK_MINUTES = 15;
 
-const ARGON2_OPTIONS = {
-  type: argon2.argon2id,
-  memoryCost: 19456,
-  timeCost: 2,
-  parallelism: 1,
-} as const;
-
 @Injectable()
 export class AuthService {
-  private readonly dummyHashPromise = argon2.hash(
+  private readonly dummyHashPromise = hashStaffPassword(
     "invalid-login-sentinel-value",
-    ARGON2_OPTIONS,
   );
 
   constructor(
@@ -49,7 +44,7 @@ export class AuthService {
 
     const hashToVerify =
       user?.passwordHash ?? (await this.dummyHashPromise);
-    const passwordMatches = await argon2.verify(
+    const passwordMatches = await verifyStaffPassword(
       hashToVerify,
       password,
     );

@@ -1,7 +1,10 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../apps/api/src/generated/prisma/client.js";
-import * as argon2 from "argon2";
+import {
+  hashStaffPassword,
+  staffPasswordPolicyIssue,
+} from "../../apps/api/src/auth/password-security.js";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is required");
@@ -16,16 +19,13 @@ async function main() {
   const adminName = process.env.ADMIN_SEED_NAME?.trim() || "Administrador";
 
   if (adminEmail && adminPassword) {
-    if (adminPassword.length < 12) {
-      throw new Error("ADMIN_SEED_PASSWORD must contain at least 12 characters");
+    const passwordIssue = staffPasswordPolicyIssue(adminPassword);
+
+    if (passwordIssue) {
+      throw new Error(`ADMIN_SEED_PASSWORD: ${passwordIssue}`);
     }
 
-    const passwordHash = await argon2.hash(adminPassword, {
-      type: argon2.argon2id,
-      memoryCost: 19456,
-      timeCost: 2,
-      parallelism: 1,
-    });
+    const passwordHash = await hashStaffPassword(adminPassword);
 
     await prisma.user.upsert({
       where: { email: adminEmail },
