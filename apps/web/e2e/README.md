@@ -1,58 +1,82 @@
 # Frontend E2E
 
-Esta suite usa Playwright para validar el navegador real sin depender todavía de PostgreSQL/API para los smoke tests del frontend.
+Burger Danlin mantiene dos niveles de pruebas Playwright.
 
-## Cobertura inicial
+## Smoke E2E con API simulada
 
-- flujo cliente: menú -> datos -> pedido -> pago mock -> QR;
-- sessionStorage del capability token del pedido;
-- skip link y navegación inicial por teclado;
+La suite original valida el navegador de forma rápida y determinista sin depender de PostgreSQL/API.
+
+Cobertura:
+
+- menú -> datos -> pedido -> pago mock -> QR;
+- sessionStorage del capability token;
+- navegación por teclado;
 - login de personal;
-- transición de login a MFA;
-- error de credenciales accesible;
-- axe WCAG A/AA con bloqueo para impactos serious/critical.
+- transición a MFA;
+- credenciales inválidas;
+- axe WCAG A/AA para impactos serious/critical.
 
-Los endpoints se interceptan desde Playwright para mantener las pruebas deterministas.
-
-## Dependencias
-
-Desde la raíz del repositorio:
-
-```powershell
-& "$env:APPDATA\npm\pnpm.cmd" --filter @burger/web add -D @playwright/test@1.63.0 @axe-core/playwright@4.13.0
-```
-
-Después instala Chromium:
-
-```powershell
-& "$env:APPDATA\npm\pnpm.cmd" --filter @burger/web exec playwright install chromium
-```
-
-## Ejecutar
+Ejecutar:
 
 ```powershell
 & "$env:APPDATA\npm\pnpm.cmd" --filter @burger/web test:e2e
 ```
 
-Con navegador visible:
+## Integrated E2E con sistema real
 
-```powershell
-& "$env:APPDATA\npm\pnpm.cmd" --filter @burger/web test:e2e:headed
-```
-
-El HTML report queda fuera de Git.
-
-## Siguiente nivel
-
-Estos tests son E2E del frontend con API simulada. No sustituyen un test integrado real.
-
-La siguiente suite debe levantar:
+La suite `e2e/integration` no intercepta la API. Levanta:
 
 - PostgreSQL de test;
-- API real;
-- Web real;
-- seed determinista;
-- pedido real;
-- transición cocina;
-- QR/entrega real;
-- limpieza de DB posterior.
+- NestJS real;
+- Next.js real;
+- catálogo e inventario reales;
+- usuarios KITCHEN y DELIVERY reales;
+- Playwright/Chromium.
+
+El flujo principal verifica:
+
+1. cliente crea un pedido real;
+2. PostgreSQL reserva inventario/capacidad;
+3. pago `MOCK` real cambia el pedido a `PAID`;
+4. Cocina inicia preparación;
+5. Cocina marca el pedido `READY`;
+6. se construye el mismo payload que contiene el QR del cliente;
+7. Entrega envía el payload al endpoint real `/staff/delivery/scan`;
+8. el API valida token/hash y cambia el pedido a `DELIVERED`;
+9. el estado final se vuelve a consultar desde el API real.
+
+GitHub Actions ejecuta esta suite en cada PR/push a `main`.
+
+### Seguridad del seed
+
+`database/prisma/e2e-seed.ts` se niega a ejecutarse si:
+
+- `NODE_ENV` no es `test`;
+- el nombre de la base de datos no contiene `test`.
+
+Esto evita limpiar accidentalmente una base de desarrollo o producción.
+
+### Ejecutar localmente
+
+Usa una base separada de pruebas. No apuntes este comando a tu base normal.
+
+Ejemplo PowerShell:
+
+```powershell
+$env:NODE_ENV="test"
+$env:DATABASE_URL="postgresql://burger:burger_local@localhost:5432/burger_danlin_test?schema=public"
+$env:QR_TOKEN_SECRET="local-e2e-qr-secret-not-for-production-123456789"
+$env:AUTH_JWT_SECRET="local-e2e-auth-secret-not-for-production-123456789"
+$env:PAYMENT_PROVIDER="mock"
+$env:ENABLE_REAL_PAYMENTS="false"
+$env:E2E_KITCHEN_PASSWORD="local-kitchen-e2e-passphrase-2026"
+$env:E2E_DELIVERY_PASSWORD="local-delivery-e2e-passphrase-2026"
+
+pnpm db:migrate:deploy
+pnpm db:seed
+pnpm db:seed:e2e
+pnpm --filter @burger/web exec playwright install chromium
+pnpm --filter @burger/web test:e2e:integration
+```
+
+El HTML report de Playwright queda fuera de Git.
