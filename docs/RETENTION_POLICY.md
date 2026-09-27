@@ -1,7 +1,7 @@
 # Política Técnica de Retención y Eliminación — Burger Danlin
 
 Fecha: 2026-09-27
-Estado: política baseline; automatización parcial pendiente
+Estado: baseline implementada para PII/AuditLog; validación de infraestructura y controles complementarios pendiente
 
 ## 1. Objetivo
 
@@ -23,8 +23,8 @@ Esta es una política técnica de ingeniería. Los plazos legales/fiscales aplic
 
 | Categoría | Retención objetivo | Acción |
 |---|---:|---|
-| Pedido PENDING_PAYMENT expirado sin pago | 30 días | eliminar/anonomizar pedido y cliente si no tiene otros pedidos |
-| Pedido FAILED/CANCELLED sin obligación posterior | 90 días | eliminar/anonomizar PII; conservar métricas agregadas |
+| Pedido PENDING_PAYMENT expirado sin pago | 30 días | eliminar/anonimizar pedido y cliente si no tiene otros pedidos |
+| Pedido FAILED/CANCELLED sin obligación posterior | 90 días | eliminar/anonimizar PII; conservar métricas agregadas |
 | Pedido PAID/DELIVERED/REFUNDED | 12 meses como baseline técnica | luego anonimizar PII, sujeto a obligaciones legales/fiscales |
 | Customer sin pedidos relacionados | 30 días | eliminar |
 | Payment técnico no completado | 90 días | eliminar salvo investigación/reconciliación |
@@ -126,20 +126,48 @@ El hold debe:
 - tener fecha de revisión;
 - afectar el mínimo conjunto de datos posible.
 
-## 9. Implementación pendiente
+## 9. Implementación
 
-Esta política está definida, pero todavía faltan controles automáticos en código/infra:
+Implementado en el repositorio:
 
-1. job de cleanup de pedidos/clientes;
-2. anonimización de históricos;
-3. purga de AuditLog;
-4. retención centralizada de logs;
-5. rotación verificable de backups local/offsite;
-6. mecanismo de legal hold;
-7. pruebas automatizadas del cleanup;
-8. métrica/alerta si el cleanup deja de correr.
+1. comando `pnpm retention:dry-run` sin mutaciones;
+2. comando `pnpm retention:apply` protegido por `RETENTION_CLEANUP_ENABLED=true`;
+3. anonimización de PII solo cuando todos los pedidos del Customer cumplen la ventana de retención;
+4. limpieza de metadata de pagos asociada a datos anonimizados;
+5. eliminación de Customers huérfanos vencidos;
+6. purga de AuditLog general a 12 meses y eventos de login fallido/bloqueo a 180 días;
+7. reporte sin mutación de pedidos operativos antiguos en estados `PAID`, `CONFIRMED`, `PREPARING` o `READY`;
+8. tests de dry-run, ventanas de retención y aplicación;
+9. servicio Docker de producción con usuario DB runtime de mínimo privilegio;
+10. timer systemd diario preparado;
+11. backup local alineado a 7 días.
 
-Hasta implementar estos puntos, el control debe considerarse **parcial**.
+Pendiente antes de considerar el ciclo de vida completo cerrado:
+
+1. mecanismo por registro para legal/incident hold;
+2. política/automatización de cuentas de staff desactivadas;
+3. retención centralizada de logs cuando exista backend de observabilidad;
+4. verificación del Object Lock/retención offsite real;
+5. alerta si el cleanup programado falla;
+6. validación legal/fiscal de los plazos antes de habilitar `RETENTION_CLEANUP_ENABLED=true` en producción.
+
+Por estos puntos, el control global de retención sigue **parcial** hasta la validación de producción.
+
+### Ejecución manual segura
+
+Dry-run:
+
+```bash
+pnpm retention:dry-run
+```
+
+Aplicación explícita:
+
+```bash
+RETENTION_CLEANUP_ENABLED=true pnpm retention:apply
+```
+
+En producción, ejecutar primero dry-run y revisar el JSON antes de habilitar el timer.
 
 ## 10. Verificación
 
