@@ -9,6 +9,7 @@ import { HealthController } from "./health/health.controller.js";
 import { InventoryModule } from "./inventory/inventory.module.js";
 import { MetricsController } from "./metrics/metrics.controller.js";
 import { MetricsService } from "./metrics/metrics.service.js";
+import { NotificationsModule } from "./notifications/notifications.module.js";
 import { OrdersModule } from "./orders/orders.module.js";
 import { PaymentsModule } from "./payments/payments.module.js";
 import { PickupEventsModule } from "./pickup-events/pickup-events.module.js";
@@ -17,6 +18,7 @@ import { TelemetryController } from "./telemetry/telemetry.controller.js";
 
 @Module({
   imports: [
+    NotificationsModule,
     DatabaseModule,
     InventoryModule,
     AuthModule,
