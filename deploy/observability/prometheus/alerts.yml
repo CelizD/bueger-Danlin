@@ -1,0 +1,92 @@
+groups:
+  - name: burger-danlin
+    rules:
+      - alert: BurgerApiDown
+        expr: up{job="burger-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Burger Danlin API is down
+          description: Prometheus has been unable to scrape the API for more than 2 minutes.
+
+      - alert: BurgerDatabaseDown
+        expr: burger_database_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Burger Danlin database is unavailable
+          description: The API cannot reach PostgreSQL.
+
+      - alert: BurgerHigh5xxRate
+        expr: |
+          (
+            sum(rate(burger_http_requests_total{status=~"5.."}[5m]))
+            /
+            clamp_min(sum(rate(burger_http_requests_total[5m])), 0.001)
+          ) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Elevated API 5xx rate
+          description: More than 5 percent of API requests have returned 5xx for 10 minutes.
+
+      - alert: BurgerHighP95Latency
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (
+              rate(burger_http_request_duration_seconds_bucket[5m])
+            )
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: API p95 latency is high
+          description: API p95 latency has exceeded 1 second for 10 minutes.
+
+      - alert: BurgerLowInventory
+        expr: burger_inventory_stock < burger_inventory_low_stock_threshold
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Inventory is below its configured threshold
+          description: One or more Burger Danlin inventory items are below the low-stock threshold.
+
+      - alert: BurgerHostMemoryHigh
+        expr: |
+          100 * (
+            1 -
+            node_memory_MemAvailable_bytes /
+            node_memory_MemTotal_bytes
+          ) > 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: VPS memory usage is high
+          description: Host memory utilization has exceeded 90 percent for 10 minutes.
+
+      - alert: BurgerHostDiskLow
+        expr: |
+          (
+            node_filesystem_avail_bytes{
+              mountpoint="/",
+              fstype!~"tmpfs|overlay"
+            }
+            /
+            node_filesystem_size_bytes{
+              mountpoint="/",
+              fstype!~"tmpfs|overlay"
+            }
+          ) < 0.15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: VPS root filesystem is running low
+          description: Less than 15 percent of the root filesystem is available.
