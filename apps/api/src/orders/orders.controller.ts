@@ -1,8 +1,10 @@
+import { Throttle } from "@nestjs/throttler";
 import {
   BadRequestException,
   Body,
   Controller,
   Get,
+  Header,
   Headers,
   Param,
   Post,
@@ -10,6 +12,7 @@ import {
 import { CustomerOrdersService } from "./customer-orders.service.js";
 import { CreateOrderDto } from "./dto/create-order.dto.js";
 import { OrdersService } from "./orders.service.js";
+import { OrderCodePipe } from "./order-code.pipe.js";
 
 @Controller("orders")
 export class OrdersController {
@@ -19,6 +22,12 @@ export class OrdersController {
   ) {}
 
   @Post()
+  @Throttle({
+    default: {
+      limit: 30,
+      ttl: 60_000,
+    },
+  })
   create(
     @Body() body: CreateOrderDto,
     @Headers("idempotency-key") idempotencyKey?: string,
@@ -31,8 +40,15 @@ export class OrdersController {
   }
 
   @Get(":orderCode")
+  @Header("Cache-Control", "no-store")
+  @Throttle({
+    default: {
+      limit: 60,
+      ttl: 60_000,
+    },
+  })
   getOne(
-    @Param("orderCode") orderCode: string,
+    @Param("orderCode", OrderCodePipe) orderCode: string,
     @Headers("x-order-token") verificationToken?: string,
   ) {
     if (!verificationToken) {
@@ -43,8 +59,15 @@ export class OrdersController {
   }
 
   @Post(":orderCode/cancel")
+  @Header("Cache-Control", "no-store")
+  @Throttle({
+    default: {
+      limit: 12,
+      ttl: 60_000,
+    },
+  })
   cancel(
-    @Param("orderCode") orderCode: string,
+    @Param("orderCode", OrderCodePipe) orderCode: string,
     @Headers("x-order-token") verificationToken?: string,
   ) {
     if (!verificationToken) {

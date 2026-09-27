@@ -62,7 +62,7 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | SQL parametrizado | ✅ | Prisma domina acceso; raw SQL sensible usa parámetros/valores interpolados por Prisma |
 | Rate limit auth | ✅ | 5/min por IP + lockout persistente por cuenta |
 | Rate limit API | ✅ | límite global |
-| Rate limits por endpoints caros | 🟡 | Login está especializado; revisar endpoints caros al medir carga |
+| Rate limits por endpoints caros | ✅ | Login/MFA y rutas públicas sensibles de pedidos/pagos tienen límites específicos además del límite global; ajustar valores con métricas reales de carga |
 | CORS explícito | ✅ | allowlist de APP_ORIGIN |
 | CSRF | ✅ | Origin + Fetch Metadata + SameSite para mutaciones de staff |
 | HTTPS obligatorio | 🟡 | FORCE_HTTPS listo; requiere reverse proxy/TLS real |
