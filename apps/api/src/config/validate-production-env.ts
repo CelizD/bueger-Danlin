@@ -7,6 +7,11 @@ const weakValues = new Set([
   "burger_local",
 ]);
 
+const productionPaymentProviders = new Set([
+  "stripe",
+  "mercadopago",
+]);
+
 function requireStrongSecret(name: string, minLength: number) {
   const value = process.env[name]?.trim() ?? "";
 
@@ -71,7 +76,14 @@ export function validateProductionEnvironment() {
     );
   }
 
-  const provider = process.env.PAYMENT_PROVIDER?.trim().toLowerCase();
+  const provider =
+    process.env.PAYMENT_PROVIDER?.trim().toLowerCase() ?? "";
+
+  if (!productionPaymentProviders.has(provider)) {
+    throw new Error(
+      "PAYMENT_PROVIDER must be either stripe or mercadopago in production",
+    );
+  }
 
   if (provider === "stripe") {
     requireStrongSecret("STRIPE_SECRET_KEY", 24);
