@@ -23,7 +23,8 @@
     "db:seed:e2e": "tsx database/prisma/e2e-seed.ts",
     "security:benchmark-argon2": "tsx apps/api/src/scripts/benchmark-argon2.ts",
     "retention:dry-run": "tsx apps/api/src/scripts/retention-cleanup.ts",
-    "retention:apply": "tsx apps/api/src/scripts/retention-cleanup.ts --apply"
+    "retention:apply": "tsx apps/api/src/scripts/retention-cleanup.ts --apply",
+    "telegram:test": "tsx apps/api/src/scripts/test-telegram.ts"
   },
   "devDependencies": {
     "dotenv": "^17.2.2",
