@@ -98,9 +98,7 @@ export class PickupEventsService {
                   event.transportCostCents /
                     paidOrderCount,
                 )
-              : event.transportCostCents > 0
-                ? event.transportCostCents
-                : 0;
+              : null;
 
         return {
           id: event.id,
