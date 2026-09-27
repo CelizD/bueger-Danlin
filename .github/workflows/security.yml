@@ -85,61 +85,50 @@ jobs:
       - name: Run Semgrep
         run: semgrep scan --config auto --error --exclude apps/api/src/generated/prisma .
 
-  container-scan:
-    name: Container image scan
+  image-scan:
+    name: Image scan (${{ matrix.name }})
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: API
+            dockerfile: apps/api/Dockerfile
+            image: burger-danlin-api
+            build_args: ""
+          - name: Web
+            dockerfile: apps/web/Dockerfile
+            image: burger-danlin-web
+            build_args: "--build-arg NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1"
+          - name: Backup
+            dockerfile: deploy/backup/Dockerfile
+            image: burger-danlin-backup
+            build_args: ""
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Build API image
-        run: docker build --pull --file apps/api/Dockerfile --tag burger-danlin-api:scan .
-
-      - name: Scan API image with Trivy
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: burger-danlin-api:scan
-          format: table
-          exit-code: "1"
-          ignore-unfixed: true
-          vuln-type: os,library
-          scanners: vuln
-          severity: HIGH,CRITICAL
-
-      - name: Build Web image
+      - name: Build production image
         run: >-
-          docker build --pull
-          --build-arg NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
-          --file apps/web/Dockerfile
-          --tag burger-danlin-web:scan
+          docker build
+          ${{ matrix.build_args }}
+          --file ${{ matrix.dockerfile }}
+          --tag ${{ matrix.image }}:${{ github.sha }}
           .
 
-      - name: Scan Web image with Trivy
+      - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: burger-danlin-web:scan
+          image-ref: ${{ matrix.image }}:${{ github.sha }}
           format: table
           exit-code: "1"
           ignore-unfixed: true
-          vuln-type: os,library
-          scanners: vuln
-          severity: HIGH,CRITICAL
-
-      - name: Build backup image
-        run: docker build --pull --file deploy/backup/Dockerfile --tag burger-danlin-backup:scan .
-
-      - name: Scan backup image with Trivy
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: burger-danlin-backup:scan
-          format: table
-          exit-code: "1"
-          ignore-unfixed: true
-          vuln-type: os,library
-          scanners: vuln
-          severity: HIGH,CRITICAL
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
 
   sbom:
     name: Generate SBOM
