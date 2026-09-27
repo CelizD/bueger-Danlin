@@ -7,6 +7,7 @@ import {
 } from "@nestjs/common";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../database/prisma.service.js";
+import { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
 
 const staffOrderSelect = {
   id: true,
@@ -59,7 +60,10 @@ const staffOrderSelect = {
 
 @Injectable()
 export class StaffOrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly telegram?: TelegramNotificationService,
+  ) {}
 
   async kitchenOrders() {
     return this.prisma.order.findMany({
@@ -140,7 +144,17 @@ export class StaffOrdersService {
       throw new BadRequestException("El QR tiene un formato inválido.");
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    let deliveryNotice:
+      | {
+          orderCode: string;
+          comboQuantity: number;
+          totalCents: number;
+          currency: string;
+          status: "DELIVERED";
+        }
+      | undefined;
+
+    const result = await this.prisma.$transaction(async (tx) => {
       const locked = await tx.$queryRaw<Array<{ id: string }>>`
         SELECT "id"
         FROM "Order"
@@ -215,11 +229,25 @@ export class StaffOrdersService {
         },
       });
 
+      deliveryNotice = {
+        orderCode: updated.orderCode,
+        comboQuantity: updated.comboQuantity,
+        totalCents: updated.totalCents,
+        currency: updated.currency,
+        status: "DELIVERED",
+      };
+
       return {
         ...updated,
         alreadyDelivered: false,
       };
     });
+
+    if (deliveryNotice) {
+      this.telegram?.notifyStatusChanged(deliveryNotice);
+    }
+
+    return result;
   }
 
   private assertQrToken(expectedHash: string, verificationToken: string) {
@@ -247,7 +275,17 @@ export class StaffOrdersService {
   ) {
     const orderCode = orderCodeInput.trim().toUpperCase();
 
-    return this.prisma.$transaction(async (tx) => {
+    let statusNotice:
+      | {
+          orderCode: string;
+          comboQuantity: number;
+          totalCents: number;
+          currency: string;
+          status: "PREPARING" | "READY" | "DELIVERED";
+        }
+      | undefined;
+
+    const result = await this.prisma.$transaction(async (tx) => {
       const locked = await tx.$queryRaw<Array<{ id: string }>>`
         SELECT "id"
         FROM "Order"
@@ -313,7 +351,21 @@ export class StaffOrdersService {
         },
       });
 
+      statusNotice = {
+        orderCode: updated.orderCode,
+        comboQuantity: updated.comboQuantity,
+        totalCents: updated.totalCents,
+        currency: updated.currency,
+        status: to,
+      };
+
       return updated;
     });
+
+    if (statusNotice) {
+      this.telegram?.notifyStatusChanged(statusNotice);
+    }
+
+    return result;
   }
 }
