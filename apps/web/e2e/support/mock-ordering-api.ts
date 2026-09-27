@@ -118,6 +118,35 @@ export async function mockOrderingApi(page: Page) {
             freeDeliveryUnlocked: false,
           },
         },
+        {
+          id: "event-2",
+          code: "SAT-E2E-CUCAPA",
+          name: "Cucapá E2E",
+          locationLabel: "Cucapá",
+          pickupPoint: {
+            id: "point-2",
+            code: "CUCAPA",
+            name: "Cucapá",
+            address: "Punto Cucapá",
+            latitude: null,
+            longitude: null,
+          },
+          timezone: "America/Tijuana",
+          startsAt: "2026-09-26T20:00:00.000Z",
+          closesAt: "2026-09-26T04:00:00.000Z",
+          maxCombos: 30,
+          reservedCombos: 1,
+          remainingCombos: 29,
+          status: "OPEN",
+          groupDelivery: {
+            minPaidOrders: 5,
+            paidOrderCount: 4,
+            remainingPaidOrders: 1,
+            transportCostCents: 10000,
+            estimatedDeliveryFeeCents: 2500,
+            freeDeliveryUnlocked: false,
+          },
+        },
       ]);
       return;
     }
@@ -141,6 +170,11 @@ export async function mockOrderingApi(page: Page) {
     }
 
     if (path.endsWith("/orders") && method === "POST") {
+      const input = request.postDataJSON() as {
+        pickupEventId?: string;
+      };
+      const isCucapa = input.pickupEventId === "event-2";
+
       await json(route, {
         orderCode: "H-TEST01",
         status: "PENDING_PAYMENT",
@@ -151,8 +185,10 @@ export async function mockOrderingApi(page: Page) {
         reservationExpiresAt: "2026-09-20T05:30:00.000Z",
         verificationToken: "opaque-e2e-token",
         pickup: {
-          locationLabel: "Universidad",
-          startsAt: "2026-09-26T19:00:00.000Z",
+          locationLabel: isCucapa ? "Cucapá" : "Universidad",
+          startsAt: isCucapa
+            ? "2026-09-26T20:00:00.000Z"
+            : "2026-09-26T19:00:00.000Z",
           closesAt: "2026-09-26T04:00:00.000Z",
           timezone: "America/Tijuana",
         },
