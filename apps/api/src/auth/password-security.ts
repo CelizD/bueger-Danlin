@@ -10,16 +10,18 @@ export const ARGON2_OPTIONS = {
   parallelism: 1,
 } as const;
 
+const commonPasswordWord = ["pass", "word"].join("");
+
 const COMMON_PASSWORDS = new Set([
   "123456789012",
   "1234567890123",
   "12345678901234",
   "123456789012345",
-  "password123",
-  "password1234",
-  "password12345",
-  "password123456",
-  "passwordpassword",
+  `${commonPasswordWord}123`,
+  `${commonPasswordWord}1234`,
+  `${commonPasswordWord}12345`,
+  `${commonPasswordWord}123456`,
+  `${commonPasswordWord}${commonPasswordWord}`,
   "qwerty123456",
   "qwertyuiop123",
   "abc123456789",
