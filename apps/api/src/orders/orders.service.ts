@@ -12,6 +12,7 @@ import {
 } from "node:crypto";
 import { PrismaService } from "../database/prisma.service.js";
 import { InventoryService } from "../inventory/inventory.service.js";
+import { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
 import { CreateOrderDto } from "./dto/create-order.dto.js";
 
 const CAPACITY_STATUSES = [
@@ -31,6 +32,7 @@ export class OrdersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly inventory: InventoryService,
+    private readonly telegram?: TelegramNotificationService,
   ) {
     const secret = process.env.QR_TOKEN_SECRET;
 
@@ -89,7 +91,7 @@ export class OrdersService {
     }
 
     try {
-      return await this.prisma.$transaction(async (tx) => {
+      const created = await this.prisma.$transaction(async (tx) => {
         const lockedRows = await tx.$queryRaw<Array<{ id: string }>>`
           SELECT "id"
           FROM "PickupEvent"
@@ -424,6 +426,16 @@ export class OrdersService {
           },
         };
       });
+
+      this.telegram?.notifyOrderCreated({
+        orderCode: created.orderCode,
+        comboQuantity: created.comboQuantity,
+        totalCents: created.totalCents,
+        currency: created.currency,
+        locationLabel: created.pickup.locationLabel,
+      });
+
+      return created;
     } catch (error) {
       const code = (error as { code?: string }).code;
 
