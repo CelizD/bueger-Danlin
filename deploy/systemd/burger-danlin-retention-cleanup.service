@@ -1,0 +1,11 @@
+[Unit]
+Description=Burger Danlin data retention cleanup
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/burger-danlin
+TimeoutStartSec=20min
+ExecStart=/usr/bin/docker compose --env-file /etc/burger-danlin/production.env -f /opt/burger-danlin/docker-compose.prod.yml run --rm retention-cleanup
