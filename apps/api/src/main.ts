@@ -11,8 +11,35 @@ import { AppModule } from "./app.module.js";
 import { HttpExceptionFilter } from "./common/http-exception.filter.js";
 import { STAFF_SESSION_COOKIE } from "./auth/auth.constants.js";
 import { validateProductionEnvironment } from "./config/validate-production-env.js";
+import { MetricsService } from "./metrics/metrics.service.js";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+function metricRoute(request: any) {
+  const routePath = request.route?.path;
+  const baseUrl = request.baseUrl;
+
+  if (typeof routePath === "string") {
+    const base =
+      typeof baseUrl === "string" ? baseUrl : "";
+
+    return `${base}${routePath}` || "/";
+  }
+
+  return String(
+    request.originalUrl ?? request.url ?? "/",
+  )
+    .split("?")[0]
+    .replace(
+      /\/H-[A-Za-z0-9-]+(?=\/|$)/g,
+      "/:orderCode",
+    )
+    .replace(
+      /\/[A-Za-z0-9_-]{20,}(?=\/|$)/g,
+      "/:id",
+    )
+    .replace(/\/\d+(?=\/|$)/g, "/:id");
+}
 
 function allowedOrigins() {
   const configured = process.env.APP_ORIGIN
@@ -36,6 +63,7 @@ async function bootstrap() {
   const isProduction = process.env.NODE_ENV === "production";
   const origins = allowedOrigins();
   const httpLogger = new Logger("HTTP");
+  const metrics = app.get(MetricsService);
   const jsonBodyLimit = process.env.JSON_BODY_LIMIT ?? "256kb";
   const urlencodedBodyLimit = process.env.URLENCODED_BODY_LIMIT ?? "64kb";
   const apiDocsEnabled =
@@ -82,6 +110,13 @@ async function bootstrap() {
     response.on("finish", () => {
       const durationMs =
         Number(process.hrtime.bigint() - startedAt) / 1_000_000;
+      metrics.observeHttpRequest({
+        method: request.method,
+        route: metricRoute(request),
+        statusCode: response.statusCode,
+        durationSeconds: durationMs / 1000,
+      });
+
       const entry = JSON.stringify({
         requestId,
         method: request.method,
