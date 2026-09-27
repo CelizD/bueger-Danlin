@@ -125,7 +125,8 @@ export class MetricsService {
         durationSeconds <=
         HTTP_DURATION_BUCKETS[index]!
       ) {
-        histogram.buckets[index] += 1;
+        histogram.buckets[index] =
+          (histogram.buckets[index] ?? 0) + 1;
       }
     }
 
