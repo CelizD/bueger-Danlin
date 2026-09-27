@@ -185,6 +185,12 @@ Protecciones HTTP:
 
 Consulta `SECURITY_AUDIT.md` para el estado detallado.
 
+Documentación de seguridad y privacidad técnica:
+
+- `docs/THREAT_MODEL.md`
+- `docs/DATA_INVENTORY.md`
+- `docs/RETENTION_POLICY.md`
+
 ## Pagos
 
 Los pagos reales están **intencionalmente deshabilitados** mientras el resto del producto termina de validarse.
@@ -389,17 +395,18 @@ Documentación:
 Los siguientes bloques todavía sí están pendientes:
 
 1. ejecutar el benchmark Argon2id en el hardware objetivo y registrar el resultado;
-2. threat model + inventario de datos + política de retención;
-3. métricas, tracing, alertas y logs centralizados;
-4. runbooks de incidentes;
-5. ADRs;
-6. load/stress testing;
-7. staging y rollback probado;
-8. DAST;
-9. infraestructura real: dominio, TLS, WAF/CDN y backup offsite real;
-10. simulacro completo de pérdida del VPS;
-11. pentest prelaunch;
-12. integración completa de pagos reales.
+2. automatizar cleanup/anonimización según la política de retención;
+3. aviso de privacidad final y validación legal/fiscal antes de producción;
+4. métricas, tracing, alertas y logs centralizados;
+5. runbooks de incidentes;
+6. ADRs;
+7. load/stress testing;
+8. staging y rollback probado;
+9. DAST;
+10. infraestructura real: dominio, TLS, WAF/CDN y backup offsite real;
+11. simulacro completo de pérdida del VPS;
+12. pentest prelaunch;
+13. integración completa de pagos reales.
 
 No se planean microservicios ni Kubernetes para el MVP salvo que una necesidad técnica real lo justifique.
 
