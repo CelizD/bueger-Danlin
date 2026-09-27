@@ -7,6 +7,7 @@ import {
 import { createHash, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../database/prisma.service.js";
 import { InventoryService } from "../inventory/inventory.service.js";
+import { GroupTelegramNotificationService } from "../notifications/group-telegram-notification.service.js";
 import { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
 import type { PaymentProviderName } from "./domain/payment-provider.types.js";
 import { PaymentProviderRegistry } from "./payment-provider.registry.js";
@@ -49,6 +50,7 @@ export class PaymentsService {
     private readonly inventory: InventoryService,
     private readonly paymentProviderRegistry: PaymentProviderRegistry,
     private readonly telegram?: TelegramNotificationService,
+    private readonly groupTelegram?: GroupTelegramNotificationService,
   ) {}
 
   async createCheckout(
@@ -289,6 +291,7 @@ export class PaymentsService {
           totalCents: number;
           currency: string;
           locationLabel?: string;
+          pickupEventId: string;
         }
       | undefined;
 
@@ -432,6 +435,7 @@ export class PaymentsService {
         totalCents: order.totalCents,
         currency: order.currency,
         locationLabel: order.pickupEvent.locationLabel,
+        pickupEventId: order.pickupEvent.id,
       };
 
       return {
@@ -446,6 +450,9 @@ export class PaymentsService {
 
     if (paymentNotice) {
       this.telegram?.notifyPaymentConfirmed(paymentNotice);
+      await this.groupTelegram?.observeCompleted(
+        paymentNotice.pickupEventId,
+      );
     }
 
     return result;

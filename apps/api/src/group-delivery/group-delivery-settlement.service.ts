@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../database/prisma.service.js";
 import { InventoryService } from "../inventory/inventory.service.js";
+import { GroupTelegramNotificationService } from "../notifications/group-telegram-notification.service.js";
 
 type SettleOptions = {
   force?: boolean;
@@ -45,6 +46,7 @@ export class GroupDeliverySettlementService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly inventory: InventoryService,
+    private readonly groupTelegram?: GroupTelegramNotificationService,
   ) {}
 
   async settleExpired(now = new Date()) {
@@ -77,6 +79,8 @@ export class GroupDeliverySettlementService {
       );
     }
 
+    await this.groupTelegram?.flushPending();
+
     return {
       checked: candidates.length,
       settled: results.filter((result) => result.settled).length,
@@ -90,7 +94,7 @@ export class GroupDeliverySettlementService {
   ) {
     const now = options.now ?? new Date();
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const locked = await tx.$queryRaw<Array<{ id: string }>>`
         SELECT "id"
         FROM "PickupEvent"
@@ -276,6 +280,8 @@ export class GroupDeliverySettlementService {
           groupDeliveryFinalAssignedCents: assignedCents,
           groupDeliveryFinalFreeUnlocked:
             freeDeliveryUnlocked,
+          groupDeliveryFinalCancelledPendingOrders:
+            cancelledPendingOrders,
         },
       });
 
@@ -318,6 +324,15 @@ export class GroupDeliverySettlementService {
         cancelledPendingOrders,
       };
     });
+
+    if (
+      result.settled ||
+      result.alreadyFinalized
+    ) {
+      await this.groupTelegram?.flushEvent(eventId);
+    }
+
+    return result;
   }
 
   async assertNotFinalized(eventId: string) {

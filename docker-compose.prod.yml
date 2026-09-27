@@ -126,6 +126,8 @@ services:
       TELEGRAM_NOTIFY_READY: ${TELEGRAM_NOTIFY_READY:-true}
       TELEGRAM_NOTIFY_DELIVERED: ${TELEGRAM_NOTIFY_DELIVERED:-true}
       TELEGRAM_NOTIFY_CANCELLED: ${TELEGRAM_NOTIFY_CANCELLED:-true}
+      TELEGRAM_NOTIFY_GROUP_COMPLETED: ${TELEGRAM_NOTIFY_GROUP_COMPLETED:-true}
+      TELEGRAM_NOTIFY_GROUP_CLOSED: ${TELEGRAM_NOTIFY_GROUP_CLOSED:-true}
       TELEGRAM_BOT_TOKEN_FILE: /run/secrets/telegram-bot-token
       TELEGRAM_CHAT_ID_FILE: /run/secrets/telegram-chat-id
     volumes:
@@ -222,8 +224,17 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_RUNTIME_USER:?POSTGRES_RUNTIME_USER is required}:${POSTGRES_RUNTIME_PASSWORD:?POSTGRES_RUNTIME_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}?schema=public
+      TELEGRAM_NOTIFICATIONS_ENABLED: ${TELEGRAM_NOTIFICATIONS_ENABLED:-false}
+      TELEGRAM_NOTIFY_GROUP_COMPLETED: ${TELEGRAM_NOTIFY_GROUP_COMPLETED:-true}
+      TELEGRAM_NOTIFY_GROUP_CLOSED: ${TELEGRAM_NOTIFY_GROUP_CLOSED:-true}
+      TELEGRAM_BOT_TOKEN_FILE: /run/secrets/telegram-bot-token
+      TELEGRAM_CHAT_ID_FILE: /run/secrets/telegram-chat-id
+    volumes:
+      - ${TELEGRAM_BOT_TOKEN_FILE:-/dev/null}:/run/secrets/telegram-bot-token:ro
+      - ${TELEGRAM_CHAT_ID_FILE:-/dev/null}:/run/secrets/telegram-chat-id:ro
     networks:
       - data
+      - offsite
     security_opt:
       - no-new-privileges:true
     cap_drop:

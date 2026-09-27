@@ -12,6 +12,8 @@ const original = {
   enabled: process.env.TELEGRAM_NOTIFICATIONS_ENABLED,
   token: process.env.TELEGRAM_BOT_TOKEN,
   chatId: process.env.TELEGRAM_CHAT_ID,
+  groupCompleted: process.env.TELEGRAM_NOTIFY_GROUP_COMPLETED,
+  groupClosed: process.env.TELEGRAM_NOTIFY_GROUP_CLOSED,
 };
 
 describe("TelegramNotificationService", () => {
@@ -28,6 +30,8 @@ describe("TelegramNotificationService", () => {
       TELEGRAM_NOTIFICATIONS_ENABLED: original.enabled,
       TELEGRAM_BOT_TOKEN: original.token,
       TELEGRAM_CHAT_ID: original.chatId,
+      TELEGRAM_NOTIFY_GROUP_COMPLETED: original.groupCompleted,
+      TELEGRAM_NOTIFY_GROUP_CLOSED: original.groupClosed,
     })) {
       if (value === undefined) {
         delete process.env[key];
@@ -70,6 +74,58 @@ describe("TelegramNotificationService", () => {
     expect(body.text).toContain("Universidad");
     expect(body.text).not.toContain("cliente@example.com");
     expect(body.text).not.toContain("+52664");
+  });
+
+  it("envía resumen grupal sin PII y reporta éxito", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+        }),
+      );
+
+    const service = new TelegramNotificationService();
+
+    const sent = await service.notifyGroupClosed({
+      locationLabel: "Universidad",
+      paidOrderCount: 3,
+      minPaidOrders: 5,
+      transportCostCents: 10_000,
+      assignedCents: 10_000,
+      freeDeliveryUnlocked: false,
+      cancelledPendingOrders: 1,
+    });
+
+    expect(sent).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const body = JSON.parse(
+      String(fetchMock.mock.calls[0]?.[1]?.body),
+    );
+
+    expect(body.text).toContain("Universidad");
+    expect(body.text).toContain("3 de 5");
+    expect(body.text).toContain("$100.00");
+    expect(body.text).toContain("cancelados: 1");
+    expect(body.text).not.toContain("cliente@example.com");
+    expect(body.text).not.toContain("+52664");
+  });
+
+  it("devuelve false si Telegram rechaza el aviso grupal", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response("error", { status: 500 }),
+    );
+
+    const service = new TelegramNotificationService();
+
+    await expect(
+      service.notifyGroupCompleted({
+        locationLabel: "Cucapá",
+        paidOrderCount: 5,
+        minPaidOrders: 5,
+      }),
+    ).resolves.toBe(false);
   });
 
   it("no llama Telegram cuando está deshabilitado", () => {

@@ -17,6 +17,22 @@ type CancellationNotice = OrderNotice & {
   refundStatus?: "PENDING" | "REFUNDED" | null;
 };
 
+export type GroupCompletedNotice = {
+  locationLabel: string;
+  paidOrderCount: number;
+  minPaidOrders: number;
+};
+
+export type GroupClosedNotice = {
+  locationLabel: string;
+  paidOrderCount: number;
+  minPaidOrders: number;
+  transportCostCents: number;
+  assignedCents: number;
+  freeDeliveryUnlocked: boolean;
+  cancelledPendingOrders: number;
+};
+
 function enabled(name: string, fallback = true) {
   const value = process.env[name];
 
@@ -58,7 +74,7 @@ export class TelegramNotificationService {
   notifyOrderCreated(order: OrderNotice) {
     if (!enabled("TELEGRAM_NOTIFY_NEW_ORDER")) return;
 
-    this.dispatch(
+    void this.dispatch(
       [
         "🍔 Nuevo pedido",
         `Pedido: ${order.orderCode}`,
@@ -77,7 +93,7 @@ export class TelegramNotificationService {
   notifyPaymentConfirmed(order: OrderNotice) {
     if (!enabled("TELEGRAM_NOTIFY_PAYMENT")) return;
 
-    this.dispatch(
+    void this.dispatch(
       [
         "💳 Pago confirmado",
         `Pedido: ${order.orderCode}`,
@@ -117,7 +133,7 @@ export class TelegramNotificationService {
           ? "✅ Pedido listo"
           : "📦 Pedido entregado";
 
-    this.dispatch(
+    void this.dispatch(
       [
         heading,
         `Pedido: ${order.orderCode}`,
@@ -137,7 +153,7 @@ export class TelegramNotificationService {
           ? "⚠️ Pedido cancelado — reembolso pendiente"
           : "❌ Pedido cancelado";
 
-    this.dispatch(
+    void this.dispatch(
       [
         heading,
         `Pedido: ${order.orderCode}`,
@@ -153,7 +169,7 @@ export class TelegramNotificationService {
   }
 
   notifyTest() {
-    this.dispatch(
+    void this.dispatch(
       [
         "✅ Telegram conectado",
         "Burger Danlin puede enviar notificaciones.",
@@ -161,9 +177,51 @@ export class TelegramNotificationService {
     );
   }
 
-  private dispatch(text: string) {
+  async notifyGroupCompleted(
+    group: GroupCompletedNotice,
+  ) {
+    if (!enabled("TELEGRAM_NOTIFY_GROUP_COMPLETED")) {
+      return false;
+    }
+
+    return this.dispatch(
+      [
+        "🎉 Grupo completado",
+        `Punto: ${group.locationLabel}`,
+        `Meta: ${group.paidOrderCount} de ${group.minPaidOrders} pedidos pagados`,
+        "Envío gratis desbloqueado ✅",
+      ].join("\n"),
+    );
+  }
+
+  async notifyGroupClosed(group: GroupClosedNotice) {
+    if (!enabled("TELEGRAM_NOTIFY_GROUP_CLOSED")) {
+      return false;
+    }
+
+    const deliveryLine = group.freeDeliveryUnlocked
+      ? "Envío: gratis confirmado ✅"
+      : `Envío final a cobrar: ${money(
+          group.assignedCents,
+          "MXN",
+        )}`;
+
+    return this.dispatch(
+      [
+        "🔒 Punto de entrega cerrado",
+        `Punto: ${group.locationLabel}`,
+        `Pedidos pagados: ${group.paidOrderCount} de ${group.minPaidOrders}`,
+        `Traslado: ${money(group.transportCostCents, "MXN")}`,
+        deliveryLine,
+        `Pedidos sin pagar cancelados: ${group.cancelledPendingOrders}`,
+        "Estado: cargos de envío congelados",
+      ].join("\n"),
+    );
+  }
+
+  private async dispatch(text: string): Promise<boolean> {
     if (!enabled("TELEGRAM_NOTIFICATIONS_ENABLED", false)) {
-      return;
+      return false;
     }
 
     const token = setting("TELEGRAM_BOT_TOKEN");
@@ -173,17 +231,17 @@ export class TelegramNotificationService {
       this.logger.warn(
         "Telegram notifications are enabled but TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is missing.",
       );
-      return;
+      return false;
     }
 
-    void this.send(token, chatId, text);
+    return this.send(token, chatId, text);
   }
 
   private async send(
     token: string,
     chatId: string,
     text: string,
-  ) {
+  ): Promise<boolean> {
     const controller = new AbortController();
     const timeout = setTimeout(
       () => controller.abort(),
@@ -211,7 +269,10 @@ export class TelegramNotificationService {
         this.logger.warn(
           `Telegram sendMessage failed with status ${response.status}.`,
         );
+        return false;
       }
+
+      return true;
     } catch (error) {
       const message =
         error instanceof Error
@@ -221,6 +282,7 @@ export class TelegramNotificationService {
       this.logger.warn(
         `Telegram notification failed: ${message}`,
       );
+      return false;
     } finally {
       clearTimeout(timeout);
     }

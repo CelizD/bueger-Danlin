@@ -203,6 +203,13 @@ model PickupEvent {
   groupDeliveryFinalTransportCostCents   Int?
   groupDeliveryFinalAssignedCents        Int?
   groupDeliveryFinalFreeUnlocked         Boolean?
+  groupDeliveryFinalCancelledPendingOrders Int?
+  telegramGroupCompletedAt               DateTime?
+  telegramGroupCompletedPaidOrders       Int?
+  telegramGroupCompletedNotificationClaimedAt DateTime?
+  telegramGroupCompletedNotifiedAt       DateTime?
+  telegramGroupClosedNotificationClaimedAt DateTime?
+  telegramGroupClosedNotifiedAt          DateTime?
   status                                 PickupEventStatus @default(DRAFT)
   createdAt                 DateTime          @default(now())
   updatedAt                 DateTime          @updatedAt

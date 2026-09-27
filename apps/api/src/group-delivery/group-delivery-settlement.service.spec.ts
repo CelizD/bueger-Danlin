@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { PrismaService } from "../database/prisma.service.js";
 import type { InventoryService } from "../inventory/inventory.service.js";
+import type { GroupTelegramNotificationService } from "../notifications/group-telegram-notification.service.js";
 import {
   allocateTransportCost,
   GroupDeliverySettlementService,
@@ -102,9 +103,15 @@ describe("GroupDeliverySettlementService", () => {
       releaseOrder: vi.fn().mockResolvedValue(undefined),
     } as unknown as InventoryService;
 
+    const groupTelegram = {
+      flushEvent: vi.fn().mockResolvedValue(undefined),
+      flushPending: vi.fn().mockResolvedValue(undefined),
+    } as unknown as GroupTelegramNotificationService;
+
     const service = new GroupDeliverySettlementService(
       prisma,
       inventory,
+      groupTelegram,
     );
 
     const result = await service.settleEvent("event-1", {
@@ -140,8 +147,12 @@ describe("GroupDeliverySettlementService", () => {
         groupDeliveryFinalPaidOrders: 3,
         groupDeliveryFinalAssignedCents: 10_000,
         groupDeliveryFinalFreeUnlocked: false,
+        groupDeliveryFinalCancelledPendingOrders: 1,
       }),
     });
+    expect(groupTelegram.flushEvent).toHaveBeenCalledWith(
+      "event-1",
+    );
   });
 
   it("no recalcula un grupo ya finalizado", async () => {

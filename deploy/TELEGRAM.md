@@ -11,7 +11,10 @@ Burger Danlin usa Telegram para dos tipos de mensajes:
    - pedido listo;
    - pedido entregado;
    - pedido cancelado;
-   - reembolso completado o pendiente.
+   - reembolso completado o pendiente;
+   - grupo completado al alcanzar la meta de pedidos pagados;
+   - punto de entrega cerrado con resumen final del traslado;
+   - cantidad de pedidos sin pagar cancelados al cierre.
 
 2. **Alertas operativas desde Prometheus + Alertmanager**
    - API caída;
@@ -90,6 +93,8 @@ TELEGRAM_NOTIFY_PREPARING=false
 TELEGRAM_NOTIFY_READY=true
 TELEGRAM_NOTIFY_DELIVERED=true
 TELEGRAM_NOTIFY_CANCELLED=true
+TELEGRAM_NOTIFY_GROUP_COMPLETED=true
+TELEGRAM_NOTIFY_GROUP_CLOSED=true
 
 TELEGRAM_BOT_TOKEN_FILE=/etc/burger-danlin/telegram-bot-token
 TELEGRAM_CHAT_ID_FILE=/etc/burger-danlin/telegram-chat-id
@@ -135,6 +140,35 @@ docker compose \
   -e TELEGRAM_CHAT_ID_FILE=/run/secrets/telegram-chat-id \
   api node dist/scripts/test-telegram.js
 ```
+
+## Notificaciones grupales
+
+Cuando un punto alcanza la meta configurada, por ejemplo `5 de 5` pedidos pagados, se envía una sola notificación:
+
+```text
+🎉 Grupo completado
+Punto: Universidad
+Meta: 5 de 5 pedidos pagados
+Envío gratis desbloqueado ✅
+```
+
+Cuando el punto cierra manualmente o por horario, Telegram recibe el resumen final:
+
+```text
+🔒 Punto de entrega cerrado
+Punto: Universidad
+Pedidos pagados: 3 de 5
+Traslado: $100.00
+Envío final a cobrar: $100.00
+Pedidos sin pagar cancelados: 1
+Estado: cargos de envío congelados
+```
+
+Si el grupo alcanzó la meta, el cierre indica `Envío: gratis confirmado`.
+
+Los hitos y el estado de envío se guardan en PostgreSQL. Cada aviso utiliza un claim persistente para evitar duplicados por concurrencia. Si Telegram falla, el claim se libera y el job de cierre grupal vuelve a intentar los avisos pendientes. Los grupos ya finalizados antes de esta funcionalidad se marcan durante la migración para no enviar mensajes históricos al desplegar.
+
+No se envía PII del cliente en estos resúmenes: no incluyen nombre, teléfono, correo, token de pedido ni QR.
 
 ## 7. Levantar Alertmanager
 

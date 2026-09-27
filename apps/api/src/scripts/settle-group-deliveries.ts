@@ -4,6 +4,8 @@ import { PrismaClient } from "../generated/prisma/client.js";
 import type { PrismaService } from "../database/prisma.service.js";
 import { GroupDeliverySettlementService } from "../group-delivery/group-delivery-settlement.service.js";
 import { InventoryService } from "../inventory/inventory.service.js";
+import { GroupTelegramNotificationService } from "../notifications/group-telegram-notification.service.js";
+import { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
 
 async function main() {
   const connectionString = process.env.DATABASE_URL;
@@ -18,9 +20,15 @@ async function main() {
 
   const runtimePrisma = prisma as unknown as PrismaService;
   const inventory = new InventoryService(runtimePrisma);
+  const telegram = new TelegramNotificationService();
+  const groupTelegram = new GroupTelegramNotificationService(
+    runtimePrisma,
+    telegram,
+  );
   const settlement = new GroupDeliverySettlementService(
     runtimePrisma,
     inventory,
+    groupTelegram,
   );
 
   try {
