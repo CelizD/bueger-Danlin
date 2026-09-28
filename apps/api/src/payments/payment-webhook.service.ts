@@ -7,6 +7,7 @@ import {
 } from "@nestjs/common";
 import { createHash } from "node:crypto";
 import { PrismaService } from "../database/prisma.service.js";
+import type { Prisma } from "../generated/prisma/client.js";
 import { InventoryService } from "../inventory/inventory.service.js";
 import { GroupTelegramNotificationService } from "../notifications/group-telegram-notification.service.js";
 import { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
@@ -507,7 +508,7 @@ export class PaymentWebhookService {
         status: ProviderPaymentStatus;
         paidAt?: Date;
         refundedAt?: Date;
-        metadata?: Record<string, unknown>;
+        metadata?: Prisma.InputJsonValue;
       } = {
         status: incomingStatus,
       };
