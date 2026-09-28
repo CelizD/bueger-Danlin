@@ -131,6 +131,26 @@ export default function DashboardPage() {
               day={data.day}
             />
 
+            <div className="dashboard-history-heading">
+              <div>
+                <p className="admin-kicker">
+                  Análisis
+                </p>
+                <h2>
+                  Rendimiento e histórico
+                </h2>
+              </div>
+              <span>
+                {data.filter.selectedEvent
+                  ? "Entrega seleccionada"
+                  : "Acumulado general"}
+              </span>
+            </div>
+
+            <AdminDashboardMetrics
+              metrics={data.metrics}
+            />
+
             <AdminDashboardAnalysis
               data={data}
               maxExtraQuantity={
@@ -139,10 +159,6 @@ export default function DashboardPage() {
               maxEventRevenue={
                 maxEventRevenue
               }
-            />
-
-            <AdminDashboardMetrics
-              metrics={data.metrics}
             />
 
             <p className="dashboard-footnote">
