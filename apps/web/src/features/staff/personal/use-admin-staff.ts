@@ -311,6 +311,7 @@ export function useAdminStaff() {
   }
 
   return {
+    ...forms,
     sessionUser,
     filteredUsers,
     counts,
@@ -332,6 +333,5 @@ export function useAdminStaff() {
     resetMfa,
     openPasswordReset,
     submitPasswordReset,
-    ...forms,
   };
 }
