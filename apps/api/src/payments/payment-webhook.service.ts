@@ -80,13 +80,13 @@ function bodyHash(body: MercadoPagoWebhookBody) {
 
 function mergePaymentMetadata(
   metadata: unknown,
-  additions: Record<string, unknown>,
-) {
-  const base =
+  additions: Prisma.InputJsonObject,
+): Prisma.InputJsonObject {
+  const base: Prisma.InputJsonObject =
     metadata &&
     typeof metadata === "object" &&
     !Array.isArray(metadata)
-      ? (metadata as Record<string, unknown>)
+      ? (metadata as Prisma.InputJsonObject)
       : {};
 
   return {
