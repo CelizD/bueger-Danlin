@@ -233,6 +233,7 @@ export class PaymentWebhookService {
             | "FAILED";
           updatedAt: Date;
         }
+      | null
       | undefined;
 
     try {
