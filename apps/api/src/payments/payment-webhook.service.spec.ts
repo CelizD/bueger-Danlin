@@ -136,7 +136,7 @@ function harness(options?: {
   const prisma = {
     paymentWebhookEvent: {
       create: createEvent,
-      findUnique: vi.fn().mockResolvedValue(event),
+      findFirst: vi.fn().mockResolvedValue(event),
       updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       update: vi.fn().mockResolvedValue(undefined),
     },
