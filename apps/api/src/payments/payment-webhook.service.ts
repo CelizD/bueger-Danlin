@@ -133,13 +133,14 @@ export class PaymentWebhookService {
     const claim = await claimPaymentWebhookEvent(
       this.prisma,
       {
-      eventId,
-      replayKey,
-      resourceId,
-      requestId: input.requestId,
-      type,
-      bodyHash: hash,
-    });
+        eventId,
+        replayKey,
+        resourceId,
+        requestId: input.requestId,
+        type,
+        bodyHash: hash,
+      },
+    );
 
     if (!claim.claimed) {
       return {
