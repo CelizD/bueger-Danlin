@@ -71,6 +71,8 @@ function harness(options?: {
   canonicalAmountCents?: number;
   knownPayment?: boolean;
   eventUpdatedAt?: Date;
+  orderStatus?: string;
+  orderPaymentStatus?: string;
 }) {
   const event = {
     id: "webhook-1",
@@ -105,8 +107,9 @@ function harness(options?: {
         order: {
           id: "order-1",
           orderCode: "H-A1B2C3D4",
-          status: "PENDING_PAYMENT",
-          paymentStatus: currentStatus,
+          status: options?.orderStatus ?? "PENDING_PAYMENT",
+          paymentStatus:
+            options?.orderPaymentStatus ?? currentStatus,
           totalCents: 13_000,
           currency: "MXN",
           comboQuantity: 1,
@@ -401,6 +404,61 @@ describe("PaymentWebhookService", () => {
     });
     expect(result).toMatchObject({
       applied: false,
+      paymentStatus: "PAID",
+    });
+  });
+
+  it("no revive un pedido cancelado si Mercado Pago confirma tarde", async () => {
+    const h = harness({
+      paymentStatus: "CANCELLED",
+      canonicalStatus: "PAID",
+      orderStatus: "CANCELLED",
+      orderPaymentStatus: "CANCELLED",
+    });
+
+    const result = await h.service.handleMercadoPago(input());
+
+    expect(h.tx.payment.update).toHaveBeenCalledWith({
+      where: { id: "payment-1" },
+      data: expect.objectContaining({
+        status: "PAID",
+        paidAt: expect.any(Date),
+        metadata: expect.objectContaining({
+          latePaymentOrderStatus: "CANCELLED",
+          requiresManualRefund: true,
+        }),
+      }),
+    });
+    expect(h.tx.order.update).toHaveBeenCalledWith({
+      where: { id: "order-1" },
+      data: {
+        paymentStatus: "PAID",
+      },
+    });
+    expect(h.inventory.commitOrder).not.toHaveBeenCalled();
+    expect(h.telegram.notifyPaymentConfirmed).not.toHaveBeenCalled();
+    expect(h.groupTelegram.observeCompleted).not.toHaveBeenCalled();
+    expect(h.tx.auditLog.create).toHaveBeenCalledWith({
+      data: {
+        action: "PAYMENT_LATE_AFTER_ORDER_CLOSED",
+        entityType: "Payment",
+        entityId: "payment-1",
+        before: {
+          orderStatus: "CANCELLED",
+          paymentStatus: "CANCELLED",
+          providerStatus: "CANCELLED",
+        },
+        after: {
+          orderStatus: "CANCELLED",
+          paymentStatus: "PAID",
+          providerStatus: "PAID",
+          requiresManualRefund: true,
+          source: "WEBHOOK",
+        },
+      },
+    });
+    expect(result).toMatchObject({
+      applied: true,
       paymentStatus: "PAID",
     });
   });

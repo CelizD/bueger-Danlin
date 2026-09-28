@@ -77,6 +77,23 @@ function bodyHash(body: MercadoPagoWebhookBody) {
   return sha256(JSON.stringify(body));
 }
 
+function mergePaymentMetadata(
+  metadata: unknown,
+  additions: Record<string, unknown>,
+) {
+  const base =
+    metadata &&
+    typeof metadata === "object" &&
+    !Array.isArray(metadata)
+      ? (metadata as Record<string, unknown>)
+      : {};
+
+  return {
+    ...base,
+    ...additions,
+  };
+}
+
 function webhookEventId(
   body: MercadoPagoWebhookBody,
   resourceId: string,
@@ -481,16 +498,33 @@ export class PaymentWebhookService {
       }
 
       const now = new Date();
+      const order = current.order;
+      const latePaid =
+        incomingStatus === "PAID" &&
+        order.status !== "PENDING_PAYMENT";
+
       const paymentData: {
         status: ProviderPaymentStatus;
         paidAt?: Date;
         refundedAt?: Date;
+        metadata?: Record<string, unknown>;
       } = {
         status: incomingStatus,
       };
 
       if (incomingStatus === "PAID") {
         paymentData.paidAt = canonical.paidAt ?? now;
+
+        if (latePaid) {
+          paymentData.metadata = mergePaymentMetadata(
+            current.metadata,
+            {
+              latePaymentDetectedAt: now.toISOString(),
+              latePaymentOrderStatus: order.status,
+              requiresManualRefund: true,
+            },
+          );
+        }
       }
 
       if (incomingStatus === "REFUNDED") {
@@ -501,8 +535,6 @@ export class PaymentWebhookService {
         where: { id: current.id },
         data: paymentData,
       });
-
-      const order = current.order;
 
       if (
         incomingStatus === "PAID" &&
@@ -559,6 +591,33 @@ export class PaymentWebhookService {
           locationLabel: order.pickupEvent.locationLabel,
           pickupEventId: order.pickupEvent.id,
         };
+      } else if (latePaid) {
+        await tx.order.update({
+          where: { id: order.id },
+          data: {
+            paymentStatus: "PAID",
+          },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            action: "PAYMENT_LATE_AFTER_ORDER_CLOSED",
+            entityType: "Payment",
+            entityId: current.id,
+            before: {
+              orderStatus: order.status,
+              paymentStatus: order.paymentStatus,
+              providerStatus: currentStatus,
+            },
+            after: {
+              orderStatus: order.status,
+              paymentStatus: "PAID",
+              providerStatus: "PAID",
+              requiresManualRefund: true,
+              source: "WEBHOOK",
+            },
+          },
+        });
       } else if (
         ["PENDING", "PROCESSING", "FAILED", "CANCELLED"].includes(
           incomingStatus,

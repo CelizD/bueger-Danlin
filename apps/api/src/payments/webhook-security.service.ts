@@ -6,6 +6,10 @@ import {
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const WEBHOOK_TOLERANCE_SECONDS = 5 * 60;
+const MAX_STRIPE_SIGNATURE_HEADER = 2_048;
+const MAX_MERCADOPAGO_SIGNATURE_HEADER = 1_024;
+const MAX_MERCADOPAGO_REQUEST_ID = 128;
+const MAX_MERCADOPAGO_DATA_ID = 128;
 
 function safeEqualHex(expectedHex: string, receivedHex: string) {
   if (
@@ -70,6 +74,12 @@ export class WebhookSecurityService {
       throw new UnauthorizedException("Falta Stripe-Signature.");
     }
 
+    if (signatureHeader.length > MAX_STRIPE_SIGNATURE_HEADER) {
+      throw new BadRequestException(
+        "Stripe-Signature demasiado largo.",
+      );
+    }
+
     const parts = parseSignatureHeader(signatureHeader);
     const timestamp = parts.t?.[0];
     const signatures = parts.v1 ?? [];
@@ -112,6 +122,17 @@ export class WebhookSecurityService {
     if (!input.signatureHeader || !input.requestId || !input.dataId) {
       throw new UnauthorizedException(
         "Faltan datos de firma de Mercado Pago.",
+      );
+    }
+
+    if (
+      input.signatureHeader.length >
+        MAX_MERCADOPAGO_SIGNATURE_HEADER ||
+      input.requestId.length > MAX_MERCADOPAGO_REQUEST_ID ||
+      input.dataId.length > MAX_MERCADOPAGO_DATA_ID
+    ) {
+      throw new BadRequestException(
+        "Datos de firma de Mercado Pago demasiado largos.",
       );
     }
 

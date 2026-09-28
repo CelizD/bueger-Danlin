@@ -142,6 +142,33 @@ describe("WebhookSecurityService", () => {
     ).toBe(true);
   });
 
+  it("rechaza headers de firma Stripe demasiado largos", () => {
+    expect(() =>
+      service.verifyStripe(
+        Buffer.from("{}"),
+        "x".repeat(2_049),
+      ),
+    ).toThrow(BadRequestException);
+  });
+
+  it("rechaza headers o IDs de Mercado Pago demasiado largos", () => {
+    expect(() =>
+      service.verifyMercadoPago({
+        signatureHeader: "x".repeat(1_025),
+        requestId: "request-123",
+        dataId: "payment-123",
+      }),
+    ).toThrow(BadRequestException);
+
+    expect(() =>
+      service.verifyMercadoPago({
+        signatureHeader: "ts=1,v1=abc",
+        requestId: "r".repeat(129),
+        dataId: "payment-123",
+      }),
+    ).toThrow(BadRequestException);
+  });
+
   it("rechaza Mercado Pago cuando faltan datos de firma", () => {
     expect(() =>
       service.verifyMercadoPago({

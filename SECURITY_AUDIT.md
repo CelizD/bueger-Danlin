@@ -110,7 +110,7 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | SSRF controls | 🔵 | No existe fetch arbitrario de URLs |
 | API versionado | ✅ | `/api/v1` |
 | Webhook signature validation | ✅ | Stripe valida raw body firmado; Mercado Pago valida manifest `data.id + x-request-id + ts`; ambos usan HMAC, ventana temporal y comparación timing-safe |
-| Webhook idempotency real | ✅ | Mercado Pago persiste eventos únicos por proveedor/huella, reintenta fallidos, deduplica concurrencia y bloquea transiciones regresivas/fuera de orden |
+| Webhook idempotency real | ✅ | Mercado Pago persiste eventos únicos por proveedor/huella, reintenta fallidos, deduplica concurrencia, bloquea transiciones regresivas/fuera de orden y no revive pedidos cerrados ante pagos tardíos |
 | CSP | ✅ | CSP se aplica en producción desde Next.js |
 | Pagos reales deshabilitados por defecto | ✅ | `ENABLE_REAL_PAYMENTS=false`; doble bloqueo antes de persistencia y antes de tráfico externo |
 
@@ -174,7 +174,7 @@ Pendiente antes de habilitar pagos reales:
 13. Idempotencia en creación de pedidos y capa de pagos.
 14. Transacciones/locks para capacidad e inventario.
 15. QR sin PII y capability token hasheado.
-16. Webhook signature verification + replay window + deduplicación persistente + reconciliación canónica.
+16. Webhook signature verification + replay window + límites de headers/IDs + deduplicación persistente + reconciliación canónica + protección ante pagos tardíos.
 17. Logs HTTP estructurados.
 18. AuditLog.
 19. SAST/SCA/Gitleaks/SBOM.
