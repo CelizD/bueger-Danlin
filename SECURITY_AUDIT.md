@@ -97,7 +97,7 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | Headers API | ✅ | Helmet + HSTS prod |
 | Headers Web | ✅ | CSP prod, nosniff, DENY frame, Referrer, Permissions, COOP/CORP, HSTS |
 | Logs HTTP estructurados | ✅ | requestId, método, path, status, duración, IP y UA; sin bodies |
-| AuditLog | 🟡 | Cubre múltiples operaciones administrativas y de pedido; falta matriz formal de eventos obligatorios |
+| AuditLog | ✅ | Matriz formal en `docs/AUDIT_LOG_MATRIX.md`, eventos obligatorios protegidos por test de política y pruebas runtime en flujos críticos; sin PII/tokens en creación de pedido y pagos |
 | Logs centralizados/SIEM | 🟡 | Loki + Alloy configurados para logs Docker con retención de 30 días; falta validar ingestión y operación en el VPS real |
 | Métricas | 🟡 | API instrumentada + Prometheus + Node Exporter + dashboard Grafana preparados; falta validar targets y consumo en el VPS real |
 | Distributed tracing | 🔴 | Falta OpenTelemetry o equivalente |

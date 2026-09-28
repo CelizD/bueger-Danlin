@@ -56,6 +56,16 @@ async function cleanupFixture(fixture: CreatedFixture) {
   });
 
   const customerIds = existingOrders.map((order) => order.customerId);
+  const orderIds = existingOrders.map((order) => order.id);
+
+  if (orderIds.length > 0) {
+    await prisma.auditLog.deleteMany({
+      where: {
+        entityType: "Order",
+        entityId: { in: orderIds },
+      },
+    });
+  }
 
   await prisma.order.deleteMany({
     where: {
@@ -185,6 +195,25 @@ describe("OrdersService concurrency", () => {
     });
 
     expect(count).toBe(1);
+
+    const createdOrder = await prisma.order.findFirstOrThrow({
+      where: { pickupEventId: event.id },
+      select: { id: true },
+    });
+    const audit = await prisma.auditLog.findFirst({
+      where: {
+        action: "ORDER_CREATED",
+        entityType: "Order",
+        entityId: createdOrder.id,
+      },
+      select: { after: true },
+    });
+
+    expect(audit).not.toBeNull();
+    const serializedAudit = JSON.stringify(audit?.after);
+    expect(serializedAudit).not.toContain("Cliente prueba");
+    expect(serializedAudit).not.toContain("+526641234567");
+    expect(serializedAudit).not.toContain("verificationToken");
   });
 
   it("evita sobreventa de inventario entre eventos concurrentes distintos", async () => {

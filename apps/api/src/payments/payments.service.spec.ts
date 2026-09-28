@@ -63,9 +63,19 @@ function harness(
       update: vi.fn().mockResolvedValue(undefined),
     },
     payment: {
-      upsert: vi.fn().mockResolvedValue(undefined),
+      upsert: vi.fn().mockResolvedValue({
+        id: "payment-mock-1",
+        orderId: "order-1",
+        provider: "MOCK",
+        status: "PAID",
+        amountCents: 13000,
+        currency: "MXN",
+      }),
     },
     orderStatusHistory: {
+      create: vi.fn().mockResolvedValue(undefined),
+    },
+    auditLog: {
       create: vi.fn().mockResolvedValue(undefined),
     },
   };
@@ -291,6 +301,26 @@ describe("PaymentsService", () => {
       "order-1",
     );
     expect(tx.orderStatusHistory.create).toHaveBeenCalledTimes(1);
+    expect(tx.auditLog.create).toHaveBeenCalledWith({
+      data: {
+        action: "PAYMENT_CONFIRMED",
+        entityType: "Payment",
+        entityId: "payment-mock-1",
+        before: {
+          orderStatus: "PENDING_PAYMENT",
+          paymentStatus: "PENDING",
+        },
+        after: {
+          orderId: "order-1",
+          provider: "MOCK",
+          status: "PAID",
+          amountCents: 13000,
+          currency: "MXN",
+          orderStatus: "PAID",
+          paymentStatus: "PAID",
+        },
+      },
+    });
     expect(groupTelegram.observeCompleted).toHaveBeenCalledWith(
       "event-1",
     );
@@ -346,6 +376,9 @@ function checkoutHarness(options?: {
         options?.existingPayment ?? null,
       ),
       create: vi.fn().mockResolvedValue(createdPayment),
+    },
+    auditLog: {
+      create: vi.fn().mockResolvedValue(undefined),
     },
   };
 
@@ -434,6 +467,7 @@ describe("PaymentsService.createCheckout", () => {
 
     expect(prisma.$transaction).not.toHaveBeenCalled();
     expect(tx.payment.create).not.toHaveBeenCalled();
+    expect(tx.auditLog.create).not.toHaveBeenCalled();
     expect(createOrder).not.toHaveBeenCalled();
   });
 
@@ -487,6 +521,21 @@ describe("PaymentsService.createCheckout", () => {
         currency: "MXN",
         idempotencyKey: "mercadopago:order-1",
       }),
+    });
+
+    expect(tx.auditLog.create).toHaveBeenCalledWith({
+      data: {
+        action: "PAYMENT_CHECKOUT_CREATED",
+        entityType: "Payment",
+        entityId: "payment-1",
+        after: {
+          orderId: "order-1",
+          provider: "MERCADOPAGO",
+          status: "PENDING",
+          amountCents: 13000,
+          currency: "MXN",
+        },
+      },
     });
 
     expect(createOrder).toHaveBeenCalledTimes(1);

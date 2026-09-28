@@ -163,6 +163,21 @@ export class PaymentsService {
             },
           },
         });
+
+        await tx.auditLog.create({
+          data: {
+            action: "PAYMENT_CHECKOUT_CREATED",
+            entityType: "Payment",
+            entityId: payment.id,
+            after: {
+              orderId: order.id,
+              provider: providerForDatabase,
+              status: payment.status,
+              amountCents: payment.amountCents,
+              currency: payment.currency,
+            },
+          },
+        });
       }
 
       if (
@@ -387,7 +402,7 @@ export class PaymentsService {
         );
       }
 
-      await tx.payment.upsert({
+      const confirmedPayment = await tx.payment.upsert({
         where: { idempotencyKey },
         update: {
           status: "PAID",
@@ -405,6 +420,27 @@ export class PaymentsService {
           paidAt: now,
           metadata: {
             environment: "local",
+          },
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          action: "PAYMENT_CONFIRMED",
+          entityType: "Payment",
+          entityId: confirmedPayment.id,
+          before: {
+            orderStatus: order.status,
+            paymentStatus: order.paymentStatus,
+          },
+          after: {
+            orderId: order.id,
+            provider: confirmedPayment.provider,
+            status: confirmedPayment.status,
+            amountCents: confirmedPayment.amountCents,
+            currency: confirmedPayment.currency,
+            orderStatus: "PAID",
+            paymentStatus: "PAID",
           },
         },
       });

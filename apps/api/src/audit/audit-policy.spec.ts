@@ -1,0 +1,118 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { describe, expect, it } from "vitest";
+
+const requirements: Array<{
+  file: string;
+  actions: string[];
+}> = [
+  {
+    file: "../auth/auth.service.ts",
+    actions: [
+      "STAFF_LOGIN_FAILED",
+      "STAFF_LOGIN_LOCKED",
+      "STAFF_LOGIN_MFA_REQUIRED",
+      "STAFF_LOGIN_SUCCESS",
+      "STAFF_LOGOUT",
+    ],
+  },
+  {
+    file: "../auth/mfa.service.ts",
+    actions: [
+      "STAFF_MFA_VERIFIED",
+      "STAFF_MFA_ENROLLED",
+      "STAFF_MFA_RECOVERY_USED",
+      "STAFF_LOGIN_SUCCESS",
+    ],
+  },
+  {
+    file: "../admin/admin-staff.service.ts",
+    actions: [
+      "STAFF_USER_CREATED",
+      "STAFF_USER_UPDATED",
+      "STAFF_PASSWORD_RESET",
+      "STAFF_MFA_RESET",
+    ],
+  },
+  {
+    file: "../inventory/inventory.service.ts",
+    actions: [
+      "INVENTORY_ITEM_CREATED",
+      "INVENTORY_ITEM_UPDATED",
+      "INVENTORY_ITEM_DELETED",
+    ],
+  },
+  {
+    file: "../admin/admin-pickup-events.service.ts",
+    actions: [
+      "PICKUP_EVENT_CREATED",
+      "PICKUP_EVENT_UPDATED",
+      "PICKUP_EVENT_OPENED",
+    ],
+  },
+  {
+    file: "../group-delivery/group-delivery-settlement.service.ts",
+    actions: [
+      "ORDER_CANCELLED_AT_PICKUP_CUTOFF",
+      "GROUP_DELIVERY_FINALIZED",
+    ],
+  },
+  {
+    file: "../staff/staff-orders.service.ts",
+    actions: [
+      "ORDER_QR_DELIVERED",
+      "ORDER_STATUS_CHANGED",
+    ],
+  },
+  {
+    file: "../orders/customer-orders.service.ts",
+    actions: [
+      "CUSTOMER_ORDER_CANCELLED",
+      "CUSTOMER_ORDER_REFUNDED",
+      "CUSTOMER_REFUND_REQUESTED",
+    ],
+  },
+  {
+    file: "../orders/orders.service.ts",
+    actions: ["ORDER_CREATED"],
+  },
+  {
+    file: "../payments/payments.service.ts",
+    actions: [
+      "PAYMENT_CHECKOUT_CREATED",
+      "PAYMENT_CONFIRMED",
+    ],
+  },
+];
+
+describe("AuditLog policy", () => {
+  for (const requirement of requirements) {
+    it(`mantiene eventos obligatorios en ${requirement.file}`, () => {
+      const path = fileURLToPath(
+        new URL(requirement.file, import.meta.url),
+      );
+      const source = readFileSync(path, "utf8");
+
+      for (const action of requirement.actions) {
+        expect(source).toContain(`"${action}"`);
+      }
+    });
+  }
+
+  it("la creación de pedido no audita PII o tokens", () => {
+    const path = fileURLToPath(
+      new URL("../orders/orders.service.ts", import.meta.url),
+    );
+    const source = readFileSync(path, "utf8");
+    const start = source.indexOf('action: "ORDER_CREATED"');
+    const end = source.indexOf("});", start);
+
+    expect(start).toBeGreaterThanOrEqual(0);
+    const auditBlock = source.slice(start, end);
+
+    expect(auditBlock).not.toContain("customer.name");
+    expect(auditBlock).not.toContain("customer.phone");
+    expect(auditBlock).not.toContain("customer.email");
+    expect(auditBlock).not.toContain("verificationToken");
+  });
+});

@@ -439,6 +439,26 @@ export class OrdersService {
           },
         });
 
+        await tx.auditLog.create({
+          data: {
+            action: "ORDER_CREATED",
+            entityType: "Order",
+            entityId: order.id,
+            after: {
+              orderCode: order.orderCode,
+              pickupEventId: event.id,
+              status: order.status,
+              paymentStatus: order.paymentStatus,
+              comboQuantity: order.comboQuantity,
+              totalCents: order.totalCents,
+              currency: order.currency,
+              groupDeliveryTermsVersion:
+                GROUP_DELIVERY_TERMS_VERSION,
+              groupDeliveryTermsAccepted: true,
+            },
+          },
+        });
+
         if (reservedCombos + comboQuantity === event.maxCombos) {
           await tx.pickupEvent.update({
             where: { id: event.id },
