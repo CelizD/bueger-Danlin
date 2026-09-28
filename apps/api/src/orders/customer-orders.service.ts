@@ -1,16 +1,20 @@
 import {
-  ConflictException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from "@nestjs/common";
-import { createHash, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../database/prisma.service.js";
 import { InventoryService } from "../inventory/inventory.service.js";
 import { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
+import { cancelCustomerOrder } from "./customer-order-cancellation.js";
+import { hasRefundRequest } from "./customer-order-refund.js";
+import { assertOrderVerificationToken } from "./customer-order-security.js";
 
-const TERMINAL_STATUSES = ["DELIVERED", "CANCELLED", "REFUNDED", "NO_SHOW"] as const;
-const CAPACITY_STATUSES = ["PAID", "CONFIRMED", "PREPARING", "READY", "DELIVERED"] as const;
+const TERMINAL_STATUSES = [
+  "DELIVERED",
+  "CANCELLED",
+  "REFUNDED",
+  "NO_SHOW",
+] as const;
 
 @Injectable()
 export class CustomerOrdersService {
@@ -20,7 +24,10 @@ export class CustomerOrdersService {
     private readonly telegram?: TelegramNotificationService,
   ) {}
 
-  async getOrder(orderCodeInput: string, verificationToken: string) {
+  async getOrder(
+    orderCodeInput: string,
+    verificationToken: string,
+  ) {
     const orderCode = orderCodeInput.trim().toUpperCase();
     const order = await this.prisma.order.findUnique({
       where: { orderCode },
@@ -32,26 +39,39 @@ export class CustomerOrdersService {
         },
         items: {
           orderBy: { id: "asc" },
-          include: { modifiers: { orderBy: { id: "asc" } } },
+          include: {
+            modifiers: { orderBy: { id: "asc" } },
+          },
         },
         payments: { orderBy: { createdAt: "desc" } },
       },
     });
 
-    if (!order) throw new NotFoundException("El pedido no existe.");
-    this.assertVerificationToken(order.verificationTokenHash, verificationToken);
+    if (!order) {
+      throw new NotFoundException("El pedido no existe.");
+    }
+
+    assertOrderVerificationToken(
+      order.verificationTokenHash,
+      verificationToken,
+    );
 
     const now = new Date();
     const canCancel =
       !order.pickupEvent.groupDeliveryFinalizedAt &&
       order.pickupEvent.status !== "CLOSED" &&
       now < order.pickupEvent.closesAt &&
-      !TERMINAL_STATUSES.includes(order.status as (typeof TERMINAL_STATUSES)[number]);
+      !TERMINAL_STATUSES.includes(
+        order.status as (typeof TERMINAL_STATUSES)[number],
+      );
 
     const latestPayment = order.payments[0] ?? null;
-    const refundRequested = this.hasRefundRequest(latestPayment?.metadata);
+    const refundRequested = hasRefundRequest(
+      latestPayment?.metadata,
+    );
 
-    const finalized = !!order.pickupEvent.groupDeliveryFinalizedAt;
+    const finalized =
+      !!order.pickupEvent.groupDeliveryFinalizedAt;
 
     const paidOrderCount = finalized
       ? order.pickupEvent.groupDeliveryFinalPaidOrders ?? 0
@@ -67,7 +87,8 @@ export class CustomerOrdersService {
 
     const freeDeliveryUnlocked = finalized
       ? order.pickupEvent.groupDeliveryFinalFreeUnlocked ?? false
-      : paidOrderCount >= order.pickupEvent.freeDeliveryMinPaidOrders;
+      : paidOrderCount >=
+        order.pickupEvent.freeDeliveryMinPaidOrders;
 
     const estimatedDeliveryFeeCents = finalized
       ? order.groupDeliveryFinalFeeCents
@@ -75,7 +96,8 @@ export class CustomerOrdersService {
         ? 0
         : paidOrderCount > 0
           ? Math.ceil(
-              order.pickupEvent.transportCostCents / paidOrderCount,
+              order.pickupEvent.transportCostCents /
+                paidOrderCount,
             )
           : null;
 
@@ -108,20 +130,24 @@ export class CustomerOrdersService {
         },
       },
       groupDelivery: {
-        minPaidOrders: order.pickupEvent.freeDeliveryMinPaidOrders,
+        minPaidOrders:
+          order.pickupEvent.freeDeliveryMinPaidOrders,
         paidOrderCount,
         remainingPaidOrders: Math.max(
           0,
-          order.pickupEvent.freeDeliveryMinPaidOrders - paidOrderCount,
+          order.pickupEvent.freeDeliveryMinPaidOrders -
+            paidOrderCount,
         ),
         transportCostCents: finalized
-          ? order.pickupEvent.groupDeliveryFinalTransportCostCents ??
+          ? order.pickupEvent
+              .groupDeliveryFinalTransportCostCents ??
             order.pickupEvent.transportCostCents
           : order.pickupEvent.transportCostCents,
         estimatedDeliveryFeeCents,
         freeDeliveryUnlocked,
         finalized,
-        finalizedAt: order.pickupEvent.groupDeliveryFinalizedAt,
+        finalizedAt:
+          order.pickupEvent.groupDeliveryFinalizedAt,
         finalFeeCents: order.groupDeliveryFinalFeeCents,
       },
       items: order.items.map((item) => ({
@@ -139,350 +165,22 @@ export class CustomerOrdersService {
     };
   }
 
-  async cancel(orderCodeInput: string, verificationToken: string) {
-    const orderCode = orderCodeInput.trim().toUpperCase();
-
-    let cancellationNotice:
-      | {
-          orderCode: string;
-          comboQuantity: number;
-          totalCents: number;
-          currency: string;
-          locationLabel?: string;
-          refundStatus?: "PENDING" | "REFUNDED" | null;
-        }
-      | undefined;
-
-    const result = await this.prisma.$transaction(async (tx) => {
-      const locked = await tx.$queryRaw<Array<{ id: string }>>`
-        SELECT "id"
-        FROM "Order"
-        WHERE "orderCode" = ${orderCode}
-        FOR UPDATE
-      `;
-
-      if (locked.length === 0) {
-        throw new NotFoundException("El pedido no existe.");
-      }
-
-      const order = await tx.order.findUnique({
-        where: { orderCode },
-        include: {
-          pickupEvent: {
-          include: {
-            pickupPoint: true,
-          },
-        },
-          payments: { orderBy: { createdAt: "desc" } },
-        },
-      });
-
-      if (!order) throw new NotFoundException("El pedido no existe.");
-      this.assertVerificationToken(order.verificationTokenHash, verificationToken);
-
-      if (order.status === "CANCELLED" || order.status === "REFUNDED") {
-        const latestPayment = order.payments[0] ?? null;
-        return {
-          orderCode: order.orderCode,
-          status: order.status,
-          paymentStatus: order.paymentStatus,
-          refundStatus:
-            order.status === "REFUNDED"
-              ? "REFUNDED"
-              : this.hasRefundRequest(latestPayment?.metadata)
-                ? "PENDING"
-                : null,
-          alreadyCancelled: true,
-        };
-      }
-
-      if (order.status === "DELIVERED" || order.status === "NO_SHOW") {
-        throw new ConflictException("Este pedido ya no puede cancelarse.");
-      }
-
-      const now = new Date();
-
-      if (
-        order.pickupEvent.groupDeliveryFinalizedAt ||
-        order.pickupEvent.status === "CLOSED" ||
-        now >= order.pickupEvent.closesAt
-      ) {
-        throw new ConflictException(
-          "El punto de entrega ya cerró y este pedido ya no puede cancelarse.",
-        );
-      }
-
-      const fromStatus = order.status;
-      const paidPayment = order.payments.find((payment) => payment.status === "PAID");
-
-      if (order.paymentStatus === "PAID" && !paidPayment) {
-        throw new ConflictException(
-          "El pedido está marcado como pagado pero no se encontró el registro del pago.",
-        );
-      }
-
-      if (!paidPayment) {
-        await tx.payment.updateMany({
-          where: {
-            orderId: order.id,
-            status: { in: ["PENDING", "PROCESSING"] },
-          },
-          data: { status: "CANCELLED" },
-        });
-
-        await tx.order.update({
-          where: { id: order.id },
-          data: {
-            status: "CANCELLED",
-            paymentStatus: "CANCELLED",
-            reservationExpiresAt: null,
-            cancelledAt: now,
-          },
-        });
-
-        await tx.orderStatusHistory.create({
-          data: {
-            orderId: order.id,
-            from: fromStatus,
-            to: "CANCELLED",
-            note: "Pedido cancelado por el cliente antes del cierre.",
-          },
-        });
-
-        await tx.auditLog.create({
-          data: {
-            action: "CUSTOMER_ORDER_CANCELLED",
-            entityType: "Order",
-            entityId: order.id,
-            before: { status: fromStatus, paymentStatus: order.paymentStatus },
-            after: { status: "CANCELLED", paymentStatus: "CANCELLED" },
-          },
-        });
-
-        await this.inventory.releaseOrder(tx, order.id);
-        await this.reopenCapacityIfNeeded(tx, order.pickupEventId, order.pickupEvent);
-
-        cancellationNotice = {
-          orderCode: order.orderCode,
-          comboQuantity: order.comboQuantity,
-          totalCents: order.totalCents,
-          currency: order.currency,
-          locationLabel: order.pickupEvent.locationLabel,
-          refundStatus: null,
-        };
-
-        return {
-          orderCode: order.orderCode,
-          status: "CANCELLED",
-          paymentStatus: "CANCELLED",
-          refundStatus: null,
-          alreadyCancelled: false,
-        };
-      }
-
-      if (paidPayment.provider === "MOCK") {
-        await tx.payment.update({
-          where: { id: paidPayment.id },
-          data: {
-            status: "REFUNDED",
-            refundedAt: now,
-            metadata: this.withRefundMetadata(paidPayment.metadata, now, "completed"),
-          },
-        });
-
-        await tx.order.update({
-          where: { id: order.id },
-          data: {
-            status: "REFUNDED",
-            paymentStatus: "REFUNDED",
-            reservationExpiresAt: null,
-            cancelledAt: now,
-          },
-        });
-
-        await tx.orderStatusHistory.create({
-          data: {
-            orderId: order.id,
-            from: fromStatus,
-            to: "CANCELLED",
-            note: "Pedido cancelado por el cliente antes del cierre.",
-          },
-        });
-
-        await tx.orderStatusHistory.create({
-          data: {
-            orderId: order.id,
-            from: "CANCELLED",
-            to: "REFUNDED",
-            note: "Reembolso local simulado completado.",
-          },
-        });
-
-        await tx.auditLog.create({
-          data: {
-            action: "CUSTOMER_ORDER_REFUNDED",
-            entityType: "Order",
-            entityId: order.id,
-            before: { status: fromStatus, paymentStatus: order.paymentStatus },
-            after: { status: "REFUNDED", paymentStatus: "REFUNDED", provider: "MOCK" },
-          },
-        });
-
-        await this.inventory.releaseOrder(tx, order.id);
-        await this.reopenCapacityIfNeeded(tx, order.pickupEventId, order.pickupEvent);
-
-        cancellationNotice = {
-          orderCode: order.orderCode,
-          comboQuantity: order.comboQuantity,
-          totalCents: order.totalCents,
-          currency: order.currency,
-          locationLabel: order.pickupEvent.locationLabel,
-          refundStatus: "REFUNDED",
-        };
-
-        return {
-          orderCode: order.orderCode,
-          status: "REFUNDED",
-          paymentStatus: "REFUNDED",
-          refundStatus: "REFUNDED",
-          alreadyCancelled: false,
-        };
-      }
-
-      await tx.payment.update({
-        where: { id: paidPayment.id },
-        data: {
-          metadata: this.withRefundMetadata(paidPayment.metadata, now, "requested"),
-        },
-      });
-
-      await tx.order.update({
-        where: { id: order.id },
-        data: {
-          status: "CANCELLED",
-          reservationExpiresAt: null,
-          cancelledAt: now,
-        },
-      });
-
-      await tx.orderStatusHistory.create({
-        data: {
-          orderId: order.id,
-          from: fromStatus,
-          to: "CANCELLED",
-          note: "Pedido cancelado por el cliente; reembolso solicitado al proveedor.",
-        },
-      });
-
-      await tx.auditLog.create({
-        data: {
-          action: "CUSTOMER_REFUND_REQUESTED",
-          entityType: "Order",
-          entityId: order.id,
-          before: { status: fromStatus, paymentStatus: order.paymentStatus },
-          after: {
-            status: "CANCELLED",
-            paymentStatus: order.paymentStatus,
-            provider: paidPayment.provider,
-            refundStatus: "PENDING",
-          },
-        },
-      });
-
-      // The order is cancelled immediately even when the external refund is
-      // still pending, so its reserved/committed ingredients must return to
-      // available stock exactly once.
-      await this.inventory.releaseOrder(tx, order.id);
-      await this.reopenCapacityIfNeeded(tx, order.pickupEventId, order.pickupEvent);
-
-      cancellationNotice = {
-        orderCode: order.orderCode,
-        comboQuantity: order.comboQuantity,
-        totalCents: order.totalCents,
-        currency: order.currency,
-        locationLabel: order.pickupEvent.locationLabel,
-        refundStatus: "PENDING",
-      };
-
-      return {
-        orderCode: order.orderCode,
-        status: "CANCELLED",
-        paymentStatus: order.paymentStatus,
-        refundStatus: "PENDING",
-        alreadyCancelled: false,
-      };
-    });
+  async cancel(
+    orderCodeInput: string,
+    verificationToken: string,
+  ) {
+    const { result, cancellationNotice } =
+      await cancelCustomerOrder(
+        this.prisma,
+        this.inventory,
+        orderCodeInput,
+        verificationToken,
+      );
 
     if (cancellationNotice) {
       this.telegram?.notifyCancelled(cancellationNotice);
     }
 
     return result;
-  }
-
-  private async reopenCapacityIfNeeded(tx: any, pickupEventId: string, pickupEvent: { status: string; maxCombos: number; closesAt: Date }) {
-    if (pickupEvent.status !== "SOLD_OUT" || pickupEvent.closesAt <= new Date()) return;
-
-    const capacity = await tx.order.aggregate({
-      where: {
-        pickupEventId,
-        OR: [
-          { status: { in: [...CAPACITY_STATUSES] } },
-          {
-            status: "PENDING_PAYMENT",
-            reservationExpiresAt: { gt: new Date() },
-          },
-        ],
-      },
-      _sum: { comboQuantity: true },
-    });
-
-    if ((capacity._sum.comboQuantity ?? 0) < pickupEvent.maxCombos) {
-      await tx.pickupEvent.update({
-        where: { id: pickupEventId },
-        data: { status: "OPEN" },
-      });
-    }
-  }
-
-  private hasRefundRequest(metadata: unknown) {
-    return !!(
-      metadata &&
-      typeof metadata === "object" &&
-      !Array.isArray(metadata) &&
-      "refundRequestedAt" in metadata
-    );
-  }
-
-  private withRefundMetadata(
-    metadata: unknown,
-    now: Date,
-    status: "requested" | "completed",
-  ): any {
-    const base =
-      metadata && typeof metadata === "object" && !Array.isArray(metadata)
-        ? (metadata as Record<string, unknown>)
-        : {};
-
-    return {
-      ...base,
-      refundRequestedAt: now.toISOString(),
-      refundStatus: status,
-      ...(status === "completed" ? { refundCompletedAt: now.toISOString() } : {}),
-      refundReason: "customer_cancelled_before_cutoff",
-    };
-  }
-
-  private assertVerificationToken(expectedHash: string, verificationToken: string) {
-    const actualHash = createHash("sha256").update(verificationToken).digest("hex");
-    const expected = Buffer.from(expectedHash, "hex");
-    const actual = Buffer.from(actualHash, "hex");
-
-    if (
-      expected.length !== actual.length ||
-      !timingSafeEqual(expected, actual)
-    ) {
-      throw new UnauthorizedException("Token de pedido inválido.");
-    }
   }
 }
