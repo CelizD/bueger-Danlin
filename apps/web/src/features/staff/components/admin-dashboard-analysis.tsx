@@ -18,22 +18,6 @@ export function AdminDashboardAnalysis({
 }: Props) {
   return (
     <>
-      <div className="dashboard-history-heading">
-        <div>
-          <p className="admin-kicker">
-            Análisis
-          </p>
-          <h2>
-            Rendimiento e histórico
-          </h2>
-        </div>
-        <span>
-          {data.filter.selectedEvent
-            ? "Entrega seleccionada"
-            : "Acumulado general"}
-        </span>
-      </div>
-
       <section className="dashboard-grid">
         <article className="dashboard-panel">
           <div className="dashboard-panel-head">
