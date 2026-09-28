@@ -17,13 +17,16 @@ const requirements: Array<{
     ],
   },
   {
-    file: "../auth/mfa.service.ts",
+    file: "../auth/mfa-verification.ts",
     actions: [
       "STAFF_MFA_VERIFIED",
       "STAFF_MFA_ENROLLED",
       "STAFF_MFA_RECOVERY_USED",
-      "STAFF_LOGIN_SUCCESS",
     ],
+  },
+  {
+    file: "../auth/mfa.service.ts",
+    actions: ["STAFF_LOGIN_SUCCESS"],
   },
   {
     file: "../admin/admin-staff.service.ts",
