@@ -43,7 +43,7 @@ const requirements: Array<{
     ],
   },
   {
-    file: "../admin/admin-pickup-events.service.ts",
+    file: "../admin/admin-pickup-event-mutations.ts",
     actions: [
       "PICKUP_EVENT_CREATED",
       "PICKUP_EVENT_UPDATED",
