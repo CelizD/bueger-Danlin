@@ -1,0 +1,291 @@
+"use client";
+
+import {
+  cancelOrder,
+  confirmMockOrderPayment,
+  createOrder,
+  loadCustomerOrder,
+} from "./api";
+import { orderTokenStorageKey } from "./formatters";
+import type {
+  BurgerSelection,
+  CatalogProduct,
+  CreatedOrder,
+  PickupEvent,
+} from "./types";
+import {
+  type FormEvent,
+  useState,
+} from "react";
+
+type UseOrderCheckoutInput = {
+  event: PickupEvent | null;
+  combo: CatalogProduct | undefined;
+  coke: CatalogProduct | undefined;
+  burgers: BurgerSelection[];
+  cokes: number;
+  groupDeliveryAccepted: boolean;
+  setError: (message: string) => void;
+};
+
+export function useOrderCheckout({
+  event,
+  combo,
+  coke,
+  burgers,
+  cokes,
+  groupDeliveryAccepted,
+  setError,
+}: UseOrderCheckoutInput) {
+  const [name, setName] =
+    useState("");
+  const [phone, setPhone] =
+    useState("");
+  const [email, setEmail] =
+    useState("");
+  const [submitting, setSubmitting] =
+    useState(false);
+  const [paying, setPaying] =
+    useState(false);
+  const [canceling, setCanceling] =
+    useState(false);
+  const [
+    cancelMessage,
+    setCancelMessage,
+  ] = useState("");
+  const [
+    createdOrder,
+    setCreatedOrder,
+  ] = useState<CreatedOrder | null>(
+    null,
+  );
+
+  async function submitOrder(
+    eventSubmit:
+      FormEvent<HTMLFormElement>,
+  ) {
+    eventSubmit.preventDefault();
+
+    if (
+      !event ||
+      !combo ||
+      burgers.length === 0
+    ) {
+      return;
+    }
+
+    if (!groupDeliveryAccepted) {
+      setError(
+        "Debes aceptar las condiciones de entrega grupal antes de continuar.",
+      );
+      return;
+    }
+
+    const cleanPhone =
+      phone.replace(/\D/g, "");
+
+    if (cleanPhone.length !== 10) {
+      setError(
+        "El teléfono debe tener 10 dígitos.",
+      );
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const items = burgers.map(
+        (burger) => ({
+          productId: combo.id,
+          quantity: 1,
+          removedModifierOptionIds:
+            burger.removedIds,
+          extraModifierOptionIds:
+            burger.extraIds,
+        }),
+      );
+
+      if (cokes > 0 && coke) {
+        items.push({
+          productId: coke.id,
+          quantity: cokes,
+          removedModifierOptionIds: [],
+          extraModifierOptionIds: [],
+        });
+      }
+
+      const orderData =
+        await createOrder({
+          pickupEventId: event.id,
+          groupDeliveryTermsAccepted:
+            groupDeliveryAccepted,
+          customer: {
+            name: name.trim(),
+            phone:
+              `+52${cleanPhone}`,
+            email:
+              email.trim() ||
+              undefined,
+          },
+          items,
+        });
+
+      setCreatedOrder(orderData);
+      window.sessionStorage.setItem(
+        orderTokenStorageKey(
+          orderData.orderCode,
+        ),
+        orderData.verificationToken,
+      );
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "No se pudo crear el pedido.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function cancelCreatedOrder() {
+    if (!createdOrder) {
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        createdOrder.paymentStatus ===
+          "PAID"
+          ? "¿Cancelar este pedido? También se iniciará el reembolso."
+          : "¿Cancelar este pedido? Se liberará el cupo reservado.",
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setCanceling(true);
+    setError("");
+    setCancelMessage("");
+
+    try {
+      const data = await cancelOrder(
+        createdOrder.orderCode,
+        createdOrder.verificationToken,
+      );
+
+      setCreatedOrder((current) =>
+        current
+          ? {
+              ...current,
+              status: data.status,
+              paymentStatus:
+                data.paymentStatus,
+            }
+          : current,
+      );
+
+      setCancelMessage(
+        data.refundStatus ===
+          "REFUNDED"
+          ? "Pedido cancelado y reembolso local completado."
+          : data.refundStatus ===
+              "PENDING"
+            ? "Pedido cancelado. El reembolso está en proceso."
+            : "Pedido cancelado y cupo liberado.",
+      );
+    } catch (cancelError) {
+      setError(
+        cancelError instanceof Error
+          ? cancelError.message
+          : "No se pudo cancelar el pedido.",
+      );
+    } finally {
+      setCanceling(false);
+    }
+  }
+
+  async function confirmMockPayment() {
+    if (
+      !createdOrder ||
+      createdOrder.paymentStatus ===
+        "PAID"
+    ) {
+      return;
+    }
+
+    setPaying(true);
+    setError("");
+
+    try {
+      const data =
+        await confirmMockOrderPayment(
+          createdOrder.orderCode,
+          createdOrder.verificationToken,
+        );
+
+      setCreatedOrder((current) =>
+        current
+          ? {
+              ...current,
+              status: data.status,
+              paymentStatus:
+                data.paymentStatus,
+            }
+          : current,
+      );
+
+      try {
+        const refreshed =
+          await loadCustomerOrder(
+            createdOrder.orderCode,
+            createdOrder.verificationToken,
+          );
+
+        setCreatedOrder((current) =>
+          current
+            ? {
+                ...current,
+                status:
+                  refreshed.status,
+                paymentStatus:
+                  refreshed.paymentStatus,
+                groupDelivery:
+                  refreshed.groupDelivery,
+              }
+            : current,
+        );
+      } catch {
+        // El pago ya quedó confirmado. Si la actualización del progreso
+        // falla, "Administrar mi pedido" lo recalculará al abrirse.
+      }
+    } catch (paymentError) {
+      setError(
+        paymentError instanceof Error
+          ? paymentError.message
+          : "No se pudo confirmar el pago local.",
+      );
+    } finally {
+      setPaying(false);
+    }
+  }
+
+  return {
+    name,
+    phone,
+    email,
+    submitting,
+    paying,
+    canceling,
+    cancelMessage,
+    createdOrder,
+    setName,
+    setPhone,
+    setEmail,
+    submitOrder,
+    cancelCreatedOrder,
+    confirmMockPayment,
+  };
+}
