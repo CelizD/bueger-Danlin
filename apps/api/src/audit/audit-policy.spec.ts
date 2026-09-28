@@ -77,11 +77,12 @@ const requirements: Array<{
     actions: ["ORDER_CREATED"],
   },
   {
-    file: "../payments/payments.service.ts",
-    actions: [
-      "PAYMENT_CHECKOUT_CREATED",
-      "PAYMENT_CONFIRMED",
-    ],
+    file: "../payments/payment-checkout.ts",
+    actions: ["PAYMENT_CHECKOUT_CREATED"],
+  },
+  {
+    file: "../payments/mock-payment-confirmation.ts",
+    actions: ["PAYMENT_CONFIRMED"],
   },
   {
     file: "../payments/mercadopago-webhook-reconciliation.ts",
