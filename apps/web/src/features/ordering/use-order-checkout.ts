@@ -118,7 +118,8 @@ export function useOrderCheckout({
       const orderData =
         await createOrder({
           pickupEventId: event.id,
-          groupDeliveryTermsAccepted,
+          groupDeliveryTermsAccepted:
+            groupDeliveryAccepted,
           customer: {
             name: name.trim(),
             phone:
