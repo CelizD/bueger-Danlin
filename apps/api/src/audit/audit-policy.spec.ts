@@ -73,7 +73,7 @@ const requirements: Array<{
     ],
   },
   {
-    file: "../orders/orders.service.ts",
+    file: "../orders/order-create-transaction.ts",
     actions: ["ORDER_CREATED"],
   },
   {
@@ -110,7 +110,10 @@ describe("AuditLog policy", () => {
 
   it("la creación de pedido no audita PII o tokens", () => {
     const path = fileURLToPath(
-      new URL("../orders/orders.service.ts", import.meta.url),
+      new URL(
+        "../orders/order-create-transaction.ts",
+        import.meta.url,
+      ),
     );
     const source = readFileSync(path, "utf8");
     const start = source.indexOf('action: "ORDER_CREATED"');
