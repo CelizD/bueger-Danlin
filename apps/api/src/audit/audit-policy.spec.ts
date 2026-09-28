@@ -35,7 +35,7 @@ const requirements: Array<{
     ],
   },
   {
-    file: "../inventory/inventory.service.ts",
+    file: "../inventory/inventory-item-mutations.ts",
     actions: [
       "INVENTORY_ITEM_CREATED",
       "INVENTORY_ITEM_UPDATED",
