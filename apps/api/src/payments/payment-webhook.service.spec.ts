@@ -322,12 +322,16 @@ describe("PaymentWebhookService", () => {
       h.prisma.paymentWebhookEvent.updateMany,
     ).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: {
+        where: expect.objectContaining({
           id: "webhook-1",
-          status: {
-            in: ["RECEIVED", "FAILED"],
-          },
-        },
+          OR: expect.arrayContaining([
+            {
+              status: {
+                in: ["RECEIVED", "FAILED"],
+              },
+            },
+          ]),
+        }),
       }),
     );
     expect(result).toMatchObject({
