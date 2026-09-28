@@ -84,18 +84,11 @@ const requirements: Array<{
     ],
   },
   {
-    file: "../payments/payment-webhook.service.ts",
+    file: "../payments/mercadopago-webhook-reconciliation.ts",
     actions: [
       "PAYMENT_WEBHOOK_APPLIED",
       "PAYMENT_WEBHOOK_IGNORED",
       "PAYMENT_LATE_AFTER_ORDER_CLOSED",
-    ],
-  },
-  {
-    file: "../payments/payment-webhook.service.ts",
-    actions: [
-      "PAYMENT_WEBHOOK_APPLIED",
-      "PAYMENT_WEBHOOK_IGNORED",
       "PAYMENT_CONFIRMED",
     ],
   },
