@@ -65,7 +65,7 @@ const requirements: Array<{
     ],
   },
   {
-    file: "../orders/customer-orders.service.ts",
+    file: "../orders/customer-order-cancellation.ts",
     actions: [
       "CUSTOMER_ORDER_CANCELLED",
       "CUSTOMER_ORDER_REFUNDED",
