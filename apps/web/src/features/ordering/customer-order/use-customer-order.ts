@@ -1,0 +1,140 @@
+"use client";
+
+import {
+  useEffect,
+  useState,
+} from "react";
+import {
+  cancelCustomerOrder,
+  fetchCustomerOrder,
+} from "./api";
+import {
+  cancellationNotice,
+  resolveOrderAccessToken,
+} from "./access";
+import type { CustomerOrder } from "./types";
+
+export function useCustomerOrder(
+  orderCode: string,
+) {
+  const [token, setToken] =
+    useState("");
+  const [order, setOrder] =
+    useState<CustomerOrder | null>(
+      null,
+    );
+  const [loading, setLoading] =
+    useState(true);
+  const [canceling, setCanceling] =
+    useState(false);
+  const [error, setError] =
+    useState("");
+  const [notice, setNotice] =
+    useState("");
+
+  async function loadOrder(
+    orderToken = token,
+  ) {
+    if (!orderToken) {
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const data =
+        await fetchCustomerOrder(
+          orderCode,
+          orderToken,
+        );
+
+      setOrder(data);
+    } catch (loadError) {
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "No se pudo consultar el pedido.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    const resolvedToken =
+      resolveOrderAccessToken(
+        orderCode,
+      );
+
+    setToken(resolvedToken);
+
+    if (!resolvedToken) {
+      setLoading(false);
+      setError(
+        "Este navegador no tiene el acceso seguro de este pedido. Abre el enlace original que recibiste al comprar.",
+      );
+      return;
+    }
+
+    void loadOrder(resolvedToken);
+  }, [orderCode]);
+
+  async function cancelOrder() {
+    if (
+      !order ||
+      !token ||
+      !order.canCancel
+    ) {
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        order.paymentStatus === "PAID"
+          ? "¿Seguro que quieres cancelar? Se iniciará el reembolso del pago."
+          : "¿Seguro que quieres cancelar? El cupo reservado se liberará.",
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setCanceling(true);
+    setError("");
+    setNotice("");
+
+    try {
+      const data =
+        await cancelCustomerOrder(
+          order.orderCode,
+          token,
+        );
+
+      setNotice(
+        cancellationNotice(
+          data.refundStatus,
+        ),
+      );
+
+      await loadOrder(token);
+    } catch (cancelError) {
+      setError(
+        cancelError instanceof Error
+          ? cancelError.message
+          : "No se pudo cancelar el pedido.",
+      );
+    } finally {
+      setCanceling(false);
+    }
+  }
+
+  return {
+    order,
+    loading,
+    canceling,
+    error,
+    notice,
+    cancelOrder,
+  };
+}
