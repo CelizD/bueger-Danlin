@@ -14,25 +14,12 @@ import {
   updateAdminStaff,
 } from "./api";
 import type {
-  CreateStaffForm,
-  PasswordResetForm,
   SessionUser,
   StaffRole,
   StaffRoleFilter,
   StaffUser,
 } from "./types";
-
-const EMPTY_CREATE: CreateStaffForm = {
-  name: "",
-  email: "",
-  role: "KITCHEN",
-  password: "",
-};
-
-const EMPTY_RESET: PasswordResetForm = {
-  password: "",
-  confirm: "",
-};
+import { useStaffForms } from "./use-staff-forms";
 
 export function useAdminStaff() {
   const [sessionUser, setSessionUser] =
@@ -48,22 +35,16 @@ export function useAdminStaff() {
     useState(false);
   const [busyId, setBusyId] =
     useState<string | null>(null);
-  const [createOpen, setCreateOpen] =
-    useState(false);
-  const [resetUser, setResetUser] =
-    useState<StaffUser | null>(null);
   const [error, setError] =
     useState("");
   const [success, setSuccess] =
     useState("");
-  const [createForm, setCreateForm] =
-    useState<CreateStaffForm>(EMPTY_CREATE);
-  const [resetForm, setResetForm] =
-    useState<PasswordResetForm>(EMPTY_RESET);
   const [creating, setCreating] =
     useState(false);
   const [resetting, setResetting] =
     useState(false);
+
+  const forms = useStaffForms();
 
   async function load(
     showRefresh = false,
@@ -142,27 +123,10 @@ export function useAdminStaff() {
     [users],
   );
 
-  function setCreateField(
-    field: keyof CreateStaffForm,
-    value: string,
-  ) {
-    setCreateForm((current) => ({
-      ...current,
-      [field]:
-        field === "role"
-          ? (value as StaffRole)
-          : value,
-    }));
-  }
-
   function openCreate() {
     setError("");
     setSuccess("");
-    setCreateOpen(true);
-  }
-
-  function closeCreate() {
-    setCreateOpen(false);
+    forms.openCreate();
   }
 
   async function createUser(
@@ -177,11 +141,10 @@ export function useAdminStaff() {
     try {
       const data =
         await createAdminStaff(
-          createForm,
+          forms.createForm,
         );
 
-      setCreateForm(EMPTY_CREATE);
-      setCreateOpen(false);
+      forms.resetCreate();
       setSuccess(
         `Cuenta creada para ${data.name}.`,
       );
@@ -281,25 +244,9 @@ export function useAdminStaff() {
   function openPasswordReset(
     staff: StaffUser,
   ) {
-    setResetForm(EMPTY_RESET);
     setError("");
     setSuccess("");
-    setResetUser(staff);
-  }
-
-  function closePasswordReset() {
-    setResetUser(null);
-    setResetForm(EMPTY_RESET);
-  }
-
-  function setResetField(
-    field: keyof PasswordResetForm,
-    value: string,
-  ) {
-    setResetForm((current) => ({
-      ...current,
-      [field]: value,
-    }));
+    forms.openPasswordReset(staff);
   }
 
   async function submitPasswordReset(
@@ -308,13 +255,13 @@ export function useAdminStaff() {
   ) {
     event.preventDefault();
 
-    if (!resetUser) {
+    if (!forms.resetUser) {
       return;
     }
 
     if (
-      resetForm.password !==
-      resetForm.confirm
+      forms.resetForm.password !==
+      forms.resetForm.confirm
     ) {
       setError(
         "Las contraseñas no coinciden.",
@@ -328,17 +275,17 @@ export function useAdminStaff() {
 
     try {
       await resetAdminStaffPassword(
-        resetUser.id,
-        resetForm.password,
+        forms.resetUser.id,
+        forms.resetForm.password,
       );
 
       const changedSelf =
-        resetUser.id ===
+        forms.resetUser.id ===
         sessionUser?.sub;
       const changedName =
-        resetUser.name;
+        forms.resetUser.name;
 
-      closePasswordReset();
+      forms.closePasswordReset();
 
       if (changedSelf) {
         window.location.replace(
@@ -372,26 +319,19 @@ export function useAdminStaff() {
     loading,
     refreshing,
     busyId,
-    createOpen,
-    resetUser,
     error,
     success,
-    createForm,
-    resetForm,
     creating,
     resetting,
     setQuery,
     setRoleFilter,
     load,
-    setCreateField,
     openCreate,
-    closeCreate,
     createUser,
     updateUser,
     resetMfa,
     openPasswordReset,
-    closePasswordReset,
-    setResetField,
     submitPasswordReset,
+    ...forms,
   };
 }
