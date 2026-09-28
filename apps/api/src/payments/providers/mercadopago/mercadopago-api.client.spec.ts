@@ -112,6 +112,57 @@ describe("MercadoPagoApiClient", () => {
     });
   });
 
+  it("consulta una order por ID para reconciliar webhooks", async () => {
+    vi.stubEnv(
+      "MERCADOPAGO_ACCESS_TOKEN",
+      "APP_USR-test-access-token-long-enough",
+    );
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          id: "ORDTST01",
+          status: "processed",
+          status_detail: "accredited",
+          total_amount: "130.00",
+          total_paid_amount: "130.00",
+          external_reference: "H-A1B2C3D4",
+          last_updated_date: "2026-09-28T00:00:00.000Z",
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result =
+      await new MercadoPagoApiClient().getOrder("ORDTST01");
+
+    expect(result).toMatchObject({
+      id: "ORDTST01",
+      status: "processed",
+      total_amount: "130.00",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const [url, options] = fetchMock.mock.calls[0] as [
+      string,
+      RequestInit,
+    ];
+    expect(url).toBe(
+      "https://api.mercadopago.com/v1/orders/ORDTST01",
+    );
+    expect(options.method).toBe("GET");
+    expect(options.headers).toMatchObject({
+      authorization:
+        "Bearer APP_USR-test-access-token-long-enough",
+    });
+  });
+
   it("no llama la API si falta el access token", async () => {
     vi.stubEnv("MERCADOPAGO_ACCESS_TOKEN", "");
 
@@ -206,7 +257,7 @@ describe("MercadoPagoApiClient", () => {
     await expect(
       new MercadoPagoApiClient().createOrder(orderInput()),
     ).rejects.toThrow(
-      "Mercado Pago create order returned an invalid response",
+      "Mercado Pago order API returned an invalid response",
     );
   });
 });

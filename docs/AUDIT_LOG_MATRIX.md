@@ -75,8 +75,12 @@ El cierre manual y automático comparten `GROUP_DELIVERY_FINALIZED`.
 |---|---|---|
 | `PAYMENT_CHECKOUT_CREATED` | Payment | cliente |
 | `PAYMENT_CONFIRMED` | Payment | proveedor/mock verificado |
+| `PAYMENT_WEBHOOK_APPLIED` | Payment | webhook Mercado Pago verificado |
+| `PAYMENT_WEBHOOK_IGNORED` | Payment | webhook Mercado Pago verificado |
 
 El payload de auditoría de pagos puede guardar IDs internos, proveedor, estado, moneda e importe, pero no credenciales, URLs firmadas, secretos ni tokens.
+
+La deduplicación técnica del webhook se conserva además en `PaymentWebhookEvent`. Los eventos procesados/ignorados tienen retención técnica de 90 días; los fallidos se preservan para investigación y reintento.
 
 ## Verificación
 

@@ -109,8 +109,8 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | ASVS baseline | 🔴 | No existe matriz verificable |
 | SSRF controls | 🔵 | No existe fetch arbitrario de URLs |
 | API versionado | ✅ | `/api/v1` |
-| Webhook signature validation | ✅ | Stripe/Mercado Pago HMAC + raw body + timestamp + timingSafeEqual |
-| Webhook idempotency real | 🟡 | Arquitectura preparada; handlers reales congelados |
+| Webhook signature validation | ✅ | Stripe valida raw body firmado; Mercado Pago valida manifest `data.id + x-request-id + ts`; ambos usan HMAC, ventana temporal y comparación timing-safe |
+| Webhook idempotency real | ✅ | Mercado Pago persiste eventos únicos por proveedor/huella, reintenta fallidos, deduplica concurrencia y bloquea transiciones regresivas/fuera de orden |
 | CSP | ✅ | CSP se aplica en producción desde Next.js |
 | Pagos reales deshabilitados por defecto | ✅ | `ENABLE_REAL_PAYMENTS=false`; doble bloqueo antes de persistencia y antes de tráfico externo |
 
@@ -143,21 +143,19 @@ Estado actual:
 - `PaymentProviderRegistry` desacopla proveedor y dominio;
 - Mercado Pago Orders API client preparado;
 - creación de checkout Mercado Pago implementada;
+- webhook Mercado Pago firmado, persistente, deduplicado y reconciliado contra GET /v1/orders/{id};
+- getPayment() Mercado Pago conectado;
 - `ENABLE_REAL_PAYMENTS=false` por defecto;
 - producción puede arrancar con pagos reales deshabilitados;
 - ninguna credencial por sí sola habilita tráfico externo.
 
 Pendiente antes de habilitar pagos reales:
 
-1. webhook persistente e idempotente;
-2. deduplicación de eventos;
-3. `getPayment()`;
-4. refund real;
-5. reconciliación;
-6. sandbox end-to-end;
-7. pruebas de estados fallidos/reintentos;
-8. revisión de política operativa de expiración/refund;
-9. activar `ENABLE_REAL_PAYMENTS=true` únicamente después de validar todo lo anterior.
+1. refund real;
+2. sandbox end-to-end;
+3. revisión de política operativa de expiración/refund;
+4. prueba de reconciliación real con credenciales sandbox;
+5. activar `ENABLE_REAL_PAYMENTS=true` únicamente después de validar todo lo anterior.
 
 ## Controles fuertes actuales
 
@@ -176,7 +174,7 @@ Pendiente antes de habilitar pagos reales:
 13. Idempotencia en creación de pedidos y capa de pagos.
 14. Transacciones/locks para capacidad e inventario.
 15. QR sin PII y capability token hasheado.
-16. Webhook signature verification preparada.
+16. Webhook signature verification + replay window + deduplicación persistente + reconciliación canónica.
 17. Logs HTTP estructurados.
 18. AuditLog.
 19. SAST/SCA/Gitleaks/SBOM.

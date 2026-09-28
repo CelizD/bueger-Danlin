@@ -61,10 +61,12 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 
 - [ ] Elegir Stripe o Mercado Pago para lanzamiento.
 - [ ] Configurar credenciales reales.
-- [ ] Configurar endpoint webhook real.
-- [ ] Validar firmas.
+- [ ] Configurar en Mercado Pago el endpoint HTTPS `/api/v1/payments/webhooks/mercadopago`.
+- [x] Validación HMAC + ventana anti-replay implementada en código.
+- [x] Deduplicación persistente + recuperación de PROCESSING abandonado implementadas.
+- [x] Reconciliación canónica contra `GET /v1/orders/{id}` implementada.
 - [ ] Probar pago real en entorno permitido por el proveedor.
-- [ ] Probar reintentos/idempotencia.
+- [ ] Probar reintentos/idempotencia con credenciales sandbox.
 - [ ] Probar pago fallido.
 - [ ] Probar cancelación/refund según política.
 - [ ] Desactivar mock antes de go-live.

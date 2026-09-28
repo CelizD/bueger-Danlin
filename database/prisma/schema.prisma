@@ -54,6 +54,14 @@ enum PaymentStatus {
   PARTIALLY_REFUNDED
 }
 
+enum PaymentWebhookEventStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  IGNORED
+  FAILED
+}
+
 enum PickupEventStatus {
   DRAFT
   OPEN
@@ -329,6 +337,29 @@ model Payment {
 
   @@index([orderId, status])
   @@index([provider, externalId])
+}
+
+model PaymentWebhookEvent {
+  id            String                    @id @default(cuid())
+  provider      PaymentProvider
+  eventId       String
+  replayKey     String
+  resourceId    String
+  requestId     String?
+  type          String
+  bodyHash      String
+  status        PaymentWebhookEventStatus @default(RECEIVED)
+  attemptCount  Int                       @default(0)
+  lastError     String?
+  receivedAt    DateTime                  @default(now())
+  processedAt   DateTime?
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+
+  @@unique([provider, eventId])
+  @@unique([provider, replayKey])
+  @@index([provider, resourceId])
+  @@index([status, receivedAt])
 }
 
 model OrderStatusHistory {

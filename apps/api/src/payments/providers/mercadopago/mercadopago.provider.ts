@@ -128,11 +128,34 @@ export class MercadoPagoProvider implements PaymentProvider {
   }
 
   async getPayment(
-    _externalId: string,
+    externalId: string,
   ): Promise<GetPaymentResult> {
-    throw new Error(
-      "Mercado Pago getPayment is not connected yet",
-    );
+    const order = await this.apiClient.getOrder(externalId);
+    const amount = Number(order.total_amount);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new Error(
+        "Mercado Pago returned an invalid order amount",
+      );
+    }
+
+    const paidAtCandidate =
+      order.status === "processed" && order.last_updated_date
+        ? new Date(order.last_updated_date)
+        : null;
+    const paidAt =
+      paidAtCandidate &&
+      Number.isFinite(paidAtCandidate.getTime())
+        ? paidAtCandidate
+        : null;
+
+    return {
+      externalId: order.id,
+      status: mapOrderStatus(order),
+      amountCents: Math.round(amount * 100),
+      currency: "MXN",
+      paidAt,
+    };
   }
 
   async refund(

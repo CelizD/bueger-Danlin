@@ -48,12 +48,12 @@ function errorCode(payload: unknown) {
   return undefined;
 }
 
-function assertCreateOrderResponse(
+function assertOrderResponse(
   payload: unknown,
 ): asserts payload is MercadoPagoOrderResponse {
   if (!payload || typeof payload !== "object") {
     throw new Error(
-      "Mercado Pago create order returned an invalid response",
+      "Mercado Pago order API returned an invalid response",
     );
   }
 
@@ -62,11 +62,10 @@ function assertCreateOrderResponse(
   if (
     typeof record.id !== "string" ||
     typeof record.status !== "string" ||
-    typeof record.checkout_url !== "string" ||
     typeof record.total_amount !== "string"
   ) {
     throw new Error(
-      "Mercado Pago create order returned an invalid response",
+      "Mercado Pago order API returned an invalid response",
     );
   }
 }
@@ -108,8 +107,51 @@ export class MercadoPagoApiClient {
       );
     }
 
-    assertCreateOrderResponse(payload);
+    assertOrderResponse(payload);
 
+    if (typeof payload.checkout_url !== "string") {
+      throw new Error(
+        "Mercado Pago create order returned no checkout URL",
+      );
+    }
+
+    return payload;
+  }
+
+  async getOrder(externalId: string): Promise<MercadoPagoOrderResponse> {
+    assertRealPaymentsEnabled();
+
+    const accessToken = requireAccessToken();
+    const id = externalId.trim();
+
+    if (!id || id.length > 128) {
+      throw new Error("Mercado Pago order id is invalid");
+    }
+
+    const response = await fetch(
+      `${MERCADO_PAGO_API_BASE_URL}/v1/orders/${encodeURIComponent(id)}`,
+      {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+          authorization: `Bearer ${accessToken}`,
+        },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      },
+    );
+
+    const payload = await response.json().catch(() => undefined);
+
+    if (!response.ok) {
+      const code = errorCode(payload);
+      const suffix = code ? `: ${code}` : "";
+
+      throw new Error(
+        `Mercado Pago get order failed (${response.status}${suffix})`,
+      );
+    }
+
+    assertOrderResponse(payload);
     return payload;
   }
 }

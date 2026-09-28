@@ -24,6 +24,7 @@ function harness() {
     .mockResolvedValueOnce(4)
     .mockResolvedValueOnce(2);
   const orderCount = vi.fn().mockResolvedValue(1);
+  const webhookCount = vi.fn().mockResolvedValue(3);
 
   const customerUpdate = vi.fn().mockResolvedValue(undefined);
   const paymentUpdateMany = vi
@@ -63,6 +64,12 @@ function harness() {
     },
     order: {
       count: orderCount,
+    },
+    paymentWebhookEvent: {
+      count: webhookCount,
+      deleteMany: vi
+        .fn()
+        .mockResolvedValue({ count: 3 }),
     },
     $transaction: vi.fn(
       async (
@@ -141,6 +148,7 @@ describe("retention policy", () => {
       orphanCustomersToDelete: 1,
       auditLogsToDelete: 6,
       staleOperationalOrders: 1,
+      paymentWebhookEventsToDelete: 3,
     });
     expect(prisma.$transaction).not.toHaveBeenCalled();
     expect(
@@ -177,11 +185,15 @@ describe("retention policy", () => {
     expect(
       prisma.auditLog.deleteMany,
     ).toHaveBeenCalledTimes(2);
+    expect(
+      prisma.paymentWebhookEvent.deleteMany,
+    ).toHaveBeenCalledTimes(1);
     expect(report.result).toEqual({
       customersAnonymized: 1,
       paymentMetadataCleared: 2,
       orphanCustomersDeleted: 1,
       auditLogsDeleted: 6,
+      paymentWebhookEventsDeleted: 3,
       staleOperationalOrders: 1,
     });
   });

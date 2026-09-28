@@ -23,9 +23,11 @@ export interface MercadoPagoOrderResponse {
   id: string;
   status: string;
   status_detail?: string;
-  checkout_url: string;
+  checkout_url?: string;
   total_amount: string;
+  total_paid_amount?: string;
   external_reference?: string;
+  last_updated_date?: string;
 }
 
 export interface MercadoPagoCreateOrderInput {

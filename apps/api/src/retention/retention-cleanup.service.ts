@@ -10,6 +10,7 @@ export const RETENTION = {
   orphanCustomerDays: 30,
   auditDays: 365,
   securityAuditDays: 180,
+  paymentWebhookDays: 90,
 } as const;
 
 export const ANONYMIZED_CUSTOMER = {
@@ -35,6 +36,7 @@ export function retentionCutoffs(now = new Date()) {
     orphanCustomer: daysAgo(now, RETENTION.orphanCustomerDays),
     audit: daysAgo(now, RETENTION.auditDays),
     securityAudit: daysAgo(now, RETENTION.securityAuditDays),
+    paymentWebhook: daysAgo(now, RETENTION.paymentWebhookDays),
   };
 }
 
@@ -119,6 +121,7 @@ export class RetentionCleanupService {
       auditLogs,
       securityAuditLogs,
       staleOperationalOrders,
+      paymentWebhookEvents,
     ] = await Promise.all([
       this.prisma.customer.count({
         where: customerWhere,
@@ -151,6 +154,12 @@ export class RetentionCleanupService {
           createdAt: { lt: cutoffs.historical },
         },
       }),
+      this.prisma.paymentWebhookEvent.count({
+        where: {
+          receivedAt: { lt: cutoffs.paymentWebhook },
+          status: { in: ["PROCESSED", "IGNORED"] },
+        },
+      }),
     ]);
 
     return {
@@ -168,6 +177,7 @@ export class RetentionCleanupService {
         auditLogsToDelete:
           auditLogs + securityAuditLogs,
         staleOperationalOrders,
+        paymentWebhookEventsToDelete: paymentWebhookEvents,
       },
     };
   }
@@ -253,6 +263,14 @@ export class RetentionCleanupService {
         },
       });
 
+    const deletedPaymentWebhookEvents =
+      await this.prisma.paymentWebhookEvent.deleteMany({
+        where: {
+          receivedAt: { lt: cutoffs.paymentWebhook },
+          status: { in: ["PROCESSED", "IGNORED"] },
+        },
+      });
+
     const staleOperationalOrders =
       await this.prisma.order.count({
         where: {
@@ -274,6 +292,8 @@ export class RetentionCleanupService {
         auditLogsDeleted:
           deletedSecurityAuditLogs.count +
           deletedOldAuditLogs.count,
+        paymentWebhookEventsDeleted:
+          deletedPaymentWebhookEvents.count,
         staleOperationalOrders,
       },
     };

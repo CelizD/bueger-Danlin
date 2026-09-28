@@ -23,13 +23,25 @@ function harness() {
     external_reference: "H-A1B2C3D4",
   });
 
+  const getOrder = vi.fn().mockResolvedValue({
+    id: "ORDTST01",
+    status: "processed",
+    status_detail: "accredited",
+    total_amount: "130.00",
+    total_paid_amount: "130.00",
+    external_reference: "H-A1B2C3D4",
+    last_updated_date: "2026-09-28T00:00:00.000Z",
+  });
+
   const apiClient = {
     createOrder,
+    getOrder,
   } as unknown as MercadoPagoApiClient;
 
   return {
     provider: new MercadoPagoProvider(apiClient),
     createOrder,
+    getOrder,
   };
 }
 
@@ -134,14 +146,24 @@ describe("MercadoPagoProvider", () => {
     expect(createOrder).not.toHaveBeenCalled();
   });
 
-  it("mantiene getPayment y refund bloqueados por ahora", async () => {
-    const { provider } = harness();
+  it("consulta el estado canónico de una order", async () => {
+    const { provider, getOrder } = harness();
 
     await expect(
       provider.getPayment("ORDTST01"),
-    ).rejects.toThrow(
-      "Mercado Pago getPayment is not connected yet",
-    );
+    ).resolves.toEqual({
+      externalId: "ORDTST01",
+      status: "PAID",
+      amountCents: 13000,
+      currency: "MXN",
+      paidAt: new Date("2026-09-28T00:00:00.000Z"),
+    });
+
+    expect(getOrder).toHaveBeenCalledWith("ORDTST01");
+  });
+
+  it("mantiene refund bloqueado por ahora", async () => {
+    const { provider } = harness();
 
     await expect(
       provider.refund({

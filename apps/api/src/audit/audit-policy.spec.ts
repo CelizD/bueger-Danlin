@@ -83,6 +83,14 @@ const requirements: Array<{
       "PAYMENT_CONFIRMED",
     ],
   },
+  {
+    file: "../payments/payment-webhook.service.ts",
+    actions: [
+      "PAYMENT_WEBHOOK_APPLIED",
+      "PAYMENT_WEBHOOK_IGNORED",
+      "PAYMENT_CONFIRMED",
+    ],
+  },
 ];
 
 describe("AuditLog policy", () => {

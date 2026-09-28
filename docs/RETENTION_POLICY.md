@@ -29,6 +29,7 @@ Esta es una política técnica de ingeniería. Los plazos legales/fiscales aplic
 | Customer sin pedidos relacionados | 30 días | eliminar |
 | Payment técnico no completado | 90 días | eliminar salvo investigación/reconciliación |
 | Payment completado/refund | alineado al pedido/obligación financiera | eliminar metadata innecesaria antes |
+| PaymentWebhookEvent procesado/ignorado | 90 días | eliminar; conservar FAILED hasta resolver/reintentar |
 | AuditLog | 12 meses | purgar o archivar con acceso restringido |
 | HTTP access/error logs | 30 días | rotar y eliminar |
 | Frontend telemetry | 30 días | rotar y eliminar |
@@ -81,8 +82,8 @@ Al desactivar/eliminar MFA:
 
 ### Sesiones
 
-Los JWT no se persisten en la base actual.
-La expiración del token define su vida máxima y el credentialVersion permite invalidación por cambio de credencial.
+Los JWT/cookies no se guardan en texto en la base. Se persiste únicamente `StaffSession` con ID opaco, usuario, versión de credencial, expiración y revocación.
+Logout marca `revokedAt` y el guard rechaza inmediatamente la sesión aunque el JWT aún no haya expirado.
 
 ## 6. Logs
 
@@ -140,7 +141,8 @@ Implementado en el repositorio:
 8. tests de dry-run, ventanas de retención y aplicación;
 9. servicio Docker de producción con usuario DB runtime de mínimo privilegio;
 10. timer systemd diario preparado;
-11. backup local alineado a 7 días.
+11. backup local alineado a 7 días;
+12. purga de `PaymentWebhookEvent` procesados/ignorados a 90 días; los FAILED se conservan.
 
 Pendiente antes de considerar el ciclo de vida completo cerrado:
 
