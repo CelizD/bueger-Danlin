@@ -1,6 +1,12 @@
 "use client";
 
 import { loadOrderingData } from "./api";
+import {
+  appendBurger,
+  burgersForPickupSelection,
+  toggleExtraBurger,
+  toggleRemovedBurger,
+} from "./builder";
 import { newBurger } from "./formatters";
 import {
   availableComboLimit,
@@ -20,12 +26,6 @@ import {
   useMemo,
   useState,
 } from "react";
-
-const EMPTY_INVENTORY: InventoryAvailability = {
-  items: [],
-  productLimits: {},
-  modifierLimits: {},
-};
 
 export function useOrderingSession(
   setError: (message: string) => void,
@@ -216,28 +216,14 @@ export function useOrderingSession(
     setEvent(nextEvent);
     setGroupDeliveryAccepted(false);
     setError("");
-    setBurgers((current) => {
-      if (nextLimit <= 0) {
-        return [];
-      }
-
-      if (current.length === 0) {
-        return [
-          newBurger(
-            unavailableIncludedModifierIds(
-              combo,
-              inventory ??
-                EMPTY_INVENTORY,
-            ),
-          ),
-        ];
-      }
-
-      return current.slice(
-        0,
+    setBurgers((current) =>
+      burgersForPickupSelection(
+        current,
         nextLimit,
-      );
-    });
+        combo,
+        inventory,
+      ),
+    );
 
     const url = new URL(
       window.location.href,
@@ -257,121 +243,40 @@ export function useOrderingSession(
     burgerId: string,
     optionId: string,
   ) {
-    const limit =
-      inventory?.modifierLimits[
-        optionId
-      ];
-    const burger = burgers.find(
-      (item) =>
-        item.localId === burgerId,
-    );
-    const tryingToInclude =
-      burger?.removedIds.includes(
+    const result =
+      toggleRemovedBurger(
+        burgers,
+        burgerId,
         optionId,
-      ) ?? false;
+        inventory,
+      );
 
-    if (
-      tryingToInclude &&
-      limit !== undefined
-    ) {
-      const includedElsewhere =
-        burgers.filter(
-          (item) =>
-            item.localId !==
-              burgerId &&
-            !item.removedIds.includes(
-              optionId,
-            ),
-        ).length;
-
-      if (
-        includedElsewhere >= limit
-      ) {
-        setError(
-          "Ese ingrediente ya no tiene inventario disponible.",
-        );
-        return;
-      }
+    if (result.error) {
+      setError(result.error);
+      return;
     }
 
-    setBurgers((current) =>
-      current.map((burgerItem) =>
-        burgerItem.localId === burgerId
-          ? {
-              ...burgerItem,
-              removedIds:
-                burgerItem.removedIds.includes(
-                  optionId,
-                )
-                  ? burgerItem.removedIds.filter(
-                      (id) =>
-                        id !== optionId,
-                    )
-                  : [
-                      ...burgerItem.removedIds,
-                      optionId,
-                    ],
-            }
-          : burgerItem,
-      ),
-    );
+    setBurgers(result.burgers);
   }
 
   function toggleExtra(
     burgerId: string,
     optionId: string,
   ) {
-    const limit =
-      inventory?.modifierLimits[
-        optionId
-      ];
-    const selectedCount =
-      burgers.filter((burger) =>
-        burger.extraIds.includes(
-          optionId,
-        ),
-      ).length;
-    const burger = burgers.find(
-      (item) =>
-        item.localId === burgerId,
-    );
-    const alreadySelected =
-      burger?.extraIds.includes(
+    const result =
+      toggleExtraBurger(
+        burgers,
+        burgerId,
         optionId,
-      ) ?? false;
-
-    if (
-      !alreadySelected &&
-      limit !== undefined &&
-      selectedCount >= limit
-    ) {
-      setError(
-        "Ese extra ya no tiene inventario disponible.",
+        inventory,
       );
+
+    if (result.error) {
+      setError(result.error);
       return;
     }
 
-    setBurgers((current) =>
-      current.map((burgerItem) =>
-        burgerItem.localId === burgerId
-          ? {
-              ...burgerItem,
-              extraIds:
-                burgerItem.extraIds.includes(
-                  optionId,
-                )
-                  ? burgerItem.extraIds.filter(
-                      (id) =>
-                        id !== optionId,
-                    )
-                  : [
-                      ...burgerItem.extraIds,
-                      optionId,
-                    ],
-            }
-          : burgerItem,
-      ),
-    );
+    setBurgers(result.burgers);
   }
 
   function addBurger() {
@@ -383,40 +288,13 @@ export function useOrderingSession(
       return;
     }
 
-    const removedForNewBurger =
-      removableOptions
-        .filter((option) => {
-          const limit =
-            inventory?.modifierLimits[
-              option.id
-            ];
-
-          if (limit === undefined) {
-            return false;
-          }
-
-          const currentlyIncluded =
-            burgers.filter(
-              (burger) =>
-                !burger.removedIds.includes(
-                  option.id,
-                ),
-            ).length;
-
-          return (
-            currentlyIncluded >= limit
-          );
-        })
-        .map(
-          (option) => option.id,
-        );
-
-    setBurgers((current) => [
-      ...current,
-      newBurger(
-        removedForNewBurger,
+    setBurgers(
+      appendBurger(
+        burgers,
+        removableOptions,
+        inventory,
       ),
-    ]);
+    );
   }
 
   function removeBurger(
