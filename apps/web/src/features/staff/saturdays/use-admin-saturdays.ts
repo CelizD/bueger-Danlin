@@ -1,18 +1,18 @@
 "use client";
 
 import {
-  API_URL,
-  apiFetch,
-} from "@/lib/api/browser";
-import {
   type FormEvent,
   useEffect,
   useMemo,
   useState,
 } from "react";
 import {
+  fetchAdminSaturdays,
+  saveAdminPickupEvent,
+  toggleAdminPickupEvent,
+} from "./api";
+import {
   nextSaturdayDefaults,
-  tijuanaIso,
   tijuanaParts,
 } from "./date-utils";
 import type {
@@ -61,55 +61,18 @@ export function useAdminSaturdays() {
     }
 
     try {
-      const me = await apiFetch(
-        API_URL + "/auth/me",
-        {
-          credentials: "include",
-          cache: "no-store",
-        },
-      );
+      const result =
+        await fetchAdminSaturdays();
 
-      if (me.status === 401) {
+      if (!result.authorized) {
         window.location.replace(
           "/admin/login",
         );
         return;
       }
 
-      const meData =
-        await me.json();
-
-      if (
-        !me.ok ||
-        meData.user.role !== "ADMIN"
-      ) {
-        window.location.replace(
-          "/admin/login",
-        );
-        return;
-      }
-
-      setUser(meData.user);
-
-      const response =
-        await apiFetch(
-          API_URL +
-            "/admin/pickup-events",
-          {
-            credentials: "include",
-            cache: "no-store",
-          },
-        );
-
-      if (!response.ok) {
-        throw new Error(
-          "No se pudieron cargar las fechas de entrega.",
-        );
-      }
-
-      setEvents(
-        await response.json(),
-      );
+      setUser(result.user);
+      setEvents(result.events);
       setError("");
     } catch (loadError) {
       setError(
@@ -212,94 +175,13 @@ export function useAdminSaturdays() {
     setSuccess("");
 
     try {
-      const startsAtIso =
-        tijuanaIso(
-          form.pickupDate,
-          form.pickupTime,
-        );
-      const closesAtIso =
-        tijuanaIso(
-          form.closeDate,
-          form.closeTime,
-        );
-      const startsAt =
-        new Date(startsAtIso);
-      const closesAt =
-        new Date(closesAtIso);
-      const maxCombos =
-        Number(form.maxCombos);
-
-      if (
-        Number.isNaN(
-          startsAt.getTime(),
-        ) ||
-        Number.isNaN(
-          closesAt.getTime(),
-        ) ||
-        !Number.isInteger(
-          maxCombos,
-        )
-      ) {
-        throw new Error(
-          "Revisa la fecha, hora y límite de combos.",
-        );
-      }
-
-      const response =
-        await apiFetch(
-          editingId
-            ? API_URL +
-                "/admin/pickup-events/" +
-                editingId
-            : API_URL +
-                "/admin/pickup-events",
-          {
-            method:
-              editingId
-                ? "PATCH"
-                : "POST",
-            credentials:
-              "include",
-            headers: {
-              "content-type":
-                "application/json",
-            },
-            body: JSON.stringify({
-              locationLabel:
-                form.locationLabel.trim(),
-              startsAt:
-                startsAtIso,
-              closesAt:
-                closesAtIso,
-              maxCombos,
-            }),
-          },
+      const message =
+        await saveAdminPickupEvent(
+          editingId,
+          form,
         );
 
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-        const message =
-          Array.isArray(
-            data.message,
-          )
-            ? data.message.join(
-                " ",
-              )
-            : data.message;
-
-        throw new Error(
-          message ||
-            "No se pudo guardar la entrega.",
-        );
-      }
-
-      setSuccess(
-        editingId
-          ? "La entrega se actualizó correctamente."
-          : "La nueva entrega se creó como borrador.",
-      );
+      setSuccess(message);
       closeForm();
       await load();
     } catch (saveError) {
@@ -316,57 +198,17 @@ export function useAdminSaturdays() {
   async function changeOpenState(
     event: PickupEvent,
   ) {
-    const shouldClose =
-      event.status === "OPEN" ||
-      event.status ===
-        "SOLD_OUT";
-
     setBusyId(event.id);
     setError("");
     setSuccess("");
 
     try {
-      const response =
-        await apiFetch(
-          API_URL +
-            "/admin/pickup-events/" +
-            event.id +
-            (shouldClose
-              ? "/close"
-              : "/open"),
-          {
-            method: "POST",
-            credentials:
-              "include",
-          },
+      const message =
+        await toggleAdminPickupEvent(
+          event,
         );
 
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-        const message =
-          Array.isArray(
-            data.message,
-          )
-            ? data.message.join(
-                " ",
-              )
-            : data.message;
-
-        throw new Error(
-          message ||
-            (shouldClose
-              ? "No se pudieron cerrar los pedidos."
-              : "No se pudieron abrir los pedidos."),
-        );
-      }
-
-      setSuccess(
-        shouldClose
-          ? "Pedidos cerrados para esa fecha."
-          : "Pedidos abiertos. Esa es ahora la fecha activa para clientes.",
-      );
+      setSuccess(message);
       await load();
     } catch (stateError) {
       setError(
