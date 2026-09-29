@@ -175,14 +175,16 @@ describe("AdminDashboardService", () => {
       eventId: "event-universidad",
       paidOrders: 2,
       combosPaid: 3,
+      paidComboCount: 3,
       combosToPrepare: 3,
-      remainingPaidCombos: 3,
+      remainingPaidCombos: 2,
       estimatedFeeCents: 5_000,
       finalized: false,
     });
     expect(result.day?.groups[1]).toMatchObject({
       eventId: "event-cucapa",
       paidOrders: 2,
+      paidComboCount: 2,
       readyCombos: 1,
       finalized: true,
       cashToCollectCents: 10_000,
