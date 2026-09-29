@@ -88,7 +88,7 @@ export class PickupEventsService {
 
         const freeDeliveryUnlocked =
           paidOrderCount >=
-          event.freeDeliveryMinPaidOrders;
+          event.freeDeliveryMinPaidCombos;
 
         const estimatedDeliveryFeeCents =
           freeDeliveryUnlocked
@@ -125,11 +125,11 @@ export class PickupEventsService {
           status: nextStatus,
           groupDelivery: {
             minPaidOrders:
-              event.freeDeliveryMinPaidOrders,
+              event.freeDeliveryMinPaidCombos,
             paidOrderCount,
             remainingPaidOrders: Math.max(
               0,
-              event.freeDeliveryMinPaidOrders -
+              event.freeDeliveryMinPaidCombos -
                 paidOrderCount,
             ),
             transportCostCents:
