@@ -112,7 +112,10 @@ describe("CustomerOrdersService.getOrder", () => {
             },
           },
         }),
-        count: vi.fn().mockResolvedValue(4),
+        findMany: vi.fn().mockResolvedValue([
+          { comboQuantity: 2 },
+          { comboQuantity: 2 },
+        ]),
       },
     } as unknown as PrismaService;
 
@@ -128,10 +131,10 @@ describe("CustomerOrdersService.getOrder", () => {
 
     expect(result.groupDelivery).toEqual({
       minPaidCombos: 5,
-      paidOrderCount: 4,
+      paidComboCount: 4,
       remainingPaidCombos: 1,
       transportCostCents: 10_000,
-      estimatedDeliveryFeeCents: 2_500,
+      estimatedDeliveryFeeCents: 5_000,
       freeDeliveryUnlocked: false,
       finalized: false,
       finalizedAt: undefined,
@@ -182,7 +185,7 @@ describe("CustomerOrdersService.getOrder", () => {
             },
           },
         }),
-        count: vi.fn(),
+        findMany: vi.fn(),
       },
     } as unknown as PrismaService;
 
@@ -198,7 +201,7 @@ describe("CustomerOrdersService.getOrder", () => {
 
     expect(result.groupDelivery).toEqual({
       minPaidCombos: 5,
-      paidOrderCount: 3,
+      paidComboCount: 3,
       remainingPaidCombos: 2,
       transportCostCents: 10_000,
       estimatedDeliveryFeeCents: 3_334,
@@ -207,7 +210,7 @@ describe("CustomerOrdersService.getOrder", () => {
       finalizedAt,
       finalFeeCents: 3_334,
     });
-    expect(prisma.order.count).not.toHaveBeenCalled();
+    expect(prisma.order.findMany).not.toHaveBeenCalled();
   });
 });
 
