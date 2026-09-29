@@ -38,10 +38,11 @@ export type AdminDayPanelData = {
     activeOrders: number;
     paidOrders: number;
     combosPaid: number;
+    paidComboCount: number;
     combosToPrepare: number;
     readyCombos: number;
-    minPaidOrders: number;
-    remainingPaidOrders: number;
+    minPaidCombos: number;
+    remainingPaidCombos: number;
     transportCostCents: number;
     estimatedFeeCents: number | null;
     freeDeliveryUnlocked: boolean;
@@ -166,7 +167,7 @@ export function AdminDayPanel({ day }: Props) {
                 <div className="admin-day-group-copy">
                   <strong>{group.pickupPoint.name}</strong>
                   <span>
-                    {group.paidOrders} de {group.minPaidOrders} pagados
+                    {group.paidComboCount} de {group.minPaidCombos} combos pagados
                   </span>
                   {group.pickupPoint.address && (
                     <small>{group.pickupPoint.address}</small>
@@ -215,8 +216,8 @@ export function AdminDayPanel({ day }: Props) {
                             ) + " c/u"}
                       </strong>
                       <small>
-                        Faltan {group.remainingPaidOrders} pedido
-                        {group.remainingPaidOrders === 1 ? "" : "s"}
+                        Faltan {group.remainingPaidCombos} combo
+                        {group.remainingPaidCombos === 1 ? "" : "s"}
                       </small>
                     </>
                   )}
