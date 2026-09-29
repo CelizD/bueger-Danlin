@@ -59,9 +59,16 @@ describe("GroupDeliverySettlementService", () => {
     };
 
     const paidOrders = [
-      { id: "paid-a", createdAt: new Date("2026-10-01T01:00:00Z") },
-      { id: "paid-b", createdAt: new Date("2026-10-01T02:00:00Z") },
-      { id: "paid-c", createdAt: new Date("2026-10-01T03:00:00Z") },
+      {
+        id: "paid-a",
+        comboQuantity: 3,
+        createdAt: new Date("2026-10-01T01:00:00Z"),
+      },
+      {
+        id: "paid-b",
+        comboQuantity: 2,
+        createdAt: new Date("2026-10-01T02:00:00Z"),
+      },
     ];
 
     const tx = {
@@ -121,9 +128,10 @@ describe("GroupDeliverySettlementService", () => {
 
     expect(result).toMatchObject({
       settled: true,
-      paidOrderCount: 3,
-      freeDeliveryUnlocked: false,
-      assignedCents: 10_000,
+      paidOrderCount: 2,
+      paidComboCount: 5,
+      freeDeliveryUnlocked: true,
+      assignedCents: 0,
       cancelledPendingOrders: 1,
     });
 
@@ -138,15 +146,15 @@ describe("GroupDeliverySettlementService", () => {
 
     expect(
       paidUpdates.map((call) => call.data.groupDeliveryFinalFeeCents),
-    ).toEqual([3_334, 3_333, 3_333]);
+    ).toEqual([0, 0]);
 
     expect(tx.pickupEvent.update).toHaveBeenCalledWith({
       where: { id: "event-1" },
       data: expect.objectContaining({
         status: "CLOSED",
-        groupDeliveryFinalPaidCombos: 3,
-        groupDeliveryFinalAssignedCents: 10_000,
-        groupDeliveryFinalFreeUnlocked: false,
+        groupDeliveryFinalPaidCombos: 5,
+        groupDeliveryFinalAssignedCents: 0,
+        groupDeliveryFinalFreeUnlocked: true,
         groupDeliveryFinalCancelledPendingOrders: 1,
       }),
     });
@@ -207,7 +215,7 @@ describe("GroupDeliverySettlementService", () => {
     expect(result).toMatchObject({
       settled: false,
       alreadyFinalized: true,
-      paidOrderCount: 4,
+      paidComboCount: 4,
       assignedCents: 10_000,
     });
     expect(tx.order.findMany).not.toHaveBeenCalled();
