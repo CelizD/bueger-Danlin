@@ -52,7 +52,7 @@ export class UpdatePickupEventDto {
   @IsInt()
   @Min(1)
   @Max(100)
-  freeDeliveryMinPaidOrders?: number;
+  freeDeliveryMinPaidCombos?: number;
 
   @IsOptional()
   @IsInt()
