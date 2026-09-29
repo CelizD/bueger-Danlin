@@ -27,6 +27,11 @@ export interface CreateCheckoutInput {
   idempotencyKey: string;
   expiresAt?: Date | null;
   customer: PaymentCustomerInput;
+  returnUrls?: {
+    successUrl: string;
+    failureUrl: string;
+    pendingUrl: string;
+  };
 }
 
 export interface CreateCheckoutResult {
