@@ -40,7 +40,7 @@ describe("ordering helpers", () => {
       },
       groupDelivery: {
         minPaidCombos: 5,
-        paidOrderCount: 4,
+        paidComboCount: 4,
         remainingPaidCombos: 1,
         transportCostCents: 10_000,
         estimatedDeliveryFeeCents: 2_500,
