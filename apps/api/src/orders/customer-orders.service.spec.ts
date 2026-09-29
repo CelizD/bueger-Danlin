@@ -127,9 +127,9 @@ describe("CustomerOrdersService.getOrder", () => {
     );
 
     expect(result.groupDelivery).toEqual({
-      minPaidOrders: 5,
+      minPaidCombos: 5,
       paidOrderCount: 4,
-      remainingPaidOrders: 1,
+      remainingPaidCombos: 1,
       transportCostCents: 10_000,
       estimatedDeliveryFeeCents: 2_500,
       freeDeliveryUnlocked: false,
@@ -197,9 +197,9 @@ describe("CustomerOrdersService.getOrder", () => {
     );
 
     expect(result.groupDelivery).toEqual({
-      minPaidOrders: 5,
+      minPaidCombos: 5,
       paidOrderCount: 3,
-      remainingPaidOrders: 2,
+      remainingPaidCombos: 2,
       transportCostCents: 10_000,
       estimatedDeliveryFeeCents: 3_334,
       freeDeliveryUnlocked: false,
