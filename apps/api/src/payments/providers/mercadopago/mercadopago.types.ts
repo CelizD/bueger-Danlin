@@ -34,3 +34,23 @@ export interface MercadoPagoCreateOrderInput {
   idempotencyKey: string;
   body: MercadoPagoCreateOrderBody;
 }
+
+export interface MercadoPagoRefundOrderInput {
+  orderId: string;
+  idempotencyKey: string;
+}
+
+export interface MercadoPagoRefundOrderResponse {
+  id: string;
+  status: string;
+  status_detail?: string;
+  transactions?: {
+    refunds?: Array<{
+      id?: string;
+      transaction_id?: string;
+      reference_id?: string;
+      amount: string;
+      status?: string;
+    }>;
+  };
+}
