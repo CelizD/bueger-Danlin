@@ -90,7 +90,7 @@ describe("TelegramNotificationService", () => {
     const sent = await service.notifyGroupClosed({
       locationLabel: "Universidad",
       paidOrderCount: 3,
-      minPaidOrders: 5,
+      minPaidCombos: 5,
       transportCostCents: 10_000,
       assignedCents: 10_000,
       freeDeliveryUnlocked: false,
@@ -123,7 +123,7 @@ describe("TelegramNotificationService", () => {
       service.notifyGroupCompleted({
         locationLabel: "Cucapá",
         paidOrderCount: 5,
-        minPaidOrders: 5,
+        minPaidCombos: 5,
       }),
     ).resolves.toBe(false);
   });
