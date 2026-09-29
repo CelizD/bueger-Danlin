@@ -11,9 +11,9 @@ export function presentCreatedOrder(
     totalCents: number;
     comboQuantity: number;
     reservationExpiresAt: Date | null;
-    groupDeliveryMinPaidOrdersAtOrder?: number | null;
+    groupDeliveryMinPaidCombosAtOrder?: number | null;
     groupDeliveryTransportCostCentsAtOrder?: number | null;
-    groupDeliveryPaidOrdersAtOrder?: number | null;
+    groupDeliveryPaidCombosAtOrder?: number | null;
     groupDeliveryEstimatedFeeCentsAtOrder?: number | null;
     pickupEvent: {
       id: string;
@@ -49,21 +49,21 @@ export function presentCreatedOrder(
     },
     groupDelivery: {
       minPaidOrders:
-        order.groupDeliveryMinPaidOrdersAtOrder ?? 5,
+        order.groupDeliveryMinPaidCombosAtOrder ?? 5,
       paidOrderCount:
-        order.groupDeliveryPaidOrdersAtOrder ?? 0,
+        order.groupDeliveryPaidCombosAtOrder ?? 0,
       remainingPaidOrders: Math.max(
         0,
-        (order.groupDeliveryMinPaidOrdersAtOrder ?? 5) -
-          (order.groupDeliveryPaidOrdersAtOrder ?? 0),
+        (order.groupDeliveryMinPaidCombosAtOrder ?? 5) -
+          (order.groupDeliveryPaidCombosAtOrder ?? 0),
       ),
       transportCostCents:
         order.groupDeliveryTransportCostCentsAtOrder ?? 0,
       estimatedDeliveryFeeCents:
         order.groupDeliveryEstimatedFeeCentsAtOrder,
       freeDeliveryUnlocked:
-        (order.groupDeliveryPaidOrdersAtOrder ?? 0) >=
-        (order.groupDeliveryMinPaidOrdersAtOrder ?? 5),
+        (order.groupDeliveryPaidCombosAtOrder ?? 0) >=
+        (order.groupDeliveryMinPaidCombosAtOrder ?? 5),
     },
   };
 }
