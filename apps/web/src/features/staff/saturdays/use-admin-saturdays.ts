@@ -93,6 +93,13 @@ export function useAdminSaturdays() {
     void load();
   }, []);
 
+  const deliveryTermsLocked =
+    editingId !== null &&
+    (events.find(
+      (event) =>
+        event.id === editingId,
+    )?.orderCount ?? 0) > 0;
+
   const activeEvent = useMemo(
     () =>
       events.find(
@@ -261,6 +268,7 @@ export function useAdminSaturdays() {
     qrEvent,
     customerOrigin,
     activeEvent,
+    deliveryTermsLocked,
     load,
     setFormField,
     openCreate,
