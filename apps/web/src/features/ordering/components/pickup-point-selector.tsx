@@ -19,11 +19,11 @@ function deliveryDate(event: PickupEvent) {
 
 function progressIcons(event: PickupEvent) {
   const goal = Math.min(
-    Math.max(event.groupDelivery.minPaidOrders, 1),
+    Math.max(event.groupDelivery.minPaidCombos, 1),
     10,
   );
   const filled = Math.min(
-    event.groupDelivery.paidOrderCount,
+    event.groupDelivery.paidComboCount,
     goal,
   );
 
@@ -50,7 +50,7 @@ export function PickupPointSelector({
       <div className="pickup-selector-head">
         <div>
           <p className="eyebrow">Punto de entrega</p>
-          <h2 id="pickup-selector-title">¿Dónde quieres recibir tu pedido?</h2>
+          <h2 id="pickup-selector-title">¿Dónde quieres recibir tu combo?</h2>
         </div>
         <span>{events.length} punto{events.length === 1 ? "" : "s"} disponible{events.length === 1 ? "" : "s"}</span>
       </div>
@@ -82,12 +82,12 @@ export function PickupPointSelector({
                 <p className="pickup-address">{event.pickupPoint.address}</p>
               )}
 
-              <div className="pickup-group-progress" aria-label={`${group.paidOrderCount} de ${group.minPaidOrders} pedidos pagados`}>
+              <div className="pickup-group-progress" aria-label={`${group.paidComboCount} de ${group.minPaidCombos} combos pagados`}>
                 <span className="pickup-burgers" aria-hidden="true">
                   {progressIcons(event)}
                 </span>
                 <strong>
-                  {group.paidOrderCount} de {group.minPaidOrders} pedidos pagados
+                  {group.paidComboCount} de {group.minPaidCombos} combos pagados
                 </strong>
               </div>
 
@@ -97,11 +97,11 @@ export function PickupPointSelector({
                 ) : (
                   <>
                     <span>
-                      Faltan {group.remainingPaidOrders} pedido{group.remainingPaidOrders === 1 ? "" : "s"} para envío gratis
+                      Faltan {group.remainingPaidCombos} combo{group.remainingPaidCombos === 1 ? "" : "s"} para envío gratis
                     </span>
                     <strong>
                       {group.estimatedDeliveryFeeCents === null
-                        ? "Costo por persona pendiente del primer pedido pagado"
+                        ? "Costo por persona pendiente del primer combo pagado"
                         : `Envío estimado ahora: ${money.format(
                             group.estimatedDeliveryFeeCents / 100,
                           )}`}
