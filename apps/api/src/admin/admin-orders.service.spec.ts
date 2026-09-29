@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { PrismaService } from "../database/prisma.service.js";
+import type { PaymentProviderRegistry } from "../payments/payment-provider.registry.js";
 import { AdminOrdersService } from "./admin-orders.service.js";
 
 describe("AdminOrdersService", () => {
@@ -108,6 +109,7 @@ describe("AdminOrdersService", () => {
             paymentStatus: "PAID",
             totalCents: 13_000,
             comboQuantity: 1,
+            payments: [],
           },
           {
             id: "order-b",
@@ -116,12 +118,17 @@ describe("AdminOrdersService", () => {
             paymentStatus: "PAID",
             totalCents: 13_000,
             comboQuantity: 1,
+            payments: [],
           },
         ]),
       },
     } as unknown as PrismaService;
 
-    const service = new AdminOrdersService(prisma);
+    const providers = {} as PaymentProviderRegistry;
+    const service = new AdminOrdersService(
+      prisma,
+      providers,
+    );
     const result = await service.listOrders();
 
     expect(result.groups[0]).toMatchObject({
@@ -148,6 +155,8 @@ describe("AdminOrdersService", () => {
       paidRevenueCents: 26_000,
       finalDeliveryCashCents: 6_667,
       activeGroups: 1,
+      manualRefundsPending: 0,
+      manualRefundsPendingCents: 0,
     });
   });
 });
