@@ -35,7 +35,7 @@ export function SaturdayEventForm({
   );
   const parsedFreeDeliveryTarget =
     Number(
-      form.freeDeliveryMinPaidOrders,
+      form.freeDeliveryMinPaidCombos,
     );
   const minimumMaxCombos =
     Number.isInteger(
@@ -240,12 +240,12 @@ export function SaturdayEventForm({
             max={maximumFreeDeliveryTarget}
             step="1"
             value={
-              form.freeDeliveryMinPaidOrders
+              form.freeDeliveryMinPaidCombos
             }
             disabled={deliveryTermsLocked}
             onChange={(event) =>
               onChange(
-                "freeDeliveryMinPaidOrders",
+                "freeDeliveryMinPaidCombos",
                 event.target.value,
               )
             }
