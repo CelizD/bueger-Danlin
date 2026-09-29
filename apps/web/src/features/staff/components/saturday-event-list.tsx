@@ -15,6 +15,14 @@ import {
 } from "../saturdays/date-utils";
 import type { PickupEvent } from "../saturdays/types";
 
+const money = new Intl.NumberFormat(
+  "es-MX",
+  {
+    style: "currency",
+    currency: "MXN",
+  },
+);
+
 type Props = {
   events: PickupEvent[];
   busyId: string | null;
@@ -107,6 +115,10 @@ export function SaturdayEventList({
                     <span>
                       <MapPin size={14} />
                       {event.locationLabel}
+                      {event.pickupPoint.address
+                        ? " · " +
+                          event.pickupPoint.address
+                        : ""}
                     </span>
                     <span>
                       <Clock3 size={14} />
@@ -153,6 +165,26 @@ export function SaturdayEventList({
                         }
                       </b>{" "}
                       reservados temporalmente
+                    </span>
+                    <span>
+                      Meta envío:{" "}
+                      <b>
+                        {
+                          event.groupDelivery
+                            .minPaidOrders
+                        }{" "}
+                        pedidos pagados
+                      </b>
+                    </span>
+                    <span>
+                      Traslado:{" "}
+                      <b>
+                        {money.format(
+                          event.groupDelivery
+                            .transportCostCents /
+                            100,
+                        )}
+                      </b>
                     </span>
                     <span>
                       Cierre:{" "}
