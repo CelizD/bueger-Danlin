@@ -160,9 +160,14 @@ export async function reconcileMercadoPagoWebhook(
 
     const now = new Date();
     const order = current.order;
+    const reservationExpired =
+      order.status === "PENDING_PAYMENT" &&
+      (!order.reservationExpiresAt ||
+        order.reservationExpiresAt <= now);
     const latePaid =
       incomingStatus === "PAID" &&
-      order.status !== "PENDING_PAYMENT";
+      (order.status !== "PENDING_PAYMENT" ||
+        reservationExpired);
 
     const paymentData: {
       status: ProviderPaymentStatus;
@@ -182,6 +187,16 @@ export async function reconcileMercadoPagoWebhook(
           {
             latePaymentDetectedAt: now.toISOString(),
             latePaymentOrderStatus: order.status,
+            latePaymentReason: reservationExpired
+              ? "RESERVATION_EXPIRED"
+              : "ORDER_ALREADY_CLOSED",
+            ...(reservationExpired &&
+            order.reservationExpiresAt
+              ? {
+                  reservationExpiredAt:
+                    order.reservationExpiresAt.toISOString(),
+                }
+              : {}),
             requiresManualRefund: true,
           },
         );
@@ -198,6 +213,62 @@ export async function reconcileMercadoPagoWebhook(
     });
 
     if (
+      incomingStatus === "PAID" &&
+      reservationExpired
+    ) {
+      await inventory.releaseOrder(
+        tx,
+        order.id,
+      );
+
+      await tx.order.update({
+        where: { id: order.id },
+        data: {
+          status: "CANCELLED",
+          paymentStatus: "PAID",
+          reservationExpiresAt: null,
+          cancelledAt:
+            order.cancelledAt ?? now,
+        },
+      });
+
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId: order.id,
+          from: "PENDING_PAYMENT",
+          to: "CANCELLED",
+          note:
+            "Pago recibido después de vencer la reserva. El pedido no se reactivó y requiere reembolso.",
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          action:
+            "PAYMENT_LATE_AFTER_ORDER_CLOSED",
+          entityType: "Payment",
+          entityId: current.id,
+          before: {
+            orderStatus: order.status,
+            paymentStatus:
+              order.paymentStatus,
+            providerStatus:
+              currentStatus,
+            reservationExpiresAt:
+              order.reservationExpiresAt,
+          },
+          after: {
+            orderStatus: "CANCELLED",
+            paymentStatus: "PAID",
+            providerStatus: "PAID",
+            reason:
+              "RESERVATION_EXPIRED",
+            requiresManualRefund: true,
+            source: "WEBHOOK",
+          },
+        },
+      });
+    } else if (
       incomingStatus === "PAID" &&
       order.status === "PENDING_PAYMENT"
     ) {
