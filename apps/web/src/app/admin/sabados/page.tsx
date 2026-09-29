@@ -27,6 +27,7 @@ export default function SaturdaysPage() {
     qrEvent,
     customerOrigin,
     activeEvent,
+    deliveryTermsLocked,
     load,
     setFormField,
     openCreate,
@@ -120,6 +121,9 @@ export default function SaturdaysPage() {
             editing={editingId != null}
             form={form}
             saving={saving}
+            deliveryTermsLocked={
+              deliveryTermsLocked
+            }
             onChange={setFormField}
             onClose={closeForm}
             onSubmit={save}
