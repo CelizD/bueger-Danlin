@@ -28,6 +28,9 @@ export type CustomerOrder = {
     transportCostCents: number;
     estimatedDeliveryFeeCents: number | null;
     freeDeliveryUnlocked: boolean;
+    finalized: boolean;
+    finalizedAt: string | null;
+    finalFeeCents: number | null;
   };
   items: Array<{
     id: string;
