@@ -2,6 +2,7 @@ import { apiErrorMessage, apiFetch } from "@/lib/api/browser";
 import type {
   CancelOrderResult,
   CatalogProduct,
+  CheckoutResult,
   CustomerOrderRefresh,
   CreateOrderInput,
   CreatedOrder,
@@ -82,6 +83,34 @@ export async function cancelOrder(
   }
 
   return data as CancelOrderResult;
+}
+
+export async function createPaymentCheckout(
+  orderCode: string,
+  verificationToken: string,
+) {
+  const response = await apiFetch(
+    `/payments/${encodeURIComponent(orderCode)}/checkout`,
+    {
+      method: "POST",
+      headers: {
+        "x-order-token": verificationToken,
+      },
+    },
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      apiErrorMessage(
+        data,
+        "No se pudo iniciar el pago con Mercado Pago.",
+      ),
+    );
+  }
+
+  return data as CheckoutResult;
 }
 
 export async function confirmMockOrderPayment(
