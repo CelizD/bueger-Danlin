@@ -10,6 +10,7 @@ type Props = {
   editing: boolean;
   form: SaturdayFormState;
   saving: boolean;
+  deliveryTermsLocked: boolean;
   onChange: (
     field: keyof SaturdayFormState,
     value: string,
@@ -24,6 +25,7 @@ export function SaturdayEventForm({
   editing,
   form,
   saving,
+  deliveryTermsLocked,
   onChange,
   onClose,
   onSubmit,
@@ -74,6 +76,57 @@ export function SaturdayEventForm({
               placeholder="Universidad"
             />
           </div>
+        </label>
+
+        <label className="saturday-full-field">
+          <span>Dirección del punto (opcional)</span>
+          <input
+            maxLength={220}
+            value={form.locationAddress}
+            onChange={(event) =>
+              onChange(
+                "locationAddress",
+                event.target.value,
+              )
+            }
+            placeholder="Av. Universidad 123, Tijuana"
+          />
+        </label>
+
+        <label>
+          <span>Latitud (opcional)</span>
+          <input
+            type="number"
+            min="-90"
+            max="90"
+            step="any"
+            value={form.latitude}
+            onChange={(event) =>
+              onChange(
+                "latitude",
+                event.target.value,
+              )
+            }
+            placeholder="32.5149"
+          />
+        </label>
+
+        <label>
+          <span>Longitud (opcional)</span>
+          <input
+            type="number"
+            min="-180"
+            max="180"
+            step="any"
+            value={form.longitude}
+            onChange={(event) =>
+              onChange(
+                "longitude",
+                event.target.value,
+              )
+            }
+            placeholder="-117.0382"
+          />
         </label>
 
         <label>
@@ -155,6 +208,64 @@ export function SaturdayEventForm({
             }
           />
         </label>
+
+        <label>
+          <span>
+            Meta para envío gratis
+          </span>
+          <input
+            required
+            type="number"
+            min="1"
+            max="100"
+            step="1"
+            value={
+              form.freeDeliveryMinPaidOrders
+            }
+            disabled={deliveryTermsLocked}
+            onChange={(event) =>
+              onChange(
+                "freeDeliveryMinPaidOrders",
+                event.target.value,
+              )
+            }
+          />
+        </label>
+
+        <label>
+          <span>
+            Costo de traslado (MXN)
+          </span>
+          <input
+            required
+            type="number"
+            min="0"
+            max="1000"
+            step="0.01"
+            value={form.transportCostMx}
+            disabled={deliveryTermsLocked}
+            onChange={(event) =>
+              onChange(
+                "transportCostMx",
+                event.target.value,
+              )
+            }
+            placeholder="150.00"
+          />
+        </label>
+
+        {deliveryTermsLocked && (
+          <div className="saturday-form-note">
+            La meta de envío gratis y el costo de traslado están bloqueados porque esta entrega ya tiene pedidos.
+          </div>
+        )}
+
+        <div className="saturday-form-note">
+          Si se alcanza la meta de pedidos pagados, el envío queda gratis.
+          Si no se alcanza, el costo de traslado se divide entre los pedidos
+          pagados y se cobra al entregar. La meta y el costo quedan bloqueados
+          desde que existe el primer pedido.
+        </div>
 
         <div className="saturday-form-note">
           Los horarios se interpretan directamente en

@@ -93,6 +93,13 @@ export function useAdminSaturdays() {
     void load();
   }, []);
 
+  const deliveryTermsLocked =
+    editingId !== null &&
+    (events.find(
+      (event) =>
+        event.id === editingId,
+    )?.orderCount ?? 0) > 0;
+
   const activeEvent = useMemo(
     () =>
       events.find(
@@ -140,6 +147,31 @@ export function useAdminSaturdays() {
     setForm({
       locationLabel:
         event.locationLabel,
+      locationAddress:
+        event.pickupPoint.address ?? "",
+      latitude:
+        event.pickupPoint.latitude == null
+          ? ""
+          : String(
+              event.pickupPoint.latitude,
+            ),
+      longitude:
+        event.pickupPoint.longitude == null
+          ? ""
+          : String(
+              event.pickupPoint.longitude,
+            ),
+      freeDeliveryMinPaidOrders:
+        String(
+          event.groupDelivery
+            .minPaidOrders,
+        ),
+      transportCostMx:
+        String(
+          event.groupDelivery
+            .transportCostCents /
+            100,
+        ),
       pickupDate:
         pickup.date,
       pickupTime:
@@ -236,6 +268,7 @@ export function useAdminSaturdays() {
     qrEvent,
     customerOrigin,
     activeEvent,
+    deliveryTermsLocked,
     load,
     setFormField,
     openCreate,

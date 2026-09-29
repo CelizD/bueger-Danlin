@@ -171,6 +171,11 @@ export function nextSaturdayDefaults(): SaturdayFormState {
 
   return {
     locationLabel: "Universidad",
+    locationAddress: "",
+    latitude: "",
+    longitude: "",
+    freeDeliveryMinPaidOrders: "5",
+    transportCostMx: "0",
     pickupDate,
     pickupTime: "09:30",
     closeDate,

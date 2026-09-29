@@ -15,6 +15,14 @@ import {
 } from "../saturdays/date-utils";
 import type { PickupEvent } from "../saturdays/types";
 
+const money = new Intl.NumberFormat(
+  "es-MX",
+  {
+    style: "currency",
+    currency: "MXN",
+  },
+);
+
 type Props = {
   events: PickupEvent[];
   busyId: string | null;
@@ -140,6 +148,54 @@ export function SaturdayEventList({
                   </div>
 
                   <div className="saturday-breakdown">
+                    <span>
+                      Meta:{" "}
+                      <b>
+                        {
+                          event.groupDelivery
+                            .minPaidOrders
+                        } pedidos
+                      </b>
+                    </span>
+                    <span>
+                      Traslado:{" "}
+                      <b>
+                        {money.format(
+                          event.groupDelivery
+                            .transportCostCents /
+                            100,
+                        )}
+                      </b>
+                    </span>
+                    <span>
+                      Envío:{" "}
+                      <b>
+                        {event.groupDelivery
+                          .freeDeliveryUnlocked
+                          ? "gratis desbloqueado"
+                          : event.groupDelivery
+                                .estimatedDeliveryFeeCents ==
+                              null
+                            ? "pendiente de pedidos pagados"
+                            : money.format(
+                                event.groupDelivery
+                                  .estimatedDeliveryFeeCents /
+                                  100,
+                              ) +
+                              " estimado por pedido"}
+                      </b>
+                    </span>
+                    {event.pickupPoint.address && (
+                      <span>
+                        Dirección:{" "}
+                        <b>
+                          {
+                            event.pickupPoint
+                              .address
+                          }
+                        </b>
+                      </span>
+                    )}
                     <span>
                       <b>
                         {event.paidCombos}

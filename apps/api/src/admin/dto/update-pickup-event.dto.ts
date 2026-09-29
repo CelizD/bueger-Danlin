@@ -26,13 +26,13 @@ export class UpdatePickupEventDto {
   @IsNumber()
   @Min(-90)
   @Max(90)
-  latitude?: number;
+  latitude?: number | null;
 
   @IsOptional()
   @IsNumber()
   @Min(-180)
   @Max(180)
-  longitude?: number;
+  longitude?: number | null;
 
   @IsOptional()
   @IsISO8601()

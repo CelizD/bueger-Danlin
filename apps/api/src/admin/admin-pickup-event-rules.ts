@@ -16,8 +16,8 @@ export const GROUP_EXCLUDED_STATUSES = [
 export type PickupPointInput = {
   locationLabel: string;
   locationAddress?: string;
-  latitude?: number;
-  longitude?: number;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 export function assertPickupEventDates(
