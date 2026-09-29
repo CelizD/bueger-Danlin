@@ -19,9 +19,9 @@ const groups: AdminDeliveryGroup[] = [
       name: "Universidad",
       address: "Entrada principal",
     },
-    minPaidOrders: 5,
-    paidOrderCount: 3,
-    remainingPaidOrders: 2,
+    minPaidCombos: 5,
+    paidComboCount: 3,
+    remainingPaidCombos: 2,
     transportCostCents: 10_000,
     estimatedFeeCents: null,
     freeDeliveryUnlocked: false,
@@ -43,9 +43,9 @@ const groups: AdminDeliveryGroup[] = [
       name: "Cucapá",
       address: null,
     },
-    minPaidOrders: 5,
-    paidOrderCount: 4,
-    remainingPaidOrders: 1,
+    minPaidCombos: 5,
+    paidComboCount: 4,
+    remainingPaidCombos: 1,
     transportCostCents: 10_000,
     estimatedFeeCents: 2_500,
     freeDeliveryUnlocked: false,
@@ -70,6 +70,7 @@ describe("AdminDeliveryGroups", () => {
     expect(html).toContain("Cucapá");
     expect(html).toContain("3 de 5");
     expect(html).toContain("4 de 5");
+    expect(html).toContain("combos pagados");
     expect(html).toContain("Cobrar");
     expect(html).toContain("$100");
     expect(html).toContain("$25");

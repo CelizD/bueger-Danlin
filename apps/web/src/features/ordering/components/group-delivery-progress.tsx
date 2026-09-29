@@ -13,8 +13,8 @@ type GroupDeliveryProgressProps = {
 };
 
 function icons(group: GroupDeliveryStatus) {
-  const goal = Math.min(Math.max(group.minPaidOrders, 1), 10);
-  const filled = Math.min(group.paidOrderCount, goal);
+  const goal = Math.min(Math.max(group.minPaidCombos, 1), 10);
+  const filled = Math.min(group.paidComboCount, goal);
 
   return Array.from({ length: goal }, (_, index) =>
     index < filled ? "🍔" : "⬜",
@@ -28,9 +28,9 @@ export function GroupDeliveryProgress({
 }: GroupDeliveryProgressProps) {
   const paid = paymentStatus === "PAID";
   const missingCopy =
-    group.remainingPaidOrders === 1
-      ? "Falta 1 pedido para envío gratis"
-      : `Faltan ${group.remainingPaidOrders} pedidos para envío gratis`;
+    group.remainingPaidCombos === 1
+      ? "Falta 1 combo para envío gratis"
+      : `Faltan ${group.remainingPaidCombos} combos para envío gratis`;
 
   return (
     <section
@@ -43,17 +43,17 @@ export function GroupDeliveryProgress({
           <h2 id="group-delivery-progress-title">{pointName}</h2>
         </div>
         <strong>
-          {group.paidOrderCount} de {group.minPaidOrders}
+          {group.paidComboCount} de {group.minPaidCombos}
         </strong>
       </div>
 
       <div
         className="group-delivery-progress-icons"
-        aria-label={`${group.paidOrderCount} de ${group.minPaidOrders} pedidos pagados`}
+        aria-label={`${group.paidComboCount} de ${group.minPaidCombos} combos pagados`}
       >
         <span aria-hidden="true">{icons(group)}</span>
         <strong>
-          {group.paidOrderCount} de {group.minPaidOrders} pedidos pagados
+          {group.paidComboCount} de {group.minPaidCombos} combos pagados
         </strong>
       </div>
 
@@ -105,7 +105,7 @@ export function GroupDeliveryProgress({
 
       {!group.finalized && !paid && (
         <p className="group-delivery-progress-note">
-          Tu pedido se sumará a la meta cuando el pago quede confirmado.
+          Los combos de tu pedido se sumarán a la meta cuando el pago quede confirmado.
         </p>
       )}
 

@@ -22,7 +22,7 @@ const CAPACITY_STATUSES = [
 ] as const;
 
 const RESERVATION_MINUTES = 15;
-const GROUP_DELIVERY_TERMS_VERSION = "2026-09-27-v1";
+const GROUP_DELIVERY_TERMS_VERSION = "2026-09-29-v2";
 
 export async function createOrderTransaction(
   prisma: PrismaService,
@@ -148,7 +148,7 @@ export async function createOrderTransaction(
     }
 
     const groupDeliveryPaidOrders =
-      await tx.order.count({
+      await tx.order.findMany({
         where: {
           pickupEventId: event.id,
           paymentStatus: "PAID",
@@ -159,19 +159,30 @@ export async function createOrderTransaction(
             ],
           },
         },
+        select: {
+          comboQuantity: true,
+        },
       });
+    const groupDeliveryPaidOrderCount =
+      groupDeliveryPaidOrders.length;
+    const groupDeliveryPaidCombos =
+      groupDeliveryPaidOrders.reduce(
+        (sum, paidOrder) =>
+          sum + paidOrder.comboQuantity,
+        0,
+      );
 
     const groupDeliveryFreeUnlocked =
-      groupDeliveryPaidOrders >=
-      event.freeDeliveryMinPaidOrders;
+      groupDeliveryPaidCombos >=
+      event.freeDeliveryMinPaidCombos;
 
     const groupDeliveryEstimatedFeeCents =
       groupDeliveryFreeUnlocked
         ? 0
-        : groupDeliveryPaidOrders > 0
+        : groupDeliveryPaidOrderCount > 0
           ? Math.ceil(
               event.transportCostCents /
-                groupDeliveryPaidOrders,
+                groupDeliveryPaidOrderCount,
             )
           : null;
 
@@ -221,12 +232,12 @@ export async function createOrderTransaction(
         groupDeliveryTermsAcceptedAt: now,
         groupDeliveryTermsVersion:
           GROUP_DELIVERY_TERMS_VERSION,
-        groupDeliveryMinPaidOrdersAtOrder:
-          event.freeDeliveryMinPaidOrders,
+        groupDeliveryMinPaidCombosAtOrder:
+          event.freeDeliveryMinPaidCombos,
         groupDeliveryTransportCostCentsAtOrder:
           event.transportCostCents,
-        groupDeliveryPaidOrdersAtOrder:
-          groupDeliveryPaidOrders,
+        groupDeliveryPaidCombosAtOrder:
+          groupDeliveryPaidCombos,
         groupDeliveryEstimatedFeeCentsAtOrder:
           groupDeliveryEstimatedFeeCents,
       },
@@ -339,15 +350,15 @@ export async function createOrderTransaction(
         timezone: event.timezone,
       },
       groupDelivery: {
-        minPaidOrders:
-          event.freeDeliveryMinPaidOrders,
-        paidOrderCount:
-          groupDeliveryPaidOrders,
-        remainingPaidOrders:
+        minPaidCombos:
+          event.freeDeliveryMinPaidCombos,
+        paidComboCount:
+          groupDeliveryPaidCombos,
+        remainingPaidCombos:
           Math.max(
             0,
-            event.freeDeliveryMinPaidOrders -
-              groupDeliveryPaidOrders,
+            event.freeDeliveryMinPaidCombos -
+              groupDeliveryPaidCombos,
           ),
         transportCostCents:
           event.transportCostCents,

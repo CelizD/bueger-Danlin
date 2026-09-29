@@ -161,10 +161,10 @@ export function useAdminSaturdays() {
           : String(
               event.pickupPoint.longitude,
             ),
-      freeDeliveryMinPaidOrders:
+      freeDeliveryMinPaidCombos:
         String(
           event.groupDelivery
-            .minPaidOrders,
+            .minPaidCombos,
         ),
       transportCostMx:
         String(

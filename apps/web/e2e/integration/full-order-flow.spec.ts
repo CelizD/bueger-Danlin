@@ -86,10 +86,10 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
 
   await expect(page.getByText("Pago aprobado")).toBeVisible();
   await expect(
-    page.getByText("1 de 5 pedidos pagados"),
+    page.getByText("1 de 5 combos pagados"),
   ).toBeVisible();
   await expect(
-    page.getByText("Faltan 4 pedidos para envío gratis"),
+    page.getByText("Faltan 4 combos para envío gratis"),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Presenta este QR" }),

@@ -219,16 +219,16 @@ model PickupEvent {
   startsAt                  DateTime
   closesAt                  DateTime
   maxCombos                 Int               @default(50)
-  freeDeliveryMinPaidOrders              Int               @default(5)
+  freeDeliveryMinPaidCombos              Int               @default(5)
   transportCostCents                     Int               @default(0)
   groupDeliveryFinalizedAt               DateTime?
-  groupDeliveryFinalPaidOrders           Int?
+  groupDeliveryFinalPaidCombos           Int?
   groupDeliveryFinalTransportCostCents   Int?
   groupDeliveryFinalAssignedCents        Int?
   groupDeliveryFinalFreeUnlocked         Boolean?
   groupDeliveryFinalCancelledPendingOrders Int?
   telegramGroupCompletedAt               DateTime?
-  telegramGroupCompletedPaidOrders       Int?
+  telegramGroupCompletedPaidCombos       Int?
   telegramGroupCompletedNotificationClaimedAt DateTime?
   telegramGroupCompletedNotifiedAt       DateTime?
   telegramGroupClosedNotificationClaimedAt DateTime?
@@ -265,9 +265,9 @@ model Order {
   deliveredAt                             DateTime?
   groupDeliveryTermsAcceptedAt            DateTime?
   groupDeliveryTermsVersion               String?
-  groupDeliveryMinPaidOrdersAtOrder       Int?
+  groupDeliveryMinPaidCombosAtOrder       Int?
   groupDeliveryTransportCostCentsAtOrder  Int?
-  groupDeliveryPaidOrdersAtOrder          Int?
+  groupDeliveryPaidCombosAtOrder          Int?
   groupDeliveryEstimatedFeeCentsAtOrder   Int?
   groupDeliveryFinalFeeCents               Int?
   groupDeliveryFinalizedAt                 DateTime?

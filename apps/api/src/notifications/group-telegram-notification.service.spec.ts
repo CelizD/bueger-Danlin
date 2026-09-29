@@ -4,19 +4,22 @@ import type { TelegramNotificationService } from "./telegram-notification.servic
 import { GroupTelegramNotificationService } from "./group-telegram-notification.service.js";
 
 describe("GroupTelegramNotificationService", () => {
-  it("marca una sola vez el hito 5/5 y envía el aviso", async () => {
+  it("marca una sola vez el hito de cinco combos aunque sean dos pedidos", async () => {
     const tx = {
       $queryRaw: vi.fn().mockResolvedValue([{ id: "event-1" }]),
       pickupEvent: {
         findUnique: vi.fn().mockResolvedValue({
           id: "event-1",
-          freeDeliveryMinPaidOrders: 5,
+          freeDeliveryMinPaidCombos: 5,
           telegramGroupCompletedAt: null,
         }),
         update: vi.fn().mockResolvedValue(undefined),
       },
       order: {
-        count: vi.fn().mockResolvedValue(5),
+        findMany: vi.fn().mockResolvedValue([
+          { comboQuantity: 3 },
+          { comboQuantity: 2 },
+        ]),
       },
     };
 
@@ -34,8 +37,8 @@ describe("GroupTelegramNotificationService", () => {
         findUnique: vi.fn().mockResolvedValue({
           id: "event-1",
           locationLabel: "Universidad",
-          freeDeliveryMinPaidOrders: 5,
-          telegramGroupCompletedPaidOrders: 5,
+          freeDeliveryMinPaidCombos: 5,
+          telegramGroupCompletedPaidCombos: 5,
         }),
       },
     } as unknown as PrismaService;
@@ -56,13 +59,13 @@ describe("GroupTelegramNotificationService", () => {
       where: { id: "event-1" },
       data: expect.objectContaining({
         telegramGroupCompletedAt: expect.any(Date),
-        telegramGroupCompletedPaidOrders: 5,
+        telegramGroupCompletedPaidCombos: 5,
       }),
     });
     expect(telegram.notifyGroupCompleted).toHaveBeenCalledWith({
       locationLabel: "Universidad",
-      paidOrderCount: 5,
-      minPaidOrders: 5,
+      paidComboCount: 5,
+      minPaidCombos: 5,
     });
   });
 
@@ -77,8 +80,8 @@ describe("GroupTelegramNotificationService", () => {
         findUnique: vi.fn().mockResolvedValue({
           id: "event-1",
           locationLabel: "Cucapá",
-          freeDeliveryMinPaidOrders: 5,
-          groupDeliveryFinalPaidOrders: 3,
+          freeDeliveryMinPaidCombos: 5,
+          groupDeliveryFinalPaidCombos: 3,
           groupDeliveryFinalTransportCostCents: 10_000,
           groupDeliveryFinalAssignedCents: 10_000,
           groupDeliveryFinalFreeUnlocked: false,
@@ -101,8 +104,8 @@ describe("GroupTelegramNotificationService", () => {
 
     expect(telegram.notifyGroupClosed).toHaveBeenCalledWith({
       locationLabel: "Cucapá",
-      paidOrderCount: 3,
-      minPaidOrders: 5,
+      paidComboCount: 3,
+      minPaidCombos: 5,
       transportCostCents: 10_000,
       assignedCents: 10_000,
       freeDeliveryUnlocked: false,
@@ -129,8 +132,8 @@ describe("GroupTelegramNotificationService", () => {
         findUnique: vi.fn().mockResolvedValue({
           id: "event-1",
           locationLabel: "Universidad",
-          freeDeliveryMinPaidOrders: 5,
-          telegramGroupCompletedPaidOrders: 5,
+          freeDeliveryMinPaidCombos: 5,
+          telegramGroupCompletedPaidCombos: 5,
         }),
       },
     } as unknown as PrismaService;

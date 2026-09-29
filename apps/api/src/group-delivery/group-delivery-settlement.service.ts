@@ -120,7 +120,7 @@ export class GroupDeliverySettlementService {
           alreadyFinalized: true,
           eventId: event.id,
           finalizedAt: event.groupDeliveryFinalizedAt,
-          paidOrderCount: event.groupDeliveryFinalPaidOrders ?? 0,
+          paidComboCount: event.groupDeliveryFinalPaidCombos ?? 0,
           freeDeliveryUnlocked:
             event.groupDeliveryFinalFreeUnlocked ?? false,
           assignedCents:
@@ -240,13 +240,20 @@ export class GroupDeliverySettlementService {
         select: {
           id: true,
           createdAt: true,
+          comboQuantity: true,
         },
         orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       });
 
       const paidOrderCount = paidOrders.length;
+      const paidComboCount = paidOrders.reduce(
+        (sum, order) =>
+          sum + order.comboQuantity,
+        0,
+      );
       const freeDeliveryUnlocked =
-        paidOrderCount >= event.freeDeliveryMinPaidOrders;
+        paidComboCount >=
+        event.freeDeliveryMinPaidCombos;
 
       const allocations = allocateTransportCost(
         paidOrders.map((order) => order.id),
@@ -274,7 +281,7 @@ export class GroupDeliverySettlementService {
         data: {
           status: "CLOSED",
           groupDeliveryFinalizedAt: now,
-          groupDeliveryFinalPaidOrders: paidOrderCount,
+          groupDeliveryFinalPaidCombos: paidComboCount,
           groupDeliveryFinalTransportCostCents:
             event.transportCostCents,
           groupDeliveryFinalAssignedCents: assignedCents,
@@ -301,8 +308,9 @@ export class GroupDeliverySettlementService {
               options.reason ??
               (options.force ? "manual" : "cutoff"),
             paidOrderCount,
-            freeDeliveryMinPaidOrders:
-              event.freeDeliveryMinPaidOrders,
+            paidComboCount,
+            freeDeliveryMinPaidCombos:
+              event.freeDeliveryMinPaidCombos,
             transportCostCents: event.transportCostCents,
             assignedCents,
             freeDeliveryUnlocked,
@@ -318,6 +326,7 @@ export class GroupDeliverySettlementService {
         eventId: updated.id,
         finalizedAt: now,
         paidOrderCount,
+        paidComboCount,
         freeDeliveryUnlocked,
         transportCostCents: event.transportCostCents,
         assignedCents,

@@ -98,9 +98,9 @@ const pickupEvent: PickupEvent = {
   remainingCombos: 4,
   status: "OPEN",
   groupDelivery: {
-    minPaidOrders: 5,
-    paidOrderCount: 3,
-    remainingPaidOrders: 2,
+    minPaidCombos: 5,
+    paidComboCount: 3,
+    remainingPaidCombos: 2,
     transportCostCents: 10_000,
     estimatedDeliveryFeeCents: 3_334,
     freeDeliveryUnlocked: false,

@@ -113,9 +113,9 @@ export async function mockOrderingApi(page: Page) {
           remainingCombos: 48,
           status: "OPEN",
           groupDelivery: {
-            minPaidOrders: 5,
-            paidOrderCount: 3,
-            remainingPaidOrders: 2,
+            minPaidCombos: 5,
+            paidComboCount: 3,
+            remainingPaidCombos: 2,
             transportCostCents: 10000,
             estimatedDeliveryFeeCents: 3334,
             freeDeliveryUnlocked: false,
@@ -142,9 +142,9 @@ export async function mockOrderingApi(page: Page) {
           remainingCombos: 29,
           status: "OPEN",
           groupDelivery: {
-            minPaidOrders: 5,
-            paidOrderCount: 4,
-            remainingPaidOrders: 1,
+            minPaidCombos: 5,
+            paidComboCount: 4,
+            remainingPaidCombos: 1,
             transportCostCents: 10000,
             estimatedDeliveryFeeCents: 2500,
             freeDeliveryUnlocked: false,
@@ -212,9 +212,9 @@ export async function mockOrderingApi(page: Page) {
           timezone: "America/Tijuana",
         },
         groupDelivery: {
-          minPaidOrders: 5,
-          paidOrderCount: isCucapa ? 4 : 3,
-          remainingPaidOrders: isCucapa ? 1 : 2,
+          minPaidCombos: 5,
+          paidComboCount: isCucapa ? 4 : 3,
+          remainingPaidCombos: isCucapa ? 1 : 2,
           transportCostCents: 10000,
           estimatedDeliveryFeeCents: isCucapa ? 2500 : 3334,
           freeDeliveryUnlocked: false,
@@ -247,7 +247,10 @@ export async function mockOrderingApi(page: Page) {
         : isCucapa
           ? 4
           : 3;
-      const freeDeliveryUnlocked = paidOrderCount >= 5;
+      const paidComboCount =
+        paidOrderCount;
+      const freeDeliveryUnlocked =
+        paidComboCount >= 5;
 
       await json(route, {
         orderCode: "H-TEST01",
@@ -275,9 +278,9 @@ export async function mockOrderingApi(page: Page) {
           },
         },
         groupDelivery: {
-          minPaidOrders: 5,
+          minPaidCombos: 5,
           paidOrderCount,
-          remainingPaidOrders: Math.max(0, 5 - paidOrderCount),
+          remainingPaidCombos: Math.max(0, 5 - paidOrderCount),
           transportCostCents: 10000,
           estimatedDeliveryFeeCents: freeDeliveryUnlocked
             ? 0

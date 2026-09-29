@@ -153,8 +153,8 @@ export function SaturdayEventList({
                       <b>
                         {
                           event.groupDelivery
-                            .minPaidOrders
-                        } pedidos
+                            .minPaidCombos
+                        } combos
                       </b>
                     </span>
                     <span>
@@ -200,7 +200,7 @@ export function SaturdayEventList({
                       <b>
                         {event.paidCombos}
                       </b>{" "}
-                      pagados
+                      combos pagados
                     </span>
                     <span>
                       <b>

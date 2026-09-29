@@ -9,9 +9,9 @@ describe("GroupDeliveryProgress", () => {
         pointName="Universidad"
         paymentStatus="PAID"
         group={{
-          minPaidOrders: 5,
-          paidOrderCount: 4,
-          remainingPaidOrders: 1,
+          minPaidCombos: 5,
+          paidComboCount: 4,
+          remainingPaidCombos: 1,
           transportCostCents: 10_000,
           estimatedDeliveryFeeCents: 2_500,
           freeDeliveryUnlocked: false,
@@ -19,7 +19,7 @@ describe("GroupDeliveryProgress", () => {
       />,
     );
 
-    expect(html).toContain("4 de 5 pedidos pagados");
+    expect(html).toContain("4 de 5 combos pagados");
     expect(html).toContain("Falta");
     expect(html).toContain("$25");
   });
@@ -30,9 +30,9 @@ describe("GroupDeliveryProgress", () => {
         pointName="Universidad"
         paymentStatus="PAID"
         group={{
-          minPaidOrders: 5,
-          paidOrderCount: 3,
-          remainingPaidOrders: 2,
+          minPaidCombos: 5,
+          paidComboCount: 3,
+          remainingPaidCombos: 2,
           transportCostCents: 10_000,
           estimatedDeliveryFeeCents: 3_334,
           freeDeliveryUnlocked: false,
@@ -54,9 +54,9 @@ describe("GroupDeliveryProgress", () => {
         pointName="Cucapá"
         paymentStatus="PAID"
         group={{
-          minPaidOrders: 5,
-          paidOrderCount: 5,
-          remainingPaidOrders: 0,
+          minPaidCombos: 5,
+          paidComboCount: 5,
+          remainingPaidCombos: 0,
           transportCostCents: 10_000,
           estimatedDeliveryFeeCents: 0,
           freeDeliveryUnlocked: true,

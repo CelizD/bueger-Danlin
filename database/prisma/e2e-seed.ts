@@ -121,7 +121,7 @@ async function main() {
       closesAt: new Date(now + 2 * 60 * 60 * 1000),
       startsAt: new Date(now + 4 * 60 * 60 * 1000),
       maxCombos: 50,
-      freeDeliveryMinPaidOrders: 5,
+      freeDeliveryMinPaidCombos: 5,
       transportCostCents: 10000,
       status: "OPEN",
     },

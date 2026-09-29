@@ -24,9 +24,9 @@ export type CatalogProduct = {
 };
 
 export type GroupDeliveryStatus = {
-  minPaidOrders: number;
-  paidOrderCount: number;
-  remainingPaidOrders: number;
+  minPaidCombos: number;
+  paidComboCount: number;
+  remainingPaidCombos: number;
   transportCostCents: number;
   estimatedDeliveryFeeCents: number | null;
   freeDeliveryUnlocked: boolean;

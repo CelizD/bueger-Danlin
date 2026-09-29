@@ -22,9 +22,9 @@ export type CustomerOrder = {
     };
   };
   groupDelivery: {
-    minPaidOrders: number;
-    paidOrderCount: number;
-    remainingPaidOrders: number;
+    minPaidCombos: number;
+    paidComboCount: number;
+    remainingPaidCombos: number;
     transportCostCents: number;
     estimatedDeliveryFeeCents: number | null;
     freeDeliveryUnlocked: boolean;

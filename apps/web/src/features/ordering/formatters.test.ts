@@ -39,9 +39,9 @@ describe("ordering helpers", () => {
         timezone: "America/Tijuana",
       },
       groupDelivery: {
-        minPaidOrders: 5,
-        paidOrderCount: 4,
-        remainingPaidOrders: 1,
+        minPaidCombos: 5,
+        paidComboCount: 4,
+        remainingPaidCombos: 1,
         transportCostCents: 10_000,
         estimatedDeliveryFeeCents: 2_500,
         freeDeliveryUnlocked: false,

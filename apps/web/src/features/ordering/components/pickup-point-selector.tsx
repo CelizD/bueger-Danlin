@@ -19,11 +19,11 @@ function deliveryDate(event: PickupEvent) {
 
 function progressIcons(event: PickupEvent) {
   const goal = Math.min(
-    Math.max(event.groupDelivery.minPaidOrders, 1),
+    Math.max(event.groupDelivery.minPaidCombos, 1),
     10,
   );
   const filled = Math.min(
-    event.groupDelivery.paidOrderCount,
+    event.groupDelivery.paidComboCount,
     goal,
   );
 
@@ -82,12 +82,12 @@ export function PickupPointSelector({
                 <p className="pickup-address">{event.pickupPoint.address}</p>
               )}
 
-              <div className="pickup-group-progress" aria-label={`${group.paidOrderCount} de ${group.minPaidOrders} pedidos pagados`}>
+              <div className="pickup-group-progress" aria-label={`${group.paidComboCount} de ${group.minPaidCombos} combos pagados`}>
                 <span className="pickup-burgers" aria-hidden="true">
                   {progressIcons(event)}
                 </span>
                 <strong>
-                  {group.paidOrderCount} de {group.minPaidOrders} pedidos pagados
+                  {group.paidComboCount} de {group.minPaidCombos} combos pagados
                 </strong>
               </div>
 
@@ -97,7 +97,7 @@ export function PickupPointSelector({
                 ) : (
                   <>
                     <span>
-                      Faltan {group.remainingPaidOrders} pedido{group.remainingPaidOrders === 1 ? "" : "s"} para envío gratis
+                      Faltan {group.remainingPaidCombos} combo{group.remainingPaidCombos === 1 ? "" : "s"} para envío gratis
                     </span>
                     <strong>
                       {group.estimatedDeliveryFeeCents === null

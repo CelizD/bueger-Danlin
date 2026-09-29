@@ -3,7 +3,7 @@ import type { PrismaService } from "../database/prisma.service.js";
 import { PickupEventsService } from "./pickup-events.service.js";
 
 describe("PickupEventsService", () => {
-  it("cuenta solo pedidos pagados vigentes para la meta grupal", async () => {
+  it("suma solo combos de pedidos pagados vigentes para la meta grupal", async () => {
     const now = new Date();
     const prisma = {
       pickupEvent: {
@@ -17,7 +17,7 @@ describe("PickupEventsService", () => {
             startsAt: new Date(now.getTime() + 3_600_000),
             closesAt: new Date(now.getTime() + 1_800_000),
             maxCombos: 50,
-            freeDeliveryMinPaidOrders: 5,
+            freeDeliveryMinPaidCombos: 5,
             transportCostCents: 10_000,
             status: "OPEN",
             pickupPoint: {
@@ -68,9 +68,9 @@ describe("PickupEventsService", () => {
 
     expect(event?.reservedCombos).toBe(4);
     expect(event?.groupDelivery).toEqual({
-      minPaidOrders: 5,
-      paidOrderCount: 2,
-      remainingPaidOrders: 3,
+      minPaidCombos: 5,
+      paidComboCount: 3,
+      remainingPaidCombos: 2,
       transportCostCents: 10_000,
       estimatedDeliveryFeeCents: 5_000,
       freeDeliveryUnlocked: false,
@@ -91,7 +91,7 @@ describe("PickupEventsService", () => {
             startsAt: new Date(now.getTime() + 3_600_000),
             closesAt: new Date(now.getTime() + 1_800_000),
             maxCombos: 30,
-            freeDeliveryMinPaidOrders: 5,
+            freeDeliveryMinPaidCombos: 5,
             transportCostCents: 10_000,
             status: "OPEN",
             pickupPoint: {

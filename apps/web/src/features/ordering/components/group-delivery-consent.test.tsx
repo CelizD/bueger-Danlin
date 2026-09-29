@@ -24,9 +24,9 @@ const event: PickupEvent = {
   remainingCombos: 46,
   status: "OPEN",
   groupDelivery: {
-    minPaidOrders: 5,
-    paidOrderCount: 4,
-    remainingPaidOrders: 1,
+    minPaidCombos: 5,
+    paidComboCount: 4,
+    remainingPaidCombos: 1,
     transportCostCents: 10_000,
     estimatedDeliveryFeeCents: 2_500,
     freeDeliveryUnlocked: false,
@@ -43,7 +43,7 @@ describe("GroupDeliveryConsent", () => {
       />,
     );
 
-    expect(html).toContain("4 de 5 pedidos pagados");
+    expect(html).toContain("4 de 5 combos pagados");
     expect(html).toContain("$25");
     expect(html).toContain("Entiendo y acepto");
     expect(html).toContain("required");

@@ -52,16 +52,25 @@ export async function listAdminPickupEvents(
       const reservedCombos =
         paidCombos + pendingReservedCombos;
 
-      const paidOrderCount = event.orders.filter(
+      const paidOrders = event.orders.filter(
         (order) =>
           order.paymentStatus === "PAID" &&
           !GROUP_EXCLUDED_STATUSES.includes(
             order.status as (typeof GROUP_EXCLUDED_STATUSES)[number],
           ),
-      ).length;
+      );
+      const paidOrderCount =
+        paidOrders.length;
+      const paidComboCount =
+        paidOrders.reduce(
+          (sum, order) =>
+            sum + order.comboQuantity,
+          0,
+        );
 
       const freeDeliveryUnlocked =
-        paidOrderCount >= event.freeDeliveryMinPaidOrders;
+        paidComboCount >=
+        event.freeDeliveryMinPaidCombos;
 
       const estimatedDeliveryFeeCents =
         freeDeliveryUnlocked
@@ -122,24 +131,18 @@ export async function listAdminPickupEvents(
         ),
         orderCount: event.orders.length,
         groupDelivery: {
-          minPaidOrders:
-            event.freeDeliveryMinPaidOrders,
-          paidOrderCount,
-          remainingPaidOrders: Math.max(
+          minPaidCombos:
+            event.freeDeliveryMinPaidCombos,
+          paidComboCount,
+          remainingPaidCombos: Math.max(
             0,
-            event.freeDeliveryMinPaidOrders -
-              paidOrderCount,
+            event.freeDeliveryMinPaidCombos -
+              paidComboCount,
           ),
           transportCostCents: event.transportCostCents,
           estimatedDeliveryFeeCents:
-            event.groupDeliveryFinalizedAt &&
-            event.groupDeliveryFinalAssignedCents != null &&
-            event.groupDeliveryFinalPaidOrders &&
-            event.groupDeliveryFinalPaidOrders > 0
-              ? Math.ceil(
-                  event.groupDeliveryFinalAssignedCents /
-                    event.groupDeliveryFinalPaidOrders,
-                )
+            event.groupDeliveryFinalizedAt
+              ? null
               : estimatedDeliveryFeeCents,
           freeDeliveryUnlocked:
             event.groupDeliveryFinalizedAt
@@ -147,8 +150,8 @@ export async function listAdminPickupEvents(
               : freeDeliveryUnlocked,
           finalized: !!event.groupDeliveryFinalizedAt,
           finalizedAt: event.groupDeliveryFinalizedAt,
-          finalPaidOrderCount:
-            event.groupDeliveryFinalPaidOrders,
+          finalPaidComboCount:
+            event.groupDeliveryFinalPaidCombos,
           finalTransportCostCents:
             event.groupDeliveryFinalTransportCostCents,
           finalAssignedCents:

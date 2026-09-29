@@ -35,7 +35,7 @@ export async function createAdminPickupEvent(
 
   assertGroupDeliveryCapacity(
     dto.maxCombos,
-    dto.freeDeliveryMinPaidOrders ?? 5,
+    dto.freeDeliveryMinPaidCombos ?? 5,
   );
 
   return prisma.$transaction(async (tx) => {
@@ -77,8 +77,8 @@ export async function createAdminPickupEvent(
         startsAt,
         closesAt,
         maxCombos: dto.maxCombos,
-        freeDeliveryMinPaidOrders:
-          dto.freeDeliveryMinPaidOrders ?? 5,
+        freeDeliveryMinPaidCombos:
+          dto.freeDeliveryMinPaidCombos ?? 5,
         transportCostCents:
           dto.transportCostCents ?? 0,
         status: "DRAFT",
@@ -102,8 +102,8 @@ export async function createAdminPickupEvent(
           startsAt: created.startsAt.toISOString(),
           closesAt: created.closesAt.toISOString(),
           maxCombos: created.maxCombos,
-          freeDeliveryMinPaidOrders:
-            created.freeDeliveryMinPaidOrders,
+          freeDeliveryMinPaidCombos:
+            created.freeDeliveryMinPaidCombos,
           transportCostCents:
             created.transportCostCents,
           status: created.status,
@@ -168,10 +168,10 @@ export async function updateAdminPickupEvent(
     }
 
     const groupDeliveryTermsChanging =
-      (dto.freeDeliveryMinPaidOrders !==
+      (dto.freeDeliveryMinPaidCombos !==
         undefined &&
-        dto.freeDeliveryMinPaidOrders !==
-          event.freeDeliveryMinPaidOrders) ||
+        dto.freeDeliveryMinPaidCombos !==
+          event.freeDeliveryMinPaidCombos) ||
       (dto.transportCostCents !==
         undefined &&
         dto.transportCostCents !==
@@ -194,13 +194,13 @@ export async function updateAdminPickupEvent(
 
     const maxCombos =
       dto.maxCombos ?? event.maxCombos;
-    const freeDeliveryMinPaidOrders =
-      dto.freeDeliveryMinPaidOrders ??
-      event.freeDeliveryMinPaidOrders;
+    const freeDeliveryMinPaidCombos =
+      dto.freeDeliveryMinPaidCombos ??
+      event.freeDeliveryMinPaidCombos;
 
     assertGroupDeliveryCapacity(
       maxCombos,
-      freeDeliveryMinPaidOrders,
+      freeDeliveryMinPaidCombos,
     );
 
     const capacity = await tx.order.aggregate({
@@ -331,8 +331,8 @@ export async function updateAdminPickupEvent(
             ? closesAt
             : undefined,
         maxCombos: dto.maxCombos,
-        freeDeliveryMinPaidOrders:
-          dto.freeDeliveryMinPaidOrders,
+        freeDeliveryMinPaidCombos:
+          dto.freeDeliveryMinPaidCombos,
         transportCostCents:
           dto.transportCostCents,
         status: nextStatus,
@@ -355,8 +355,8 @@ export async function updateAdminPickupEvent(
           startsAt: event.startsAt.toISOString(),
           closesAt: event.closesAt.toISOString(),
           maxCombos: event.maxCombos,
-          freeDeliveryMinPaidOrders:
-            event.freeDeliveryMinPaidOrders,
+          freeDeliveryMinPaidCombos:
+            event.freeDeliveryMinPaidCombos,
           transportCostCents:
             event.transportCostCents,
           status: event.status,
@@ -368,8 +368,8 @@ export async function updateAdminPickupEvent(
           startsAt: updated.startsAt.toISOString(),
           closesAt: updated.closesAt.toISOString(),
           maxCombos: updated.maxCombos,
-          freeDeliveryMinPaidOrders:
-            updated.freeDeliveryMinPaidOrders,
+          freeDeliveryMinPaidCombos:
+            updated.freeDeliveryMinPaidCombos,
           transportCostCents:
             updated.transportCostCents,
           status: updated.status,
@@ -420,7 +420,7 @@ export async function openAdminPickupEvent(
 
     assertGroupDeliveryCapacity(
       event.maxCombos,
-      event.freeDeliveryMinPaidOrders,
+      event.freeDeliveryMinPaidCombos,
     );
 
     const capacity = await tx.order.aggregate({

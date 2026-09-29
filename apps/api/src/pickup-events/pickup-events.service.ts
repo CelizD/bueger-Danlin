@@ -78,17 +78,25 @@ export class PickupEventsService {
           });
         }
 
-        const paidOrderCount = event.orders.filter(
+        const paidOrders = event.orders.filter(
           (order) =>
             order.paymentStatus === "PAID" &&
             !GROUP_EXCLUDED_STATUSES.includes(
               order.status as (typeof GROUP_EXCLUDED_STATUSES)[number],
             ),
-        ).length;
+        );
+        const paidOrderCount =
+          paidOrders.length;
+        const paidComboCount =
+          paidOrders.reduce(
+            (sum, order) =>
+              sum + order.comboQuantity,
+            0,
+          );
 
         const freeDeliveryUnlocked =
-          paidOrderCount >=
-          event.freeDeliveryMinPaidOrders;
+          paidComboCount >=
+          event.freeDeliveryMinPaidCombos;
 
         const estimatedDeliveryFeeCents =
           freeDeliveryUnlocked
@@ -124,13 +132,13 @@ export class PickupEventsService {
           ),
           status: nextStatus,
           groupDelivery: {
-            minPaidOrders:
-              event.freeDeliveryMinPaidOrders,
-            paidOrderCount,
-            remainingPaidOrders: Math.max(
+            minPaidCombos:
+              event.freeDeliveryMinPaidCombos,
+            paidComboCount,
+            remainingPaidCombos: Math.max(
               0,
-              event.freeDeliveryMinPaidOrders -
-                paidOrderCount,
+              event.freeDeliveryMinPaidCombos -
+                paidComboCount,
             ),
             transportCostCents:
               event.transportCostCents,

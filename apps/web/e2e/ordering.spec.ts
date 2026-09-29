@@ -22,8 +22,8 @@ test("cliente crea pedido, paga y obtiene QR", async ({
     }),
   ).toBeVisible();
 
-  await expect(page.getByText("3 de 5 pedidos pagados")).toBeVisible();
-  await expect(page.getByText("4 de 5 pedidos pagados")).toBeVisible();
+  await expect(page.getByText("3 de 5 combos pagados")).toBeVisible();
+  await expect(page.getByText("4 de 5 combos pagados")).toBeVisible();
 
   await page
     .getByRole("button", {
@@ -61,10 +61,10 @@ test("cliente crea pedido, paga y obtiene QR", async ({
   ).toBeVisible();
 
   await expect(
-    page.getByText("3 de 5 pedidos pagados"),
+    page.getByText("3 de 5 combos pagados"),
   ).toBeVisible();
   await expect(
-    page.getByText("Faltan 2 pedidos para envío gratis"),
+    page.getByText("Faltan 2 combos para envío gratis"),
   ).toBeVisible();
 
   const storedToken = await page.evaluate(() =>
@@ -96,10 +96,10 @@ test("cliente crea pedido, paga y obtiene QR", async ({
   ).toBeVisible();
 
   await expect(
-    page.getByText("4 de 5 pedidos pagados"),
+    page.getByText("4 de 5 combos pagados"),
   ).toBeVisible();
   await expect(
-    page.getByText("Falta 1 pedido para envío gratis"),
+    page.getByText("Falta 1 combo para envío gratis"),
   ).toBeVisible();
   await expect(page.getByText("$25", { exact: false })).toBeVisible();
 
@@ -114,7 +114,7 @@ test("cliente crea pedido, paga y obtiene QR", async ({
     page.getByText("Pagado", { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("4 de 5 pedidos pagados"),
+    page.getByText("4 de 5 combos pagados"),
   ).toBeVisible();
 });
 

@@ -102,10 +102,10 @@ export function defaultPickupEventName(
 
 export function assertGroupDeliveryCapacity(
   maxCombos: number,
-  freeDeliveryMinPaidOrders: number,
+  freeDeliveryMinPaidCombos: number,
 ) {
   if (
-    freeDeliveryMinPaidOrders >
+    freeDeliveryMinPaidCombos >
     maxCombos
   ) {
     throw new BadRequestException(
