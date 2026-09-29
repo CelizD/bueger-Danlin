@@ -12,6 +12,55 @@ const money = new Intl.NumberFormat(
   },
 );
 
+function deliveryFeeLabel(
+  order: DeliveryOrder,
+) {
+  const finalFee =
+    order.groupDeliveryFinalFeeCents;
+
+  if (finalFee === null) {
+    return "Pendiente de cierre";
+  }
+
+  if (finalFee <= 0) {
+    return "Envío gratis";
+  }
+
+  if (order.groupDeliveryFeeCollectedAt) {
+    return `Cobrado ${money.format(
+      (order.groupDeliveryFeeCollectedCents ??
+        finalFee) / 100,
+    )}`;
+  }
+
+  return `Cobrar ${money.format(
+    finalFee / 100,
+  )} en efectivo`;
+}
+
+function deliveryButtonLabel(
+  order: DeliveryOrder,
+  busy: boolean,
+) {
+  if (busy) {
+    return "Confirmando…";
+  }
+
+  const fee =
+    order.groupDeliveryFinalFeeCents ?? 0;
+
+  if (
+    fee > 0 &&
+    !order.groupDeliveryFeeCollectedAt
+  ) {
+    return `Cobrar ${money.format(
+      fee / 100,
+    )} y entregar`;
+  }
+
+  return "Confirmar entrega";
+}
+
 export function DeliveryOrderSections({
   query,
   ready,
@@ -88,6 +137,22 @@ export function DeliveryOrderSections({
                       )}
                     </strong>
                   </div>
+                  <div
+                    className={
+                      "delivery-fee-meta" +
+                      ((order.groupDeliveryFinalFeeCents ?? 0) > 0 &&
+                      !order.groupDeliveryFeeCollectedAt
+                        ? " cash-due"
+                        : "")
+                    }
+                  >
+                    <span>Envío</span>
+                    <strong>
+                      {deliveryFeeLabel(
+                        order,
+                      )}
+                    </strong>
+                  </div>
                 </div>
 
                 <button
@@ -104,10 +169,11 @@ export function DeliveryOrderSections({
                   <CheckCircle2
                     size={18}
                   />
-                  {busyCode ===
-                  order.orderCode
-                    ? "Confirmando…"
-                    : "Entrega manual"}
+                  {deliveryButtonLabel(
+                    order,
+                    busyCode ===
+                      order.orderCode,
+                  )}
                 </button>
               </article>
             ))
