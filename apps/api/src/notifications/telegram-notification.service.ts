@@ -19,14 +19,14 @@ type CancellationNotice = OrderNotice & {
 
 export type GroupCompletedNotice = {
   locationLabel: string;
-  paidOrderCount: number;
-  minPaidOrders: number;
+  paidComboCount: number;
+  minPaidCombos: number;
 };
 
 export type GroupClosedNotice = {
   locationLabel: string;
-  paidOrderCount: number;
-  minPaidOrders: number;
+  paidComboCount: number;
+  minPaidCombos: number;
   transportCostCents: number;
   assignedCents: number;
   freeDeliveryUnlocked: boolean;
@@ -188,7 +188,7 @@ export class TelegramNotificationService {
       [
         "🎉 Grupo completado",
         `Punto: ${group.locationLabel}`,
-        `Meta: ${group.paidOrderCount} de ${group.minPaidOrders} pedidos pagados`,
+        `Meta: ${group.paidComboCount} de ${group.minPaidCombos} combos pagados`,
         "Envío gratis desbloqueado ✅",
       ].join("\n"),
     );
@@ -210,7 +210,7 @@ export class TelegramNotificationService {
       [
         "🔒 Punto de entrega cerrado",
         `Punto: ${group.locationLabel}`,
-        `Pedidos pagados: ${group.paidOrderCount} de ${group.minPaidOrders}`,
+        `Combos pagados: ${group.paidComboCount} de ${group.minPaidCombos}`,
         `Traslado: ${money(group.transportCostCents, "MXN")}`,
         deliveryLine,
         `Pedidos sin pagar cancelados: ${group.cancelledPendingOrders}`,
