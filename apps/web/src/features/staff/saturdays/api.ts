@@ -93,6 +93,28 @@ export async function saveAdminPickupEvent(
     new Date(closesAtIso);
   const maxCombos =
     Number(form.maxCombos);
+  const freeDeliveryMinPaidOrders =
+    Number(
+      form.freeDeliveryMinPaidOrders,
+    );
+  const transportCostMx =
+    Number(form.transportCostMx);
+  const transportCostCents =
+    Math.round(
+      transportCostMx * 100,
+    );
+  const latitude =
+    form.latitude.trim() === ""
+      ? undefined
+      : Number(form.latitude);
+  const longitude =
+    form.longitude.trim() === ""
+      ? undefined
+      : Number(form.longitude);
+  const hasLatitude =
+    latitude !== undefined;
+  const hasLongitude =
+    longitude !== undefined;
 
   if (
     Number.isNaN(
@@ -101,10 +123,38 @@ export async function saveAdminPickupEvent(
     Number.isNaN(
       closesAt.getTime(),
     ) ||
-    !Number.isInteger(maxCombos)
+    !Number.isInteger(maxCombos) ||
+    maxCombos < 1 ||
+    maxCombos > 500 ||
+    !Number.isInteger(
+      freeDeliveryMinPaidOrders,
+    ) ||
+    freeDeliveryMinPaidOrders < 1 ||
+    freeDeliveryMinPaidOrders > 100 ||
+    !Number.isFinite(
+      transportCostMx,
+    ) ||
+    transportCostMx < 0 ||
+    transportCostCents > 100000
   ) {
     throw new Error(
-      "Revisa la fecha, hora y límite de combos.",
+      "Revisa fechas, límite de combos, meta de envío gratis y costo de traslado.",
+    );
+  }
+
+  if (
+    hasLatitude !== hasLongitude ||
+    (latitude !== undefined &&
+      (!Number.isFinite(latitude) ||
+        latitude < -90 ||
+        latitude > 90)) ||
+    (longitude !== undefined &&
+      (!Number.isFinite(longitude) ||
+        longitude < -180 ||
+        longitude > 180))
+  ) {
+    throw new Error(
+      "Ingresa latitud y longitud válidas juntas, o deja ambas vacías.",
     );
   }
 
@@ -127,6 +177,12 @@ export async function saveAdminPickupEvent(
       body: JSON.stringify({
         locationLabel:
           form.locationLabel.trim(),
+        locationAddress:
+          form.locationAddress.trim(),
+        latitude,
+        longitude,
+        freeDeliveryMinPaidOrders,
+        transportCostCents,
         startsAt: startsAtIso,
         closesAt: closesAtIso,
         maxCombos,
