@@ -25,7 +25,7 @@ function event() {
       "2030-09-05T23:00:00.000Z",
     ),
     maxCombos: 50,
-    freeDeliveryMinPaidOrders: 5,
+    freeDeliveryMinPaidCombos: 5,
     transportCostCents: 15000,
     groupDeliveryFinalizedAt: null,
     status: "DRAFT",
@@ -92,7 +92,7 @@ describe("group delivery capacity", () => {
           closesAt:
             "2030-09-05T23:00:00.000Z",
           maxCombos: 3,
-          freeDeliveryMinPaidOrders: 5,
+          freeDeliveryMinPaidCombos: 5,
         },
         "admin-1",
       ),
@@ -138,7 +138,7 @@ describe("group delivery capacity", () => {
     const brokenEvent = {
       ...event(),
       maxCombos: 3,
-      freeDeliveryMinPaidOrders: 5,
+      freeDeliveryMinPaidCombos: 5,
     };
     const tx = {
       pickupEvent: {
@@ -195,7 +195,7 @@ describe("updateAdminPickupEvent", () => {
         prisma,
         "event-1",
         {
-          freeDeliveryMinPaidOrders: 6,
+          freeDeliveryMinPaidCombos: 6,
           transportCostCents: 18000,
         },
         "admin-1",
