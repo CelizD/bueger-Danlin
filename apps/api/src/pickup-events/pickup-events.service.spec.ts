@@ -17,7 +17,7 @@ describe("PickupEventsService", () => {
             startsAt: new Date(now.getTime() + 3_600_000),
             closesAt: new Date(now.getTime() + 1_800_000),
             maxCombos: 50,
-            freeDeliveryMinPaidOrders: 5,
+            freeDeliveryMinPaidCombos: 5,
             transportCostCents: 10_000,
             status: "OPEN",
             pickupPoint: {
@@ -91,7 +91,7 @@ describe("PickupEventsService", () => {
             startsAt: new Date(now.getTime() + 3_600_000),
             closesAt: new Date(now.getTime() + 1_800_000),
             maxCombos: 30,
-            freeDeliveryMinPaidOrders: 5,
+            freeDeliveryMinPaidCombos: 5,
             transportCostCents: 10_000,
             status: "OPEN",
             pickupPoint: {
