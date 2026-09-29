@@ -120,6 +120,30 @@ describe("AdminOrdersService", () => {
             comboQuantity: 1,
             payments: [],
           },
+          {
+            id: "order-late",
+            orderCode: "H-LATE",
+            status: "CANCELLED",
+            paymentStatus: "PAID",
+            totalCents: 13_000,
+            comboQuantity: 1,
+            payments: [
+              {
+                provider: "MERCADOPAGO",
+                status: "PAID",
+                amountCents: 13_000,
+                paidAt: new Date(),
+                refundedAt: null,
+                metadata: {
+                  requiresManualRefund: true,
+                  latePaymentReason:
+                    "RESERVATION_EXPIRED",
+                  latePaymentDetectedAt:
+                    "2026-10-01T00:00:00.000Z",
+                },
+              },
+            ],
+          },
         ]),
       },
     } as unknown as PrismaService;
@@ -155,8 +179,23 @@ describe("AdminOrdersService", () => {
       paidRevenueCents: 26_000,
       finalDeliveryCashCents: 6_667,
       activeGroups: 1,
-      manualRefundsPending: 0,
-      manualRefundsPendingCents: 0,
+      manualRefundsPending: 1,
+      manualRefundsPendingCents: 13_000,
+    });
+
+    expect(
+      result.orders.find(
+        (order) =>
+          order.orderCode ===
+          "H-LATE",
+      )?.refundIssue,
+    ).toMatchObject({
+      required: true,
+      amountCents: 13_000,
+      provider: "MERCADOPAGO",
+      reason:
+        "RESERVATION_EXPIRED",
+      lastAttemptFailed: false,
     });
   });
 });
