@@ -176,7 +176,7 @@ describe("AdminDashboardService", () => {
       paidOrders: 2,
       combosPaid: 3,
       combosToPrepare: 3,
-      remainingPaidOrders: 3,
+      remainingPaidCombos: 3,
       estimatedFeeCents: 5_000,
       finalized: false,
     });
