@@ -12,7 +12,7 @@ Burger Danlin usa Telegram para dos tipos de mensajes:
    - pedido entregado;
    - pedido cancelado;
    - reembolso completado o pendiente;
-   - grupo completado al alcanzar la meta de pedidos pagados;
+   - grupo completado al alcanzar la meta de combos pagados;
    - punto de entrega cerrado con resumen final del traslado;
    - cantidad de pedidos sin pagar cancelados al cierre.
 
@@ -143,12 +143,12 @@ docker compose \
 
 ## Notificaciones grupales
 
-Cuando un punto alcanza la meta configurada, por ejemplo `5 de 5` pedidos pagados, se envía una sola notificación:
+Cuando un punto alcanza la meta configurada, por ejemplo `5 de 5` combos pagados, se envía una sola notificación:
 
 ```text
 🎉 Grupo completado
 Punto: Universidad
-Meta: 5 de 5 pedidos pagados
+Meta: 5 de 5 combos pagados
 Envío gratis desbloqueado ✅
 ```
 
@@ -157,7 +157,7 @@ Cuando el punto cierra manualmente o por horario, Telegram recibe el resumen fin
 ```text
 🔒 Punto de entrega cerrado
 Punto: Universidad
-Pedidos pagados: 3 de 5
+Combos pagados: 3 de 5
 Traslado: $100.00
 Envío final a cobrar: $100.00
 Pedidos sin pagar cancelados: 1
