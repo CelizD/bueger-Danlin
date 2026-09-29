@@ -6,14 +6,12 @@ import { CustomerOrderSummary } from "@/features/ordering/components/customer-or
 import { GroupDeliveryProgress } from "@/features/ordering/components/group-delivery-progress";
 import { CUSTOMER_ORDER_STATUS_LABELS } from "@/features/ordering/customer-order/config";
 import { pickupQrPayloadFromToken } from "@/features/ordering/formatters";
-import { pickupQrPayloadFromToken } from "@/features/ordering/formatters";
 import { useCustomerOrder } from "@/features/ordering/customer-order/use-customer-order";
 import {
   ArrowLeft,
   CheckCircle2,
 } from "lucide-react";
 import { useParams } from "next/navigation";
-import { QRCodeSVG } from "qrcode.react";
 import { QRCodeSVG } from "qrcode.react";
 
 export default function CustomerOrderPage() {
@@ -170,59 +168,6 @@ export default function CustomerOrderPage() {
                       level="H"
                       marginSize={2}
                       title={`Pedido ${order.orderCode}`}
-                    />
-                  </div>
-
-                  <div className="customer-qr-code">
-                    <span>Pedido</span>
-                    <strong>
-                      {order.orderCode}
-                    </strong>
-                  </div>
-
-                  <p className="customer-qr-warning">
-                    No compartas este QR públicamente. Funciona como comprobante para retirar tu pedido.
-                  </p>
-                </div>
-              )}
-
-            {token &&
-              order.paymentStatus ===
-                "PAID" &&
-              ![
-                "DELIVERED",
-                "CANCELLED",
-                "REFUNDED",
-                "NO_SHOW",
-              ].includes(
-                order.status,
-              ) && (
-                <div className="customer-qr-card">
-                  <div className="customer-qr-copy">
-                    <p className="eyebrow">
-                      Código de entrega
-                    </p>
-                    <h2>
-                      Presenta este QR
-                    </h2>
-                    <p>
-                      Muéstralo al momento de recoger tu pedido. El personal lo escaneará para confirmar la entrega.
-                    </p>
-                  </div>
-
-                  <div
-                    className="customer-qr-frame"
-                    aria-label="QR de entrega"
-                  >
-                    <QRCodeSVG
-                      value={pickupQrPayloadFromToken(
-                        order.orderCode,
-                        token,
-                      )}
-                      size={220}
-                      level="H"
-                      marginSize={2}
-                      title={"Pedido " + order.orderCode}
                     />
                   </div>
 
