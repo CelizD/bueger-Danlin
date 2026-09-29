@@ -103,7 +103,7 @@ describe("CustomerOrdersService.getOrder", () => {
             startsAt: new Date(Date.now() + 2 * 60 * 60_000),
             closesAt: new Date(Date.now() + 60 * 60_000),
             timezone: "America/Tijuana",
-            freeDeliveryMinPaidOrders: 5,
+            freeDeliveryMinPaidCombos: 5,
             transportCostCents: 10_000,
             pickupPoint: {
               code: "UNIVERSIDAD",
@@ -169,10 +169,10 @@ describe("CustomerOrdersService.getOrder", () => {
             startsAt: new Date(Date.now() + 2 * 60 * 60_000),
             closesAt: new Date(Date.now() - 60_000),
             timezone: "America/Tijuana",
-            freeDeliveryMinPaidOrders: 5,
+            freeDeliveryMinPaidCombos: 5,
             transportCostCents: 10_000,
             groupDeliveryFinalizedAt: finalizedAt,
-            groupDeliveryFinalPaidOrders: 3,
+            groupDeliveryFinalPaidCombos: 3,
             groupDeliveryFinalTransportCostCents: 10_000,
             groupDeliveryFinalFreeUnlocked: false,
             pickupPoint: {
