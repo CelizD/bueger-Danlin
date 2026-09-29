@@ -171,11 +171,16 @@ export function nextSaturdayDefaults(): SaturdayFormState {
 
   return {
     locationLabel: "Universidad",
+    locationAddress: "",
+    latitude: "",
+    longitude: "",
     pickupDate,
     pickupTime: "09:30",
     closeDate,
     closeTime: "21:00",
     maxCombos: "50",
+    freeDeliveryMinPaidOrders: "5",
+    transportCostPesos: "",
   };
 }
 
