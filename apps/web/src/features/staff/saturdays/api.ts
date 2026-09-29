@@ -93,6 +93,24 @@ export async function saveAdminPickupEvent(
     new Date(closesAtIso);
   const maxCombos =
     Number(form.maxCombos);
+  const freeDeliveryMinPaidOrders =
+    Number(
+      form.freeDeliveryMinPaidOrders,
+    );
+  const transportCostPesos =
+    Number(form.transportCostPesos);
+  const transportCostCents =
+    Math.round(
+      transportCostPesos * 100,
+    );
+  const latitude =
+    form.latitude.trim() === ""
+      ? undefined
+      : Number(form.latitude);
+  const longitude =
+    form.longitude.trim() === ""
+      ? undefined
+      : Number(form.longitude);
 
   if (
     Number.isNaN(
@@ -101,10 +119,60 @@ export async function saveAdminPickupEvent(
     Number.isNaN(
       closesAt.getTime(),
     ) ||
-    !Number.isInteger(maxCombos)
+    !Number.isInteger(maxCombos) ||
+    maxCombos < 1 ||
+    maxCombos > 500
   ) {
     throw new Error(
       "Revisa la fecha, hora y límite de combos.",
+    );
+  }
+
+  if (
+    !Number.isInteger(
+      freeDeliveryMinPaidOrders,
+    ) ||
+    freeDeliveryMinPaidOrders < 1 ||
+    freeDeliveryMinPaidOrders > 100 ||
+    freeDeliveryMinPaidOrders >
+      maxCombos
+  ) {
+    throw new Error(
+      "La meta de envío gratis debe ser un número válido y no puede superar el límite de combos.",
+    );
+  }
+
+  if (
+    !Number.isFinite(
+      transportCostPesos,
+    ) ||
+    transportCostPesos < 0 ||
+    transportCostCents > 100000
+  ) {
+    throw new Error(
+      "El costo de traslado debe estar entre $0 y $1,000 MXN.",
+    );
+  }
+
+  if (
+    latitude !== undefined &&
+    (!Number.isFinite(latitude) ||
+      latitude < -90 ||
+      latitude > 90)
+  ) {
+    throw new Error(
+      "La latitud debe estar entre -90 y 90.",
+    );
+  }
+
+  if (
+    longitude !== undefined &&
+    (!Number.isFinite(longitude) ||
+      longitude < -180 ||
+      longitude > 180)
+  ) {
+    throw new Error(
+      "La longitud debe estar entre -180 y 180.",
     );
   }
 
@@ -127,9 +195,15 @@ export async function saveAdminPickupEvent(
       body: JSON.stringify({
         locationLabel:
           form.locationLabel.trim(),
+        locationAddress:
+          form.locationAddress.trim(),
+        latitude,
+        longitude,
         startsAt: startsAtIso,
         closesAt: closesAtIso,
         maxCombos,
+        freeDeliveryMinPaidOrders,
+        transportCostCents,
       }),
     },
   );
