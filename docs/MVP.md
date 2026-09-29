@@ -26,3 +26,11 @@ Obligatorio. Mock en local. Stripe y Mercado Pago previstos para producción.
 
 ## Cancelación
 Permitida antes del cierre. Después del cierre no hay cancelación automática.
+
+
+## Envío grupal
+- La meta de envío gratis se mide por combos pagados, no por cantidad de pedidos.
+- Solo cuentan combos de pedidos con pago confirmado y vigentes.
+- Pedidos cancelados o reembolsados no cuentan para la meta.
+- Si se alcanza la meta de combos, el envío queda gratis.
+- Si no se alcanza, el costo de traslado se divide entre los pedidos pagados y se cobra al entregar.
