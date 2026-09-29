@@ -148,7 +148,7 @@ export async function createOrderTransaction(
     }
 
     const groupDeliveryPaidOrders =
-      await tx.order.count({
+      await tx.order.findMany({
         where: {
           pickupEventId: event.id,
           paymentStatus: "PAID",
@@ -159,19 +159,30 @@ export async function createOrderTransaction(
             ],
           },
         },
+        select: {
+          comboQuantity: true,
+        },
       });
+    const groupDeliveryPaidOrderCount =
+      groupDeliveryPaidOrders.length;
+    const groupDeliveryPaidCombos =
+      groupDeliveryPaidOrders.reduce(
+        (sum, paidOrder) =>
+          sum + paidOrder.comboQuantity,
+        0,
+      );
 
     const groupDeliveryFreeUnlocked =
-      groupDeliveryPaidOrders >=
+      groupDeliveryPaidCombos >=
       event.freeDeliveryMinPaidCombos;
 
     const groupDeliveryEstimatedFeeCents =
       groupDeliveryFreeUnlocked
         ? 0
-        : groupDeliveryPaidOrders > 0
+        : groupDeliveryPaidOrderCount > 0
           ? Math.ceil(
               event.transportCostCents /
-                groupDeliveryPaidOrders,
+                groupDeliveryPaidOrderCount,
             )
           : null;
 
@@ -226,7 +237,7 @@ export async function createOrderTransaction(
         groupDeliveryTransportCostCentsAtOrder:
           event.transportCostCents,
         groupDeliveryPaidCombosAtOrder:
-          groupDeliveryPaidOrders,
+          groupDeliveryPaidCombos,
         groupDeliveryEstimatedFeeCentsAtOrder:
           groupDeliveryEstimatedFeeCents,
       },
