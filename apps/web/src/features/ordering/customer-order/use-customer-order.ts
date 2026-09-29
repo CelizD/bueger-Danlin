@@ -34,13 +34,16 @@ export function useCustomerOrder(
 
   async function loadOrder(
     orderToken = token,
+    silent = false,
   ) {
     if (!orderToken) {
       return;
     }
 
-    setLoading(true);
-    setError("");
+    if (!silent) {
+      setLoading(true);
+      setError("");
+    }
 
     try {
       const data =
@@ -51,13 +54,17 @@ export function useCustomerOrder(
 
       setOrder(data);
     } catch (loadError) {
-      setError(
-        loadError instanceof Error
-          ? loadError.message
-          : "No se pudo consultar el pedido.",
-      );
+      if (!silent) {
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "No se pudo consultar el pedido.",
+        );
+      }
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }
 
@@ -79,6 +86,33 @@ export function useCustomerOrder(
 
     void loadOrder(resolvedToken);
   }, [orderCode]);
+
+  useEffect(() => {
+    if (
+      !token ||
+      !order ||
+      order.status !== "PENDING_PAYMENT" ||
+      !["PENDING", "PROCESSING"].includes(
+        order.paymentStatus,
+      )
+    ) {
+      return;
+    }
+
+    const intervalId =
+      window.setInterval(() => {
+        void loadOrder(token, true);
+      }, 5_000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [
+    token,
+    orderCode,
+    order?.status,
+    order?.paymentStatus,
+  ]);
 
   async function cancelOrder() {
     const retryingRefund =
@@ -137,6 +171,7 @@ export function useCustomerOrder(
 
   return {
     order,
+    token,
     loading,
     canceling,
     error,

@@ -12,6 +12,7 @@ type OrderConfirmationProps = {
   cancelMessage: string;
   paying: boolean;
   canceling: boolean;
+  paymentProvider: string;
   onConfirmPayment: () => void;
   onCancel: () => void;
 };
@@ -22,6 +23,7 @@ export function OrderConfirmation({
   cancelMessage,
   paying,
   canceling,
+  paymentProvider,
   onConfirmPayment,
   onCancel,
 }: OrderConfirmationProps) {
@@ -49,10 +51,10 @@ export function OrderConfirmation({
         <p className="lead">
           {isCancelled
             ? order.status === "REFUNDED"
-              ? "Tu pedido fue cancelado y el reembolso local quedó completado."
+              ? "Tu pedido fue cancelado y el reembolso quedó completado."
               : "Tu pedido fue cancelado y el cupo quedó liberado."
             : isPaid
-              ? "Tu pedido local quedó pagado y confirmado para continuar con cocina y entrega."
+              ? "Tu pago quedó confirmado y el pedido puede continuar con cocina y entrega."
               : `Reservamos ${order.comboQuantity} combo(s) durante 15 minutos mientras completas el pago.`}
         </p>
 
@@ -106,13 +108,19 @@ export function OrderConfirmation({
             onClick={onConfirmPayment}
             disabled={paying}
           >
-            {paying ? "Confirmando pago…" : "Simular pago local"}
+            {paymentProvider === "mercadopago"
+              ? paying
+                ? "Abriendo Mercado Pago…"
+                : "Pagar con Mercado Pago"
+              : paying
+                ? "Confirmando pago…"
+                : "Simular pago local"}
           </button>
         )}
 
         {isPaid && !isCancelled && (
           <>
-            <div className="paid-badge">Pago local aprobado</div>
+            <div className="paid-badge">Pago aprobado</div>
 
             <div className="customer-qr-card">
               <div className="customer-qr-copy">

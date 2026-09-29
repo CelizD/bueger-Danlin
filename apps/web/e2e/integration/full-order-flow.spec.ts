@@ -84,7 +84,7 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     .getByRole("button", { name: "Simular pago local" })
     .click();
 
-  await expect(page.getByText("Pago local aprobado")).toBeVisible();
+  await expect(page.getByText("Pago aprobado")).toBeVisible();
   await expect(
     page.getByText("1 de 5 pedidos pagados"),
   ).toBeVisible();

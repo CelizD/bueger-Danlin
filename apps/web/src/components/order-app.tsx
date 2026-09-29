@@ -71,8 +71,11 @@ export function OrderApp() {
         }
         paying={checkout.paying}
         canceling={checkout.canceling}
+        paymentProvider={
+          checkout.paymentProvider
+        }
         onConfirmPayment={() =>
-          void checkout.confirmMockPayment()
+          void checkout.confirmPayment()
         }
         onCancel={() =>
           void checkout.cancelCreatedOrder()

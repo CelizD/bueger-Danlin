@@ -137,6 +137,21 @@ export class MercadoPagoProvider implements PaymentProvider {
               },
             }
           : {}),
+        ...(input.returnUrls
+          ? {
+              config: {
+                online: {
+                  success_url:
+                    input.returnUrls.successUrl,
+                  failure_url:
+                    input.returnUrls.failureUrl,
+                  pending_url:
+                    input.returnUrls.pendingUrl,
+                  auto_return: "all" as const,
+                },
+              },
+            }
+          : {}),
       },
     });
 

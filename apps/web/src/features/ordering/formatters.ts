@@ -21,8 +21,18 @@ export function formatPickup(event: PickupEvent) {
   }).format(new Date(event.startsAt));
 }
 
+export function pickupQrPayloadFromToken(
+  orderCode: string,
+  verificationToken: string,
+) {
+  return `BD1:${orderCode}:${verificationToken}`;
+}
+
 export function pickupQrPayload(order: CreatedOrder) {
-  return `BD1:${order.orderCode}:${order.verificationToken}`;
+  return pickupQrPayloadFromToken(
+    order.orderCode,
+    order.verificationToken,
+  );
 }
 
 export function newBurger(

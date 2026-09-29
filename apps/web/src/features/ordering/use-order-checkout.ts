@@ -4,6 +4,7 @@ import {
   cancelOrder,
   confirmMockOrderPayment,
   createOrder,
+  createPaymentCheckout,
   loadCustomerOrder,
 } from "./api";
 import { orderTokenStorageKey } from "./formatters";
@@ -17,6 +18,11 @@ import {
   type FormEvent,
   useState,
 } from "react";
+
+const CLIENT_PAYMENT_PROVIDER =
+  (process.env.NEXT_PUBLIC_PAYMENT_PROVIDER ?? "mock")
+    .trim()
+    .toLowerCase();
 
 type UseOrderCheckoutInput = {
   event: PickupEvent | null;
@@ -190,7 +196,7 @@ export function useOrderCheckout({
       setCancelMessage(
         data.refundStatus ===
           "REFUNDED"
-          ? "Pedido cancelado y reembolso local completado."
+          ? "Pedido cancelado y reembolso completado."
           : data.refundStatus ===
               "PENDING"
             ? "Pedido cancelado. El reembolso está en proceso."
@@ -207,7 +213,7 @@ export function useOrderCheckout({
     }
   }
 
-  async function confirmMockPayment() {
+  async function confirmPayment() {
     if (
       !createdOrder ||
       createdOrder.paymentStatus ===
@@ -220,6 +226,34 @@ export function useOrderCheckout({
     setError("");
 
     try {
+      if (CLIENT_PAYMENT_PROVIDER === "mercadopago") {
+        const checkout =
+          await createPaymentCheckout(
+            createdOrder.orderCode,
+            createdOrder.verificationToken,
+          );
+
+        const checkoutUrl =
+          new URL(checkout.checkoutUrl);
+
+        if (checkoutUrl.protocol !== "https:") {
+          throw new Error(
+            "Mercado Pago devolvió una URL de pago no segura.",
+          );
+        }
+
+        window.location.assign(
+          checkoutUrl.toString(),
+        );
+        return;
+      }
+
+      if (CLIENT_PAYMENT_PROVIDER !== "mock") {
+        throw new Error(
+          "El proveedor de pago del sitio no está configurado correctamente.",
+        );
+      }
+
       const data =
         await confirmMockOrderPayment(
           createdOrder.orderCode,
@@ -265,7 +299,7 @@ export function useOrderCheckout({
       setError(
         paymentError instanceof Error
           ? paymentError.message
-          : "No se pudo confirmar el pago local.",
+          : "No se pudo iniciar el pago.",
       );
     } finally {
       setPaying(false);
@@ -281,11 +315,13 @@ export function useOrderCheckout({
     canceling,
     cancelMessage,
     createdOrder,
+    paymentProvider:
+      CLIENT_PAYMENT_PROVIDER,
     setName,
     setPhone,
     setEmail,
     submitOrder,
     cancelCreatedOrder,
-    confirmMockPayment,
+    confirmPayment,
   };
 }

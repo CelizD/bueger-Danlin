@@ -112,6 +112,16 @@ export type PaymentResult = {
   paymentStatus: string;
 };
 
+export type CheckoutResult = {
+  orderCode: string;
+  orderStatus: string;
+  paymentId: string;
+  paymentStatus: string;
+  provider: string;
+  checkoutUrl: string;
+  expiresAt: string;
+};
+
 export type CreateOrderInput = {
   pickupEventId: string;
   groupDeliveryTermsAccepted: boolean;
