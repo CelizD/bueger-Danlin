@@ -9,9 +9,9 @@ describe("GroupDeliveryProgress", () => {
         pointName="Universidad"
         paymentStatus="PAID"
         group={{
-          minPaidOrders: 5,
+          minPaidCombos: 5,
           paidOrderCount: 4,
-          remainingPaidOrders: 1,
+          remainingPaidCombos: 1,
           transportCostCents: 10_000,
           estimatedDeliveryFeeCents: 2_500,
           freeDeliveryUnlocked: false,
@@ -30,9 +30,9 @@ describe("GroupDeliveryProgress", () => {
         pointName="Universidad"
         paymentStatus="PAID"
         group={{
-          minPaidOrders: 5,
+          minPaidCombos: 5,
           paidOrderCount: 3,
-          remainingPaidOrders: 2,
+          remainingPaidCombos: 2,
           transportCostCents: 10_000,
           estimatedDeliveryFeeCents: 3_334,
           freeDeliveryUnlocked: false,
@@ -54,9 +54,9 @@ describe("GroupDeliveryProgress", () => {
         pointName="Cucapá"
         paymentStatus="PAID"
         group={{
-          minPaidOrders: 5,
+          minPaidCombos: 5,
           paidOrderCount: 5,
-          remainingPaidOrders: 0,
+          remainingPaidCombos: 0,
           transportCostCents: 10_000,
           estimatedDeliveryFeeCents: 0,
           freeDeliveryUnlocked: true,
