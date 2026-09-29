@@ -33,15 +33,33 @@ function harness() {
     last_updated_date: "2026-09-28T00:00:00.000Z",
   });
 
+  const refundOrder = vi.fn().mockResolvedValue({
+    id: "ORDTST01",
+    status: "refunded",
+    status_detail: "refunded",
+    transactions: {
+      refunds: [
+        {
+          id: "REF01",
+          transaction_id: "PAY01",
+          amount: "130.00",
+          status: "processed",
+        },
+      ],
+    },
+  });
+
   const apiClient = {
     createOrder,
     getOrder,
+    refundOrder,
   } as unknown as MercadoPagoApiClient;
 
   return {
     provider: new MercadoPagoProvider(apiClient),
     createOrder,
     getOrder,
+    refundOrder,
   };
 }
 
@@ -162,16 +180,66 @@ describe("MercadoPagoProvider", () => {
     expect(getOrder).toHaveBeenCalledWith("ORDTST01");
   });
 
-  it("mantiene refund bloqueado por ahora", async () => {
-    const { provider } = harness();
+  it("reembolsa completamente una order pagada", async () => {
+    const { provider, refundOrder } = harness();
 
     await expect(
       provider.refund({
         externalId: "ORDTST01",
         idempotencyKey: "refund-1",
       }),
+    ).resolves.toEqual({
+      externalId: "ORDTST01",
+      status: "REFUNDED",
+      refundedAmountCents: 13000,
+    });
+
+    expect(refundOrder).toHaveBeenCalledWith({
+      orderId: "ORDTST01",
+      idempotencyKey: "refund-1",
+    });
+  });
+
+  it("es idempotente si la order ya está reembolsada", async () => {
+    const { provider, getOrder, refundOrder } = harness();
+
+    getOrder.mockResolvedValueOnce({
+      id: "ORDTST01",
+      status: "refunded",
+      status_detail: "refunded",
+      total_amount: "130.00",
+      total_paid_amount: "130.00",
+      external_reference: "H-A1B2C3D4",
+      last_updated_date: "2026-09-28T00:00:00.000Z",
+    });
+
+    await expect(
+      provider.refund({
+        externalId: "ORDTST01",
+        idempotencyKey: "refund-1",
+      }),
+    ).resolves.toEqual({
+      externalId: "ORDTST01",
+      status: "REFUNDED",
+      refundedAmountCents: 13000,
+    });
+
+    expect(refundOrder).not.toHaveBeenCalled();
+  });
+
+  it("rechaza refunds parciales hasta tener transaction id explícito", async () => {
+    const { provider, refundOrder } = harness();
+
+    await expect(
+      provider.refund({
+        externalId: "ORDTST01",
+        idempotencyKey: "refund-1",
+        amountCents: 6500,
+      }),
     ).rejects.toThrow(
-      "Mercado Pago refund is not connected yet",
+      "Mercado Pago partial refunds are not supported by this integration yet",
     );
+
+    expect(refundOrder).not.toHaveBeenCalled();
   });
 });
