@@ -138,11 +138,11 @@ export class AdminOrdersService {
       const paidOrders = event.orders.filter(activePaidOrder);
       const finalized = !!event.groupDeliveryFinalizedAt;
       const paidOrderCount = finalized
-        ? event.groupDeliveryFinalPaidOrders ?? paidOrders.length
+        ? event.groupDeliveryFinalPaidCombos ?? paidOrders.length
         : paidOrders.length;
       const freeDeliveryUnlocked = finalized
         ? event.groupDeliveryFinalFreeUnlocked ?? false
-        : paidOrderCount >= event.freeDeliveryMinPaidOrders;
+        : paidOrderCount >= event.freeDeliveryMinPaidCombos;
 
       const estimatedFeeCents = finalized
         ? null
@@ -170,11 +170,11 @@ export class AdminOrdersService {
         startsAt: event.startsAt,
         closesAt: event.closesAt,
         pickupPoint: event.pickupPoint,
-        minPaidOrders: event.freeDeliveryMinPaidOrders,
+        minPaidOrders: event.freeDeliveryMinPaidCombos,
         paidOrderCount,
         remainingPaidOrders: Math.max(
           0,
-          event.freeDeliveryMinPaidOrders - paidOrderCount,
+          event.freeDeliveryMinPaidCombos - paidOrderCount,
         ),
         transportCostCents: finalized
           ? event.groupDeliveryFinalTransportCostCents ??
