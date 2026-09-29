@@ -1,11 +1,14 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
 import { PrismaService } from "../database/prisma.service.js";
 import { InventoryService } from "../inventory/inventory.service.js";
 import { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
+import { PaymentProviderRegistry } from "../payments/payment-provider.registry.js";
 import { cancelCustomerOrder } from "./customer-order-cancellation.js";
+import { processCustomerRefund } from "./customer-order-refund-processing.js";
 import { hasRefundRequest } from "./customer-order-refund.js";
 import { assertOrderVerificationToken } from "./customer-order-security.js";
 
@@ -18,10 +21,13 @@ const TERMINAL_STATUSES = [
 
 @Injectable()
 export class CustomerOrdersService {
+  private readonly logger = new Logger(CustomerOrdersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly inventory: InventoryService,
     private readonly telegram?: TelegramNotificationService,
+    private readonly paymentProviderRegistry?: PaymentProviderRegistry,
   ) {}
 
   async getOrder(
@@ -169,18 +175,59 @@ export class CustomerOrdersService {
     orderCodeInput: string,
     verificationToken: string,
   ) {
-    const { result, cancellationNotice } =
-      await cancelCustomerOrder(
-        this.prisma,
-        this.inventory,
-        orderCodeInput,
-        verificationToken,
-      );
+    const {
+      result,
+      cancellationNotice,
+      refundRequest,
+    } = await cancelCustomerOrder(
+      this.prisma,
+      this.inventory,
+      orderCodeInput,
+      verificationToken,
+    );
 
-    if (cancellationNotice) {
-      this.telegram?.notifyCancelled(cancellationNotice);
+    let finalResult = result;
+    let finalNotice = cancellationNotice;
+
+    if (
+      refundRequest &&
+      this.paymentProviderRegistry
+    ) {
+      try {
+        const refundResult =
+          await processCustomerRefund(
+            this.prisma,
+            this.paymentProviderRegistry,
+            refundRequest,
+          );
+
+        finalResult = {
+          ...result,
+          ...refundResult,
+        };
+
+        if (finalNotice) {
+          finalNotice = {
+            ...finalNotice,
+            refundStatus: "REFUNDED",
+          };
+        }
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "unknown refund provider error";
+
+        this.logger.warn(
+          `Refund remains pending for ${refundRequest.orderCode}: ${message}`,
+        );
+      }
     }
 
-    return result;
+    if (finalNotice) {
+      this.telegram?.notifyCancelled(finalNotice);
+    }
+
+    return finalResult;
   }
 }
