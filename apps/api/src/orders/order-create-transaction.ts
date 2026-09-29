@@ -163,7 +163,7 @@ export async function createOrderTransaction(
 
     const groupDeliveryFreeUnlocked =
       groupDeliveryPaidOrders >=
-      event.freeDeliveryMinPaidOrders;
+      event.freeDeliveryMinPaidCombos;
 
     const groupDeliveryEstimatedFeeCents =
       groupDeliveryFreeUnlocked
@@ -221,11 +221,11 @@ export async function createOrderTransaction(
         groupDeliveryTermsAcceptedAt: now,
         groupDeliveryTermsVersion:
           GROUP_DELIVERY_TERMS_VERSION,
-        groupDeliveryMinPaidOrdersAtOrder:
-          event.freeDeliveryMinPaidOrders,
+        groupDeliveryMinPaidCombosAtOrder:
+          event.freeDeliveryMinPaidCombos,
         groupDeliveryTransportCostCentsAtOrder:
           event.transportCostCents,
-        groupDeliveryPaidOrdersAtOrder:
+        groupDeliveryPaidCombosAtOrder:
           groupDeliveryPaidOrders,
         groupDeliveryEstimatedFeeCentsAtOrder:
           groupDeliveryEstimatedFeeCents,
@@ -340,13 +340,13 @@ export async function createOrderTransaction(
       },
       groupDelivery: {
         minPaidOrders:
-          event.freeDeliveryMinPaidOrders,
+          event.freeDeliveryMinPaidCombos,
         paidOrderCount:
           groupDeliveryPaidOrders,
         remainingPaidOrders:
           Math.max(
             0,
-            event.freeDeliveryMinPaidOrders -
+            event.freeDeliveryMinPaidCombos -
               groupDeliveryPaidOrders,
           ),
         transportCostCents:
