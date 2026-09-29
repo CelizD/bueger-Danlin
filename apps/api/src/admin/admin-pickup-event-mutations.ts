@@ -15,6 +15,17 @@ import {
   defaultPickupEventName,
 } from "./admin-pickup-event-rules.js";
 
+function assertGroupDeliveryThreshold(
+  maxCombos: number,
+  minPaidOrders: number,
+) {
+  if (minPaidOrders > maxCombos) {
+    throw new BadRequestException(
+      "La meta de envío gratis no puede superar el límite de combos.",
+    );
+  }
+}
+
 export async function createAdminPickupEvent(
   prisma: PrismaService,
   dto: CreatePickupEventDto,
@@ -31,6 +42,11 @@ export async function createAdminPickupEvent(
       "La fecha de entrega debe estar en el futuro.",
     );
   }
+
+  assertGroupDeliveryThreshold(
+    dto.maxCombos,
+    dto.freeDeliveryMinPaidOrders ?? 5,
+  );
 
   return prisma.$transaction(async (tx) => {
     const pickupPoint = await ensureAdminPickupPoint(tx, {
@@ -195,6 +211,12 @@ export async function updateAdminPickupEvent(
           " combo(s) ya reservados o pagados.",
       );
     }
+
+    assertGroupDeliveryThreshold(
+      maxCombos,
+      dto.freeDeliveryMinPaidOrders ??
+        event.freeDeliveryMinPaidOrders,
+    );
 
     let pickupPoint = event.pickupPoint;
 
