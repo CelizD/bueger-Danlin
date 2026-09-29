@@ -3,6 +3,10 @@ import {
   STATUS_LABELS,
 } from "../orders/config";
 import type { AdminOrder } from "../orders/types";
+import {
+  AlertTriangle,
+  RotateCcw,
+} from "lucide-react";
 
 function deliveryChargeText(order: AdminOrder) {
   if (order.groupDeliveryFinalizedAt) {
@@ -28,13 +32,88 @@ function deliveryChargeNote(order: AdminOrder) {
   return "El cargo definitivo se congela al cerrar el punto.";
 }
 
+function refundReason(
+  reason: string,
+) {
+  switch (reason) {
+    case "RESERVATION_EXPIRED":
+      return "El pago llegó después de que venció la reserva de 15 minutos.";
+    case "INVENTORY_ALREADY_RELEASED":
+      return "El pago llegó cuando el inventario de la reserva ya había sido liberado.";
+    case "ORDER_ALREADY_CLOSED":
+      return "El pago llegó después de que el pedido ya estaba cerrado o cancelado.";
+    default:
+      return "El proveedor confirmó el pago cuando el pedido ya no podía aceptarlo.";
+  }
+}
+
 export function AdminOrderDetail({
   order,
+  refunding,
+  onRefundLatePayment,
 }: {
   order: AdminOrder;
+  refunding: boolean;
+  onRefundLatePayment: () => void;
 }) {
   return (
     <div className="admin-order-detail">
+      {order.refundIssue && (
+        <section
+          className="admin-late-refund-card"
+          aria-label="Reembolso pendiente"
+        >
+          <div className="admin-late-refund-head">
+            <AlertTriangle size={21} />
+            <div>
+              <strong>
+                Pago tardío — reembolso requerido
+              </strong>
+              <span>
+                {refundReason(
+                  order.refundIssue.reason,
+                )}
+              </span>
+            </div>
+          </div>
+
+          <div className="admin-late-refund-meta">
+            <div>
+              <span>Monto</span>
+              <strong>
+                {money.format(
+                  order.refundIssue.amountCents /
+                    100,
+                )}
+              </strong>
+            </div>
+            <div>
+              <span>Proveedor</span>
+              <strong>
+                {order.refundIssue.provider}
+              </strong>
+            </div>
+          </div>
+
+          {order.refundIssue.lastAttemptFailed && (
+            <p className="admin-late-refund-warning">
+              El último intento de reembolso falló. El pago sigue pendiente y se puede reintentar.
+            </p>
+          )}
+
+          <button
+            type="button"
+            className="admin-late-refund-button"
+            onClick={onRefundLatePayment}
+            disabled={refunding}
+          >
+            <RotateCcw size={17} />
+            {refunding
+              ? "Procesando reembolso…"
+              : "Reembolsar ahora"}
+          </button>
+        </section>
+      )}
       <div className="admin-detail-meta">
         <div>
           <span>Cliente</span>
