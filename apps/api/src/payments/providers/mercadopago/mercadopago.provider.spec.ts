@@ -77,6 +77,14 @@ function checkoutInput() {
       email: "cliente@example.com",
       phone: "+526641234567",
     },
+    returnUrls: {
+      successUrl:
+        "https://burger.example/pedido/H-A1B2C3D4?payment=success",
+      failureUrl:
+        "https://burger.example/pedido/H-A1B2C3D4?payment=failure",
+      pendingUrl:
+        "https://burger.example/pedido/H-A1B2C3D4?payment=pending",
+    },
   };
 }
 
@@ -101,6 +109,17 @@ describe("MercadoPagoProvider", () => {
         expiration_time: "PT15M",
         payer: {
           email: "cliente@example.com",
+        },
+        config: {
+          online: {
+            success_url:
+              "https://burger.example/pedido/H-A1B2C3D4?payment=success",
+            failure_url:
+              "https://burger.example/pedido/H-A1B2C3D4?payment=failure",
+            pending_url:
+              "https://burger.example/pedido/H-A1B2C3D4?payment=pending",
+            auto_return: "all",
+          },
         },
       },
     });
