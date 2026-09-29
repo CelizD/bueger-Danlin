@@ -73,6 +73,7 @@ function harness(options?: {
   eventUpdatedAt?: Date;
   orderStatus?: string;
   orderPaymentStatus?: string;
+  reservationExpiresAt?: Date | null;
 }) {
   const event = {
     id: "webhook-1",
@@ -113,7 +114,10 @@ function harness(options?: {
           totalCents: 13_000,
           currency: "MXN",
           comboQuantity: 1,
-          reservationExpiresAt: new Date(),
+          reservationExpiresAt:
+            options?.reservationExpiresAt ??
+            new Date(Date.now() + 60_000),
+          cancelledAt: null,
           pickupEvent: {
             id: "event-1",
             locationLabel: "Universidad",
@@ -371,6 +375,83 @@ describe("PaymentWebhookService", () => {
     expect(h.groupTelegram.observeCompleted).toHaveBeenCalledWith(
       "event-1",
     );
+    expect(result).toMatchObject({
+      accepted: true,
+      duplicate: false,
+      applied: true,
+      paymentStatus: "PAID",
+    });
+  });
+
+  it("no acepta un pago confirmado después de vencer la reserva", async () => {
+    const expiredAt = new Date(
+      Date.now() - 60_000,
+    );
+    const h = harness({
+      reservationExpiresAt: expiredAt,
+    });
+
+    const result =
+      await h.service.handleMercadoPago(
+        input(),
+      );
+
+    expect(
+      h.tx.payment.update,
+    ).toHaveBeenCalledWith({
+      where: { id: "payment-1" },
+      data: expect.objectContaining({
+        status: "PAID",
+        paidAt: expect.any(Date),
+        metadata: expect.objectContaining({
+          latePaymentOrderStatus:
+            "PENDING_PAYMENT",
+          latePaymentReason:
+            "RESERVATION_EXPIRED",
+          reservationExpiredAt:
+            expiredAt.toISOString(),
+          requiresManualRefund: true,
+        }),
+      }),
+    });
+    expect(
+      h.inventory.releaseOrder,
+    ).toHaveBeenCalledWith(
+      h.tx,
+      "order-1",
+    );
+    expect(
+      h.inventory.commitOrder,
+    ).not.toHaveBeenCalled();
+    expect(
+      h.tx.order.update,
+    ).toHaveBeenCalledWith({
+      where: { id: "order-1" },
+      data: {
+        status: "CANCELLED",
+        paymentStatus: "PAID",
+        reservationExpiresAt: null,
+        cancelledAt: expect.any(Date),
+      },
+    });
+    expect(
+      h.tx.orderStatusHistory.create,
+    ).toHaveBeenCalledWith({
+      data: {
+        orderId: "order-1",
+        from: "PENDING_PAYMENT",
+        to: "CANCELLED",
+        note: expect.stringContaining(
+          "después de vencer la reserva",
+        ),
+      },
+    });
+    expect(
+      h.telegram.notifyPaymentConfirmed,
+    ).not.toHaveBeenCalled();
+    expect(
+      h.groupTelegram.observeCompleted,
+    ).not.toHaveBeenCalled();
     expect(result).toMatchObject({
       accepted: true,
       duplicate: false,
