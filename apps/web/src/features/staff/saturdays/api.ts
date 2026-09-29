@@ -143,6 +143,15 @@ export async function saveAdminPickupEvent(
   }
 
   if (
+    freeDeliveryMinPaidOrders >
+    maxCombos
+  ) {
+    throw new Error(
+      "La meta de envío gratis no puede ser mayor al límite de combos.",
+    );
+  }
+
+  if (
     hasLatitude !== hasLongitude ||
     (latitude !== null &&
       (!Number.isFinite(latitude) ||

@@ -8,6 +8,7 @@ import { CreatePickupEventDto } from "./dto/create-pickup-event.dto.js";
 import { UpdatePickupEventDto } from "./dto/update-pickup-event.dto.js";
 import { ensureAdminPickupPoint } from "./admin-pickup-point.js";
 import {
+  assertGroupDeliveryCapacity,
   assertPickupEventDates,
   assertPickupEventSaturday,
   buildPickupEventCode,
@@ -31,6 +32,11 @@ export async function createAdminPickupEvent(
       "La fecha de entrega debe estar en el futuro.",
     );
   }
+
+  assertGroupDeliveryCapacity(
+    dto.maxCombos,
+    dto.freeDeliveryMinPaidOrders ?? 5,
+  );
 
   return prisma.$transaction(async (tx) => {
     const pickupPoint = await ensureAdminPickupPoint(tx, {
@@ -186,6 +192,17 @@ export async function updateAdminPickupEvent(
       }
     }
 
+    const maxCombos =
+      dto.maxCombos ?? event.maxCombos;
+    const freeDeliveryMinPaidOrders =
+      dto.freeDeliveryMinPaidOrders ??
+      event.freeDeliveryMinPaidOrders;
+
+    assertGroupDeliveryCapacity(
+      maxCombos,
+      freeDeliveryMinPaidOrders,
+    );
+
     const capacity = await tx.order.aggregate({
       where: {
         pickupEventId: id,
@@ -210,9 +227,6 @@ export async function updateAdminPickupEvent(
 
     const reservedCombos =
       capacity._sum.comboQuantity ?? 0;
-    const maxCombos =
-      dto.maxCombos ?? event.maxCombos;
-
     if (maxCombos < reservedCombos) {
       throw new ConflictException(
         "El límite no puede ser menor a los " +
@@ -403,6 +417,11 @@ export async function openAdminPickupEvent(
         "No puedes abrir una entrega cuya fecha de cierre o entrega ya pasó.",
       );
     }
+
+    assertGroupDeliveryCapacity(
+      event.maxCombos,
+      event.freeDeliveryMinPaidOrders,
+    );
 
     const capacity = await tx.order.aggregate({
       where: {

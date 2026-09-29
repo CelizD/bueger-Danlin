@@ -98,3 +98,18 @@ export function defaultPickupEventName(
 
   return "Entrega " + pickupPointName + " · " + date;
 }
+
+
+export function assertGroupDeliveryCapacity(
+  maxCombos: number,
+  freeDeliveryMinPaidOrders: number,
+) {
+  if (
+    freeDeliveryMinPaidOrders >
+    maxCombos
+  ) {
+    throw new BadRequestException(
+      "La meta de envío gratis no puede ser mayor al límite de combos.",
+    );
+  }
+}
