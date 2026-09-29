@@ -48,11 +48,11 @@ export function presentCreatedOrder(
       timezone: order.pickupEvent.timezone,
     },
     groupDelivery: {
-      minPaidOrders:
+      minPaidCombos:
         order.groupDeliveryMinPaidCombosAtOrder ?? 5,
-      paidOrderCount:
+      paidComboCount:
         order.groupDeliveryPaidCombosAtOrder ?? 0,
-      remainingPaidOrders: Math.max(
+      remainingPaidCombos: Math.max(
         0,
         (order.groupDeliveryMinPaidCombosAtOrder ?? 5) -
           (order.groupDeliveryPaidCombosAtOrder ?? 0),
