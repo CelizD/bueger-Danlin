@@ -11,6 +11,8 @@ const data: OrdersResponse = {
     paidRevenueCents: 26000,
     finalDeliveryCashCents: 5000,
     activeGroups: 2,
+    manualRefundsPending: 0,
+    manualRefundsPendingCents: 0,
   },
   groups: [],
   orders: [
@@ -23,6 +25,7 @@ const data: OrdersResponse = {
       comboQuantity: 2,
       groupDeliveryFinalFeeCents: 0,
       groupDeliveryFinalizedAt: null,
+      refundIssue: null,
       createdAt: "2026-09-27T20:00:00.000Z",
       customer: {
         name: "Daniel",
@@ -57,6 +60,7 @@ const data: OrdersResponse = {
       comboQuantity: 1,
       groupDeliveryFinalFeeCents: null,
       groupDeliveryFinalizedAt: null,
+      refundIssue: null,
       createdAt: "2026-09-27T21:00:00.000Z",
       customer: {
         name: "Ana",
