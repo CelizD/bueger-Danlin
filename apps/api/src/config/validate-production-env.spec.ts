@@ -21,10 +21,10 @@ function setValidProductionEnvironment() {
     "DATABASE_URL",
     "postgresql://runtime:strong-password@postgres:5432/burger_danlin",
   );
-  vi.stubEnv("PAYMENT_PROVIDER", "stripe");
+  vi.stubEnv("PAYMENT_PROVIDER", "mercadopago");
   vi.stubEnv("ENABLE_REAL_PAYMENTS", "true");
-  vi.stubEnv("STRIPE_SECRET_KEY", "S".repeat(24));
-  vi.stubEnv("STRIPE_WEBHOOK_SECRET", "W".repeat(24));
+  vi.stubEnv("MERCADOPAGO_ACCESS_TOKEN", "M".repeat(24));
+  vi.stubEnv("MERCADOPAGO_WEBHOOK_SECRET", "P".repeat(24));
 }
 
 describe("validateProductionEnvironment", () => {
@@ -43,25 +43,25 @@ describe("validateProductionEnvironment", () => {
     expect(() => validateProductionEnvironment()).not.toThrow();
   });
 
-  it.each(["", "mock", "otro"])(
+  it.each(["", "mock", "otro", "stripe"])(
     "rechaza PAYMENT_PROVIDER=%s en producción",
     (provider) => {
       vi.stubEnv("PAYMENT_PROVIDER", provider);
 
       expect(() => validateProductionEnvironment()).toThrow(
-        "PAYMENT_PROVIDER must be either stripe or mercadopago in production",
+        "PAYMENT_PROVIDER must be mercadopago in production",
       );
     },
   );
 
-  it("acepta Stripe con secretos configurados cuando pagos reales están habilitados", () => {
+  it("acepta Mercado Pago con secretos configurados cuando pagos reales están habilitados", () => {
     expect(() => validateProductionEnvironment()).not.toThrow();
   });
 
   it("permite arrancar producción sin credenciales del proveedor cuando pagos reales están deshabilitados", () => {
     vi.stubEnv("ENABLE_REAL_PAYMENTS", "false");
-    vi.stubEnv("STRIPE_SECRET_KEY", "");
-    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "");
+    vi.stubEnv("MERCADOPAGO_ACCESS_TOKEN", "");
+    vi.stubEnv("MERCADOPAGO_WEBHOOK_SECRET", "");
 
     expect(() => validateProductionEnvironment()).not.toThrow();
   });
@@ -106,22 +106,6 @@ describe("validateProductionEnvironment", () => {
     expect(() => validateProductionEnvironment()).toThrow(
       "ENABLE_REAL_PAYMENTS must be either true or false in production",
     );
-  });
-
-  it("rechaza Stripe sin sus secretos", () => {
-    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "");
-
-    expect(() => validateProductionEnvironment()).toThrow(
-      "STRIPE_WEBHOOK_SECRET must be a strong secret",
-    );
-  });
-
-  it("acepta Mercado Pago con secretos configurados", () => {
-    vi.stubEnv("PAYMENT_PROVIDER", "mercadopago");
-    vi.stubEnv("MERCADOPAGO_ACCESS_TOKEN", "M".repeat(24));
-    vi.stubEnv("MERCADOPAGO_WEBHOOK_SECRET", "P".repeat(24));
-
-    expect(() => validateProductionEnvironment()).not.toThrow();
   });
 
   it("rechaza Mercado Pago sin sus secretos", () => {
