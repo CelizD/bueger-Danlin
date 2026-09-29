@@ -161,6 +161,31 @@ export async function updateAdminPickupEvent(
       );
     }
 
+    const groupDeliveryTermsChanging =
+      (dto.freeDeliveryMinPaidOrders !==
+        undefined &&
+        dto.freeDeliveryMinPaidOrders !==
+          event.freeDeliveryMinPaidOrders) ||
+      (dto.transportCostCents !==
+        undefined &&
+        dto.transportCostCents !==
+          event.transportCostCents);
+
+    if (groupDeliveryTermsChanging) {
+      const existingOrderCount =
+        await tx.order.count({
+          where: {
+            pickupEventId: id,
+          },
+        });
+
+      if (existingOrderCount > 0) {
+        throw new ConflictException(
+          "La meta de envío gratis y el costo de traslado quedan bloqueados desde el primer pedido.",
+        );
+      }
+    }
+
     const capacity = await tx.order.aggregate({
       where: {
         pickupEventId: id,
