@@ -140,6 +140,20 @@ export function useAdminSaturdays() {
     setForm({
       locationLabel:
         event.locationLabel,
+      locationAddress:
+        event.pickupPoint.address ?? "",
+      latitude:
+        event.pickupPoint.latitude === null
+          ? ""
+          : String(
+              event.pickupPoint.latitude,
+            ),
+      longitude:
+        event.pickupPoint.longitude === null
+          ? ""
+          : String(
+              event.pickupPoint.longitude,
+            ),
       pickupDate:
         pickup.date,
       pickupTime:
@@ -151,6 +165,17 @@ export function useAdminSaturdays() {
       maxCombos: String(
         event.maxCombos,
       ),
+      freeDeliveryMinPaidOrders:
+        String(
+          event.groupDelivery
+            .minPaidOrders,
+        ),
+      transportCostPesos:
+        (
+          event.groupDelivery
+            .transportCostCents /
+          100
+        ).toFixed(2),
     });
     setError("");
     setSuccess("");
