@@ -114,7 +114,7 @@ export async function mockOrderingApi(page: Page) {
           status: "OPEN",
           groupDelivery: {
             minPaidCombos: 5,
-            paidOrderCount: 3,
+            paidComboCount: 3,
             remainingPaidCombos: 2,
             transportCostCents: 10000,
             estimatedDeliveryFeeCents: 3334,
@@ -143,7 +143,7 @@ export async function mockOrderingApi(page: Page) {
           status: "OPEN",
           groupDelivery: {
             minPaidCombos: 5,
-            paidOrderCount: 4,
+            paidComboCount: 4,
             remainingPaidCombos: 1,
             transportCostCents: 10000,
             estimatedDeliveryFeeCents: 2500,
@@ -213,7 +213,7 @@ export async function mockOrderingApi(page: Page) {
         },
         groupDelivery: {
           minPaidCombos: 5,
-          paidOrderCount: isCucapa ? 4 : 3,
+          paidComboCount: isCucapa ? 4 : 3,
           remainingPaidCombos: isCucapa ? 1 : 2,
           transportCostCents: 10000,
           estimatedDeliveryFeeCents: isCucapa ? 2500 : 3334,
@@ -247,7 +247,10 @@ export async function mockOrderingApi(page: Page) {
         : isCucapa
           ? 4
           : 3;
-      const freeDeliveryUnlocked = paidOrderCount >= 5;
+      const paidComboCount =
+        paidOrderCount;
+      const freeDeliveryUnlocked =
+        paidComboCount >= 5;
 
       await json(route, {
         orderCode: "H-TEST01",
