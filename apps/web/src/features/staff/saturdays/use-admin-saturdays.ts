@@ -164,7 +164,7 @@ export function useAdminSaturdays() {
       freeDeliveryMinPaidCombos:
         String(
           event.groupDelivery
-            .minPaidOrders,
+            .minPaidCombos,
         ),
       transportCostMx:
         String(
