@@ -105,16 +105,16 @@ export async function saveAdminPickupEvent(
     );
   const latitude =
     form.latitude.trim() === ""
-      ? undefined
+      ? null
       : Number(form.latitude);
   const longitude =
     form.longitude.trim() === ""
-      ? undefined
+      ? null
       : Number(form.longitude);
   const hasLatitude =
-    latitude !== undefined;
+    latitude !== null;
   const hasLongitude =
-    longitude !== undefined;
+    longitude !== null;
 
   if (
     Number.isNaN(
@@ -144,11 +144,11 @@ export async function saveAdminPickupEvent(
 
   if (
     hasLatitude !== hasLongitude ||
-    (latitude !== undefined &&
+    (latitude !== null &&
       (!Number.isFinite(latitude) ||
         latitude < -90 ||
         latitude > 90)) ||
-    (longitude !== undefined &&
+    (longitude !== null &&
       (!Number.isFinite(longitude) ||
         longitude < -180 ||
         longitude > 180))
