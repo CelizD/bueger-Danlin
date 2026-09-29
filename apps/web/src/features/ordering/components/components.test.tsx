@@ -53,9 +53,9 @@ const pickupEvents: PickupEvent[] = [
     remainingCombos: 47,
     status: "OPEN",
     groupDelivery: {
-      minPaidOrders: 5,
+      minPaidCombos: 5,
       paidOrderCount: 3,
-      remainingPaidOrders: 2,
+      remainingPaidCombos: 2,
       transportCostCents: 10000,
       estimatedDeliveryFeeCents: 3334,
       freeDeliveryUnlocked: false,
@@ -82,9 +82,9 @@ const pickupEvents: PickupEvent[] = [
     remainingCombos: 45,
     status: "OPEN",
     groupDelivery: {
-      minPaidOrders: 5,
+      minPaidCombos: 5,
       paidOrderCount: 5,
-      remainingPaidOrders: 0,
+      remainingPaidCombos: 0,
       transportCostCents: 10000,
       estimatedDeliveryFeeCents: 0,
       freeDeliveryUnlocked: true,
