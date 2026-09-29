@@ -10,6 +10,7 @@ type Props = {
   editing: boolean;
   form: SaturdayFormState;
   saving: boolean;
+  deliveryTermsLocked: boolean;
   onChange: (
     field: keyof SaturdayFormState,
     value: string,
@@ -24,6 +25,7 @@ export function SaturdayEventForm({
   editing,
   form,
   saving,
+  deliveryTermsLocked,
   onChange,
   onClose,
   onSubmit,
@@ -220,6 +222,7 @@ export function SaturdayEventForm({
             value={
               form.freeDeliveryMinPaidOrders
             }
+            disabled={deliveryTermsLocked}
             onChange={(event) =>
               onChange(
                 "freeDeliveryMinPaidOrders",
@@ -240,6 +243,7 @@ export function SaturdayEventForm({
             max="1000"
             step="0.01"
             value={form.transportCostMx}
+            disabled={deliveryTermsLocked}
             onChange={(event) =>
               onChange(
                 "transportCostMx",
@@ -249,6 +253,12 @@ export function SaturdayEventForm({
             placeholder="150.00"
           />
         </label>
+
+        {deliveryTermsLocked && (
+          <div className="saturday-form-note">
+            La meta de envío gratis y el costo de traslado están bloqueados porque esta entrega ya tiene pedidos.
+          </div>
+        )}
 
         <div className="saturday-form-note">
           Si se alcanza la meta de pedidos pagados, el envío queda gratis.
