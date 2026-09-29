@@ -86,10 +86,12 @@ export async function reconcileMercadoPagoWebhook(
 
   const result = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw<Array<{ id: string }>>`
-      SELECT "id"
-      FROM "Payment"
-      WHERE "id" = ${payment.id}
-      FOR UPDATE
+      SELECT p."id"
+      FROM "Payment" AS p
+      INNER JOIN "Order" AS o
+        ON o."id" = p."orderId"
+      WHERE p."id" = ${payment.id}
+      FOR UPDATE OF p, o
     `;
 
     const current = await tx.payment.findUnique({
@@ -158,11 +160,44 @@ export async function reconcileMercadoPagoWebhook(
       };
     }
 
-    const now = new Date();
     const order = current.order;
+    let inventoryAlreadyReleased = false;
+
+    if (
+      incomingStatus === "PAID" &&
+      order.status === "PENDING_PAYMENT"
+    ) {
+      await tx.$queryRaw<
+        Array<{ id: string }>
+      >`
+        SELECT "id"
+        FROM "InventoryAllocation"
+        WHERE "orderId" = ${order.id}
+        FOR UPDATE
+      `;
+
+      inventoryAlreadyReleased =
+        !!(await tx.inventoryAllocation.findFirst({
+          where: {
+            orderId: order.id,
+            status: "RELEASED",
+          },
+          select: { id: true },
+        }));
+    }
+
+    const now = new Date();
+    const reservationExpired =
+      order.status === "PENDING_PAYMENT" &&
+      (!order.reservationExpiresAt ||
+        order.reservationExpiresAt <= now);
+    const reservationUnavailable =
+      reservationExpired ||
+      inventoryAlreadyReleased;
     const latePaid =
       incomingStatus === "PAID" &&
-      order.status !== "PENDING_PAYMENT";
+      (order.status !== "PENDING_PAYMENT" ||
+        reservationUnavailable);
 
     const paymentData: {
       status: ProviderPaymentStatus;
@@ -182,6 +217,19 @@ export async function reconcileMercadoPagoWebhook(
           {
             latePaymentDetectedAt: now.toISOString(),
             latePaymentOrderStatus: order.status,
+            latePaymentReason:
+              reservationExpired
+                ? "RESERVATION_EXPIRED"
+                : inventoryAlreadyReleased
+                  ? "INVENTORY_ALREADY_RELEASED"
+                  : "ORDER_ALREADY_CLOSED",
+            ...(reservationExpired &&
+            order.reservationExpiresAt
+              ? {
+                  reservationExpiredAt:
+                    order.reservationExpiresAt.toISOString(),
+                }
+              : {}),
             requiresManualRefund: true,
           },
         );
@@ -198,6 +246,64 @@ export async function reconcileMercadoPagoWebhook(
     });
 
     if (
+      incomingStatus === "PAID" &&
+      order.status === "PENDING_PAYMENT" &&
+      reservationUnavailable
+    ) {
+      await inventory.releaseOrder(
+        tx,
+        order.id,
+      );
+
+      await tx.order.update({
+        where: { id: order.id },
+        data: {
+          status: "CANCELLED",
+          paymentStatus: "PAID",
+          reservationExpiresAt: null,
+          cancelledAt:
+            order.cancelledAt ?? now,
+        },
+      });
+
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId: order.id,
+          from: "PENDING_PAYMENT",
+          to: "CANCELLED",
+          note:
+            "Pago recibido cuando la reserva ya no estaba disponible. El pedido no se reactivó y requiere reembolso.",
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          action:
+            "PAYMENT_LATE_AFTER_ORDER_CLOSED",
+          entityType: "Payment",
+          entityId: current.id,
+          before: {
+            orderStatus: order.status,
+            paymentStatus:
+              order.paymentStatus,
+            providerStatus:
+              currentStatus,
+            reservationExpiresAt:
+              order.reservationExpiresAt,
+          },
+          after: {
+            orderStatus: "CANCELLED",
+            paymentStatus: "PAID",
+            providerStatus: "PAID",
+            reason: reservationExpired
+              ? "RESERVATION_EXPIRED"
+              : "INVENTORY_ALREADY_RELEASED",
+            requiresManualRefund: true,
+            source: "WEBHOOK",
+          },
+        },
+      });
+    } else if (
       incomingStatus === "PAID" &&
       order.status === "PENDING_PAYMENT"
     ) {
