@@ -74,6 +74,7 @@ function harness(options?: {
   orderStatus?: string;
   orderPaymentStatus?: string;
   reservationExpiresAt?: Date | null;
+  inventoryAlreadyReleased?: boolean;
 }) {
   const event = {
     id: "webhook-1",
@@ -128,6 +129,13 @@ function harness(options?: {
     },
     order: {
       update: vi.fn().mockResolvedValue(undefined),
+    },
+    inventoryAllocation: {
+      findFirst: vi.fn().mockResolvedValue(
+        options?.inventoryAlreadyReleased
+          ? { id: "allocation-1" }
+          : null,
+      ),
     },
     orderStatusHistory: {
       create: vi.fn().mockResolvedValue(undefined),
@@ -442,7 +450,7 @@ describe("PaymentWebhookService", () => {
         from: "PENDING_PAYMENT",
         to: "CANCELLED",
         note: expect.stringContaining(
-          "después de vencer la reserva",
+          "reserva ya no estaba disponible",
         ),
       },
     });
@@ -457,6 +465,52 @@ describe("PaymentWebhookService", () => {
       duplicate: false,
       applied: true,
       paymentStatus: "PAID",
+    });
+  });
+
+  it("tampoco acepta el pago si el inventario ya fue liberado", async () => {
+    const h = harness({
+      reservationExpiresAt: new Date(
+        Date.now() + 60_000,
+      ),
+      inventoryAlreadyReleased: true,
+    });
+
+    await h.service.handleMercadoPago(
+      input(),
+    );
+
+    expect(
+      h.inventory.commitOrder,
+    ).not.toHaveBeenCalled();
+    expect(
+      h.inventory.releaseOrder,
+    ).toHaveBeenCalledWith(
+      h.tx,
+      "order-1",
+    );
+    expect(
+      h.tx.order.update,
+    ).toHaveBeenCalledWith({
+      where: { id: "order-1" },
+      data: {
+        status: "CANCELLED",
+        paymentStatus: "PAID",
+        reservationExpiresAt: null,
+        cancelledAt: expect.any(Date),
+      },
+    });
+    expect(
+      h.tx.payment.update,
+    ).toHaveBeenCalledWith({
+      where: { id: "payment-1" },
+      data: expect.objectContaining({
+        metadata: expect.objectContaining({
+          latePaymentReason:
+            "INVENTORY_ALREADY_RELEASED",
+          requiresManualRefund: true,
+        }),
+      }),
     });
   });
 
