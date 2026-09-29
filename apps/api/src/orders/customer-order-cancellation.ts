@@ -9,6 +9,7 @@ import {
   hasRefundRequest,
   withRefundMetadata,
 } from "./customer-order-refund.js";
+import type { CustomerRefundRequest } from "./customer-order-refund-processing.js";
 import { assertOrderVerificationToken } from "./customer-order-security.js";
 
 export type CustomerOrderCancellationNotice = {
@@ -30,6 +31,9 @@ export async function cancelCustomerOrder(
 
   let cancellationNotice:
     | CustomerOrderCancellationNotice
+    | undefined;
+  let refundRequest:
+    | CustomerRefundRequest
     | undefined;
 
   const result = await prisma.$transaction(async (tx) => {
@@ -70,6 +74,28 @@ export async function cancelCustomerOrder(
       order.status === "REFUNDED"
     ) {
       const latestPayment = order.payments[0] ?? null;
+      const refundPending =
+        order.status === "CANCELLED" &&
+        latestPayment?.status === "PAID" &&
+        latestPayment.provider !== "MOCK" &&
+        hasRefundRequest(latestPayment.metadata);
+
+      if (
+        refundPending &&
+        latestPayment?.externalId &&
+        (latestPayment.provider === "MERCADOPAGO" ||
+          latestPayment.provider === "STRIPE")
+      ) {
+        refundRequest = {
+          paymentId: latestPayment.id,
+          orderId: order.id,
+          orderCode: order.orderCode,
+          provider: latestPayment.provider,
+          externalId: latestPayment.externalId,
+          amountCents: latestPayment.amountCents,
+          metadata: latestPayment.metadata,
+        };
+      }
 
       return {
         orderCode: order.orderCode,
@@ -78,7 +104,7 @@ export async function cancelCustomerOrder(
         refundStatus:
           order.status === "REFUNDED"
             ? "REFUNDED"
-            : hasRefundRequest(latestPayment?.metadata)
+            : refundPending
               ? "PENDING"
               : null,
         alreadyCancelled: true,
@@ -272,16 +298,38 @@ export async function cancelCustomerOrder(
       };
     }
 
+    if (
+      (paidPayment.provider !== "MERCADOPAGO" &&
+        paidPayment.provider !== "STRIPE") ||
+      !paidPayment.externalId
+    ) {
+      throw new ConflictException(
+        "El pago real no tiene una referencia externa válida para procesar el reembolso.",
+      );
+    }
+
+    const refundMetadata = withRefundMetadata(
+      paidPayment.metadata,
+      now,
+      "requested",
+    );
+
     await tx.payment.update({
       where: { id: paidPayment.id },
       data: {
-        metadata: withRefundMetadata(
-          paidPayment.metadata,
-          now,
-          "requested",
-        ),
+        metadata: refundMetadata,
       },
     });
+
+    refundRequest = {
+      paymentId: paidPayment.id,
+      orderId: order.id,
+      orderCode: order.orderCode,
+      provider: paidPayment.provider,
+      externalId: paidPayment.externalId,
+      amountCents: paidPayment.amountCents,
+      metadata: refundMetadata,
+    };
 
     await tx.order.update({
       where: { id: order.id },
@@ -348,5 +396,6 @@ export async function cancelCustomerOrder(
   return {
     result,
     cancellationNotice,
+    refundRequest,
   };
 }
