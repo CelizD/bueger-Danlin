@@ -26,6 +26,10 @@ function order(overrides: Record<string, unknown> = {}) {
     createdAt: new Date(),
     updatedAt: new Date(),
     deliveredAt: null,
+    groupDeliveryFinalFeeCents: null,
+    groupDeliveryFinalizedAt: null,
+    groupDeliveryFeeCollectedAt: null,
+    groupDeliveryFeeCollectedCents: null,
     customer: {
       name: "Cliente",
       phone: "+526641234567",
@@ -62,7 +66,13 @@ function harness(currentOrder: ReturnType<typeof order>) {
       .mockResolvedValue([{ id: currentOrder.id }]),
     order: {
       findUnique: vi.fn().mockResolvedValue(currentOrder),
-      update: vi.fn().mockResolvedValue(updatedOrder),
+      update: vi.fn().mockImplementation(
+        ({ data }: { data: Record<string, unknown> }) =>
+          Promise.resolve({
+            ...updatedOrder,
+            ...data,
+          }),
+      ),
     },
     orderStatusHistory: {
       create: vi.fn().mockResolvedValue(undefined),
@@ -152,7 +162,11 @@ describe("StaffOrdersService.deliverFromQr", () => {
         entityType: "Order",
         entityId: "order-1",
         before: { status: "READY" },
-        after: { status: "DELIVERED", method: "QR" },
+        after: {
+          status: "DELIVERED",
+          method: "QR",
+          deliveryFeeCollectedCents: null,
+        },
       },
     });
     expect(result).toMatchObject({
@@ -162,6 +176,95 @@ describe("StaffOrdersService.deliverFromQr", () => {
     expect(result).not.toHaveProperty(
       "verificationTokenHash",
     );
+  });
+
+  it("bloquea la entrega si falta confirmar un cargo de envío en efectivo", async () => {
+    const current = order({
+      groupDeliveryFinalFeeCents: 5000,
+      groupDeliveryFinalizedAt: new Date(),
+    });
+    const { service, tx } = harness(current);
+
+    await expect(
+      service.deliverFromQr(
+        QR,
+        "delivery-user",
+      ),
+    ).rejects.toBeInstanceOf(
+      ConflictException,
+    );
+
+    expect(
+      tx.order.update,
+    ).not.toHaveBeenCalled();
+  });
+
+  it("registra el cargo de envío al confirmar la entrega por QR", async () => {
+    const current = order({
+      groupDeliveryFinalFeeCents: 5000,
+      groupDeliveryFinalizedAt: new Date(),
+    });
+    const { service, tx } = harness(current);
+
+    const result =
+      await service.deliverFromQr(
+        QR,
+        "delivery-user",
+        true,
+      );
+
+    expect(
+      tx.order.update,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: "DELIVERED",
+          groupDeliveryFeeCollectedAt:
+            expect.any(Date),
+          groupDeliveryFeeCollectedCents:
+            5000,
+        }),
+      }),
+    );
+
+    expect(result).toMatchObject({
+      status: "DELIVERED",
+      groupDeliveryFeeCollectedCents:
+        5000,
+    });
+  });
+
+  it("registra el cargo de envío en una entrega manual", async () => {
+    const current = order({
+      groupDeliveryFinalFeeCents: 3500,
+      groupDeliveryFinalizedAt: new Date(),
+    });
+    const { service, tx } = harness(current);
+
+    const result =
+      await service.markDelivered(
+        "H-A1B2C3D4",
+        "delivery-user",
+        true,
+      );
+
+    expect(
+      tx.order.update,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: "DELIVERED",
+          groupDeliveryFeeCollectedCents:
+            3500,
+        }),
+      }),
+    );
+
+    expect(result).toMatchObject({
+      status: "DELIVERED",
+      groupDeliveryFeeCollectedCents:
+        3500,
+    });
   });
 
   it("es idempotente si el pedido ya fue entregado", async () => {
