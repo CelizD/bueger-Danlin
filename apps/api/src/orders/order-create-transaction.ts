@@ -22,7 +22,7 @@ const CAPACITY_STATUSES = [
 ] as const;
 
 const RESERVATION_MINUTES = 15;
-const GROUP_DELIVERY_TERMS_VERSION = "2026-09-27-v1";
+const GROUP_DELIVERY_TERMS_VERSION = "2026-09-29-v2";
 
 export async function createOrderTransaction(
   prisma: PrismaService,
@@ -352,13 +352,13 @@ export async function createOrderTransaction(
       groupDelivery: {
         minPaidCombos:
           event.freeDeliveryMinPaidCombos,
-        paidOrderCount:
-          groupDeliveryPaidOrders,
+        paidComboCount:
+          groupDeliveryPaidCombos,
         remainingPaidCombos:
           Math.max(
             0,
             event.freeDeliveryMinPaidCombos -
-              groupDeliveryPaidOrders,
+              groupDeliveryPaidCombos,
           ),
         transportCostCents:
           event.transportCostCents,
