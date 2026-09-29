@@ -54,7 +54,7 @@ const pickupEvents: PickupEvent[] = [
     status: "OPEN",
     groupDelivery: {
       minPaidCombos: 5,
-      paidOrderCount: 3,
+      paidComboCount: 3,
       remainingPaidCombos: 2,
       transportCostCents: 10000,
       estimatedDeliveryFeeCents: 3334,
@@ -83,7 +83,7 @@ const pickupEvents: PickupEvent[] = [
     status: "OPEN",
     groupDelivery: {
       minPaidCombos: 5,
-      paidOrderCount: 5,
+      paidComboCount: 5,
       remainingPaidCombos: 0,
       transportCostCents: 10000,
       estimatedDeliveryFeeCents: 0,
@@ -174,7 +174,7 @@ describe("ordering components", () => {
 
     expect(html).toContain("Universidad");
     expect(html).toContain("Cucapá");
-    expect(html).toContain("3 de 5 pedidos pagados");
+    expect(html).toContain("3 de 5 combos pagados");
     expect(html).toContain("Envío gratis desbloqueado");
     expect(html).toContain("Punto seleccionado");
   });
