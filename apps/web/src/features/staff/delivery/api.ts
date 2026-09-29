@@ -78,6 +78,7 @@ export async function fetchDeliveryOrders(): Promise<
 
 export async function scanDeliveryQr(
   qrPayload: string,
+  deliveryFeeCollected = false,
 ) {
   const response = await apiFetch(
     API_URL + "/staff/delivery/scan",
@@ -87,7 +88,10 @@ export async function scanDeliveryQr(
       headers: {
         "content-type": "application/json",
       },
-      body: JSON.stringify({ qrPayload }),
+      body: JSON.stringify({
+        qrPayload,
+        deliveryFeeCollected,
+      }),
     },
   );
 
@@ -110,6 +114,7 @@ export async function scanDeliveryQr(
 
 export async function markDeliveryOrderDelivered(
   orderCode: string,
+  deliveryFeeCollected = false,
 ) {
   const response = await apiFetch(
     API_URL +
@@ -119,6 +124,12 @@ export async function markDeliveryOrderDelivered(
     {
       method: "PATCH",
       credentials: "include",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        deliveryFeeCollected,
+      }),
     },
   );
 

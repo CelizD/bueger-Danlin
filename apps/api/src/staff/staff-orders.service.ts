@@ -20,6 +20,10 @@ const staffOrderSelect = {
   createdAt: true,
   updatedAt: true,
   deliveredAt: true,
+  groupDeliveryFinalFeeCents: true,
+  groupDeliveryFinalizedAt: true,
+  groupDeliveryFeeCollectedAt: true,
+  groupDeliveryFeeCollectedCents: true,
   customer: {
     select: {
       name: true,
@@ -57,6 +61,38 @@ const staffOrderSelect = {
     },
   },
 } as const;
+
+function deliveryFeeUpdate(
+  order: {
+    groupDeliveryFinalFeeCents: number | null;
+    groupDeliveryFeeCollectedAt: Date | null;
+  },
+  deliveryFeeCollected: boolean,
+  now: Date,
+) {
+  const finalFeeCents =
+    order.groupDeliveryFinalFeeCents;
+
+  if (
+    finalFeeCents === null ||
+    finalFeeCents <= 0 ||
+    order.groupDeliveryFeeCollectedAt
+  ) {
+    return {};
+  }
+
+  if (!deliveryFeeCollected) {
+    throw new ConflictException(
+      `Confirma que recibiste ${(finalFeeCents / 100).toFixed(2)} MXN de envío en efectivo antes de entregar.`,
+    );
+  }
+
+  return {
+    groupDeliveryFeeCollectedAt: now,
+    groupDeliveryFeeCollectedCents:
+      finalFeeCents,
+  };
+}
 
 @Injectable()
 export class StaffOrdersService {
@@ -113,17 +149,26 @@ export class StaffOrdersService {
     );
   }
 
-  async markDelivered(orderCodeInput: string, userId: string) {
+  async markDelivered(
+    orderCodeInput: string,
+    userId: string,
+    deliveryFeeCollected = false,
+  ) {
     return this.transition(
       orderCodeInput,
       ["READY"],
       "DELIVERED",
       userId,
       "Pedido entregado al cliente.",
+      deliveryFeeCollected,
     );
   }
 
-  async deliverFromQr(qrPayloadInput: string, userId: string) {
+  async deliverFromQr(
+    qrPayloadInput: string,
+    userId: string,
+    deliveryFeeCollected = false,
+  ) {
     const qrPayload = qrPayloadInput.trim();
     const parts = qrPayload.split(":");
 
@@ -199,12 +244,19 @@ export class StaffOrdersService {
       }
 
       const now = new Date();
+      const feeUpdate =
+        deliveryFeeUpdate(
+          order,
+          deliveryFeeCollected,
+          now,
+        );
 
       const updated = await tx.order.update({
         where: { id: order.id },
         data: {
           status: "DELIVERED",
           deliveredAt: now,
+          ...feeUpdate,
         },
         select: staffOrderSelect,
       });
@@ -225,7 +277,12 @@ export class StaffOrdersService {
           entityType: "Order",
           entityId: order.id,
           before: { status: "READY" },
-          after: { status: "DELIVERED", method: "QR" },
+          after: {
+            status: "DELIVERED",
+            method: "QR",
+            deliveryFeeCollectedCents:
+              updated.groupDeliveryFeeCollectedCents,
+          },
         },
       });
 
@@ -272,6 +329,7 @@ export class StaffOrdersService {
     to: "PREPARING" | "READY" | "DELIVERED",
     userId: string,
     note: string,
+    deliveryFeeCollected = false,
   ) {
     const orderCode = orderCodeInput.trim().toUpperCase();
 
@@ -321,12 +379,21 @@ export class StaffOrdersService {
       }
 
       const now = new Date();
+      const feeUpdate =
+        to === "DELIVERED"
+          ? deliveryFeeUpdate(
+              order,
+              deliveryFeeCollected,
+              now,
+            )
+          : {};
 
       const updated = await tx.order.update({
         where: { id: order.id },
         data: {
           status: to,
           deliveredAt: to === "DELIVERED" ? now : order.deliveredAt,
+          ...feeUpdate,
         },
         select: staffOrderSelect,
       });
@@ -347,7 +414,15 @@ export class StaffOrdersService {
           entityType: "Order",
           entityId: order.id,
           before: { status: order.status },
-          after: { status: to },
+          after: {
+            status: to,
+            ...(to === "DELIVERED"
+              ? {
+                  deliveryFeeCollectedCents:
+                    updated.groupDeliveryFeeCollectedCents,
+                }
+              : {}),
+          },
         },
       });
 

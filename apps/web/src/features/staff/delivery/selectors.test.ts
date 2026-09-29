@@ -16,6 +16,11 @@ const orders: DeliveryOrder[] = [
     status: "READY",
     comboQuantity: 2,
     totalCents: 26000,
+    groupDeliveryFinalFeeCents: 5000,
+    groupDeliveryFinalizedAt:
+      "2026-10-03T15:00:00.000Z",
+    groupDeliveryFeeCollectedAt: null,
+    groupDeliveryFeeCollectedCents: null,
     customer: {
       name: "Daniel",
       phone: "+526641111111",
@@ -35,6 +40,11 @@ const orders: DeliveryOrder[] = [
     totalCents: 13000,
     deliveredAt:
       "2026-10-03T18:00:00.000Z",
+    groupDeliveryFinalFeeCents: 0,
+    groupDeliveryFinalizedAt:
+      "2026-10-03T15:00:00.000Z",
+    groupDeliveryFeeCollectedAt: null,
+    groupDeliveryFeeCollectedCents: null,
     customer: {
       name: "Ana",
       phone: "+526642222222",
