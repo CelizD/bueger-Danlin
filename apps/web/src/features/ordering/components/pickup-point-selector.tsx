@@ -50,7 +50,7 @@ export function PickupPointSelector({
       <div className="pickup-selector-head">
         <div>
           <p className="eyebrow">Punto de entrega</p>
-          <h2 id="pickup-selector-title">¿Dónde quieres recibir tu combo?</h2>
+          <h2 id="pickup-selector-title">¿Dónde quieres recibir tu pedido?</h2>
         </div>
         <span>{events.length} punto{events.length === 1 ? "" : "s"} disponible{events.length === 1 ? "" : "s"}</span>
       </div>
@@ -101,7 +101,7 @@ export function PickupPointSelector({
                     </span>
                     <strong>
                       {group.estimatedDeliveryFeeCents === null
-                        ? "Costo por persona pendiente del primer combo pagado"
+                        ? "Costo por persona pendiente del primer pedido pagado"
                         : `Envío estimado ahora: ${money.format(
                             group.estimatedDeliveryFeeCents / 100,
                           )}`}
