@@ -1,4 +1,8 @@
-import { API_URL, apiFetch } from "@/lib/api/browser";
+import {
+  API_URL,
+  apiErrorMessage,
+  apiFetch,
+} from "@/lib/api/browser";
 import type {
   OrdersResponse,
   StaffUser,
@@ -59,4 +63,48 @@ export async function fetchAdminOrders(): Promise<
     data:
       (await ordersResponse.json()) as OrdersResponse,
   };
+}
+
+
+export async function refundAdminLatePayment(
+  orderCode: string,
+) {
+  const response = await apiFetch(
+    API_URL +
+      "/admin/orders/" +
+      encodeURIComponent(orderCode) +
+      "/refund-late-payment",
+    {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "content-type":
+          "application/json",
+      },
+      body: JSON.stringify({
+        confirm: true,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const payload = await response
+      .json()
+      .catch(() => null);
+
+    throw new Error(
+      apiErrorMessage(
+        payload,
+        "No se pudo completar el reembolso.",
+      ),
+    );
+  }
+
+  return response.json() as Promise<{
+    orderCode: string;
+    status: "REFUNDED";
+    paymentStatus: "REFUNDED";
+    refundStatus: "REFUNDED";
+    alreadyRefunded: boolean;
+  }>;
 }
