@@ -174,7 +174,7 @@ export function nextSaturdayDefaults(): SaturdayFormState {
     locationAddress: "",
     latitude: "",
     longitude: "",
-    freeDeliveryMinPaidOrders: "5",
+    freeDeliveryMinPaidCombos: "5",
     transportCostMx: "0",
     pickupDate,
     pickupTime: "09:30",
