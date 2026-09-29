@@ -2337,6 +2337,12 @@ h2 {
   background: #fff;
 }
 
+.saturday-form input:disabled {
+  cursor: not-allowed;
+  background: #f1eee8;
+  color: #8b847a;
+}
+
 .saturday-full-field {
   grid-column: 1 / -1;
 }
