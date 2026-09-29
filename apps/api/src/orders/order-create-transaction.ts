@@ -350,11 +350,11 @@ export async function createOrderTransaction(
         timezone: event.timezone,
       },
       groupDelivery: {
-        minPaidOrders:
+        minPaidCombos:
           event.freeDeliveryMinPaidCombos,
         paidOrderCount:
           groupDeliveryPaidOrders,
-        remainingPaidOrders:
+        remainingPaidCombos:
           Math.max(
             0,
             event.freeDeliveryMinPaidCombos -
