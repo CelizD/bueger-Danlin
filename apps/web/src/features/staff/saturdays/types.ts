@@ -35,15 +35,33 @@ export type PickupEvent = {
   reservedCombos: number;
   remainingCombos: number;
   orderCount: number;
+  groupDelivery: {
+    minPaidOrders: number;
+    paidOrderCount: number;
+    remainingPaidOrders: number;
+    transportCostCents: number;
+    estimatedDeliveryFeeCents: number | null;
+    freeDeliveryUnlocked: boolean;
+    finalized: boolean;
+    finalizedAt: string | null;
+    finalPaidOrderCount: number | null;
+    finalTransportCostCents: number | null;
+    finalAssignedCents: number | null;
+  };
   createdAt: string;
   updatedAt: string;
 };
 
 export type SaturdayFormState = {
   locationLabel: string;
+  locationAddress: string;
+  latitude: string;
+  longitude: string;
   pickupDate: string;
   pickupTime: string;
   closeDate: string;
   closeTime: string;
   maxCombos: string;
+  freeDeliveryMinPaidOrders: string;
+  transportCostPesos: string;
 };
