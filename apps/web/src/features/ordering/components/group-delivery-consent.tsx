@@ -20,7 +20,7 @@ export function GroupDeliveryConsent({
   const group = event.groupDelivery;
 
   let estimateText =
-    "Todavía no hay pedidos pagados para calcular una cantidad por persona.";
+    "Todavía no hay combos pagados para calcular una cantidad por persona.";
 
   if (group.freeDeliveryUnlocked) {
     estimateText =
@@ -28,10 +28,10 @@ export function GroupDeliveryConsent({
   } else if (group.estimatedDeliveryFeeCents !== null) {
     estimateText =
       "Actualmente van " +
-      group.paidOrderCount +
+      group.paidComboCount +
       " de " +
-      group.minPaidOrders +
-      " pedidos pagados. Si cerrara ahora, el envío sería aproximadamente " +
+      group.minPaidCombos +
+      " combos pagados. Si cerrara ahora, el envío sería aproximadamente " +
       money.format(group.estimatedDeliveryFeeCents / 100) +
       " por pedido.";
   }
@@ -48,13 +48,13 @@ export function GroupDeliveryConsent({
         </h2>
         <p>
           El envío será gratis únicamente si al cierre se alcanza el mínimo
-          de <strong>{group.minPaidOrders} pedidos pagados</strong> para{" "}
+          de <strong>{group.minPaidCombos} combos pagados</strong> para{" "}
           <strong>{event.pickupPoint.name}</strong>.
         </p>
         <p className="group-delivery-estimate">{estimateText}</p>
         <small>
-          Tu pedido cuenta para la meta únicamente después de que el pago
-          sea confirmado.
+          Los combos de tu pedido cuentan para la meta únicamente después
+          de que el pago sea confirmado.
         </small>
       </div>
 
