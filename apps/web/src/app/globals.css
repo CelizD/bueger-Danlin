@@ -1765,6 +1765,20 @@ h2 {
   font-size: 13px;
 }
 
+.delivery-meta > .delivery-fee-meta {
+  grid-column: 1 / -1;
+}
+
+.delivery-fee-meta.cash-due {
+  border: 1px solid #e4c794;
+  background: #fff5df;
+}
+
+.delivery-fee-meta.cash-due strong {
+  color: #7b4b08;
+  font-size: 14px;
+}
+
 .delivery-confirm {
   width: 100%;
   min-height: 44px;
