@@ -12,6 +12,10 @@ export type DeliveryOrder = {
   comboQuantity: number;
   totalCents: number;
   deliveredAt?: string | null;
+  groupDeliveryFinalFeeCents: number | null;
+  groupDeliveryFinalizedAt: string | null;
+  groupDeliveryFeeCollectedAt: string | null;
+  groupDeliveryFeeCollectedCents: number | null;
   customer: {
     name: string;
     phone: string;
