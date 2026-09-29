@@ -93,9 +93,9 @@ export async function saveAdminPickupEvent(
     new Date(closesAtIso);
   const maxCombos =
     Number(form.maxCombos);
-  const freeDeliveryMinPaidOrders =
+  const freeDeliveryMinPaidCombos =
     Number(
-      form.freeDeliveryMinPaidOrders,
+      form.freeDeliveryMinPaidCombos,
     );
   const transportCostMx =
     Number(form.transportCostMx);
@@ -127,10 +127,10 @@ export async function saveAdminPickupEvent(
     maxCombos < 1 ||
     maxCombos > 500 ||
     !Number.isInteger(
-      freeDeliveryMinPaidOrders,
+      freeDeliveryMinPaidCombos,
     ) ||
-    freeDeliveryMinPaidOrders < 1 ||
-    freeDeliveryMinPaidOrders > 100 ||
+    freeDeliveryMinPaidCombos < 1 ||
+    freeDeliveryMinPaidCombos > 100 ||
     !Number.isFinite(
       transportCostMx,
     ) ||
@@ -143,7 +143,7 @@ export async function saveAdminPickupEvent(
   }
 
   if (
-    freeDeliveryMinPaidOrders >
+    freeDeliveryMinPaidCombos >
     maxCombos
   ) {
     throw new Error(
@@ -190,7 +190,7 @@ export async function saveAdminPickupEvent(
           form.locationAddress.trim(),
         latitude,
         longitude,
-        freeDeliveryMinPaidOrders,
+        freeDeliveryMinPaidCombos,
         transportCostCents,
         startsAt: startsAtIso,
         closesAt: closesAtIso,
