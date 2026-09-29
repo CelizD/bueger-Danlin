@@ -5,9 +5,13 @@ import {
   useMemo,
   useState,
 } from "react";
-import { fetchAdminOrders } from "./api";
+import {
+  fetchAdminOrders,
+  refundAdminLatePayment,
+} from "./api";
 import { filterAdminOrders } from "./selectors";
 import type {
+  AdminOrder,
   OrdersResponse,
   StaffUser,
 } from "./types";
@@ -32,6 +36,12 @@ export function useAdminOrders() {
     useState<string | null>(null);
   const [error, setError] =
     useState("");
+  const [success, setSuccess] =
+    useState("");
+  const [
+    refundingOrderCode,
+    setRefundingOrderCode,
+  ] = useState<string | null>(null);
 
   async function load(
     showRefreshing = false,
@@ -103,6 +113,58 @@ export function useAdminOrders() {
     );
   }
 
+  async function refundLatePayment(
+    order: AdminOrder,
+  ) {
+    const issue = order.refundIssue;
+
+    if (!issue) return;
+
+    const amount =
+      new Intl.NumberFormat(
+        "es-MX",
+        {
+          style: "currency",
+          currency: "MXN",
+        },
+      ).format(
+        issue.amountCents / 100,
+      );
+
+    if (
+      !window.confirm(
+        `¿Confirmas reembolsar ${amount} del pedido ${order.orderCode}? Esta acción se enviará al proveedor de pago.`,
+      )
+    ) {
+      return;
+    }
+
+    setRefundingOrderCode(
+      order.orderCode,
+    );
+    setError("");
+    setSuccess("");
+
+    try {
+      await refundAdminLatePayment(
+        order.orderCode,
+      );
+      await load(true);
+      setExpanded(order.id);
+      setSuccess(
+        `Reembolso de ${order.orderCode} completado correctamente.`,
+      );
+    } catch (refundError) {
+      setError(
+        refundError instanceof Error
+          ? refundError.message
+          : "No se pudo completar el reembolso.",
+      );
+    } finally {
+      setRefundingOrderCode(null);
+    }
+  }
+
   return {
     user,
     data,
@@ -113,11 +175,14 @@ export function useAdminOrders() {
     selectedEventId,
     expanded,
     error,
+    success,
+    refundingOrderCode,
     filteredOrders,
     load,
     setQuery,
     setStatus,
     selectEvent,
     toggleExpanded,
+    refundLatePayment,
   };
 }

@@ -34,6 +34,14 @@ export type AdminOrder = {
   comboQuantity: number;
   groupDeliveryFinalFeeCents: number | null;
   groupDeliveryFinalizedAt: string | null;
+  refundIssue: {
+    required: true;
+    amountCents: number;
+    provider: string;
+    reason: string;
+    detectedAt: string | null;
+    lastAttemptFailed: boolean;
+  } | null;
   createdAt: string;
   customer: {
     name: string;
@@ -68,6 +76,7 @@ export type AdminOrder = {
     status: string;
     amountCents: number;
     paidAt: string | null;
+    refundedAt: string | null;
   }>;
 };
 
@@ -80,6 +89,8 @@ export type OrdersResponse = {
     paidRevenueCents: number;
     finalDeliveryCashCents: number;
     activeGroups: number;
+    manualRefundsPending: number;
+    manualRefundsPendingCents: number;
   };
   groups: AdminDeliveryGroup[];
   orders: AdminOrder[];

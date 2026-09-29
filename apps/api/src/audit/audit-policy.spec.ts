@@ -84,6 +84,10 @@ const requirements: Array<{
     actions: ["PAYMENT_CHECKOUT_CREATED"],
   },
   {
+    file: "../admin/admin-late-payment-refund.ts",
+    actions: ["ADMIN_LATE_PAYMENT_REFUNDED"],
+  },
+  {
     file: "../payments/mock-payment-confirmation.ts",
     actions: ["PAYMENT_CONFIRMED"],
   },

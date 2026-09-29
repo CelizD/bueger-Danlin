@@ -78,12 +78,13 @@ El cierre manual y automático comparten `GROUP_DELIVERY_FINALIZED`.
 | `PAYMENT_WEBHOOK_APPLIED` | Payment | webhook Mercado Pago verificado |
 | `PAYMENT_WEBHOOK_IGNORED` | Payment | webhook Mercado Pago verificado |
 | `PAYMENT_LATE_AFTER_ORDER_CLOSED` | Payment | webhook Mercado Pago verificado |
+| `ADMIN_LATE_PAYMENT_REFUNDED` | Payment | ADMIN autenticado |
 
 El payload de auditoría de pagos puede guardar IDs internos, proveedor, estado, moneda e importe, pero no credenciales, URLs firmadas, secretos ni tokens.
 
 La deduplicación técnica del webhook se conserva además en `PaymentWebhookEvent`. Los eventos procesados/ignorados tienen retención técnica de 90 días; los fallidos se preservan para investigación y reintento.
 
-Si Mercado Pago confirma un pago cuando el pedido ya fue cancelado/cerrado, el pedido no se reactiva ni vuelve a contar para el grupo. Se registra `PAYMENT_LATE_AFTER_ORDER_CLOSED`, el dinero se refleja como pagado y el pago queda marcado para reembolso manual hasta que exista refund automático real.
+Si Mercado Pago confirma un pago cuando la reserva ya venció o el pedido ya fue cancelado/cerrado, el pedido no se reactiva ni vuelve a contar para el grupo. Se registra `PAYMENT_LATE_AFTER_ORDER_CLOSED`, el dinero se refleja como recibido y el pago queda marcado para reembolso. Un ADMIN puede resolverlo desde el panel; al completarse se registra `ADMIN_LATE_PAYMENT_REFUNDED` con el actor autenticado.
 
 ## Verificación
 

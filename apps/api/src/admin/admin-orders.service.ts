@@ -1,7 +1,19 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../database/prisma.service.js";
+import { PaymentProviderRegistry } from "../payments/payment-provider.registry.js";
+import { refundLatePaymentFromAdmin } from "./admin-late-payment-refund.js";
 
 const CANCELLED_STATUSES = ["CANCELLED", "REFUNDED"] as const;
+
+function metadataRecord(
+  metadata: unknown,
+): Record<string, unknown> {
+  return metadata &&
+    typeof metadata === "object" &&
+    !Array.isArray(metadata)
+    ? (metadata as Record<string, unknown>)
+    : {};
+}
 
 function activePaidOrder(order: {
   status: string;
@@ -17,7 +29,22 @@ function activePaidOrder(order: {
 
 @Injectable()
 export class AdminOrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paymentProviders: PaymentProviderRegistry,
+  ) {}
+
+  refundLatePayment(
+    orderCode: string,
+    actorUserId: string,
+  ) {
+    return refundLatePaymentFromAdmin(
+      this.prisma,
+      this.paymentProviders,
+      orderCode,
+      actorUserId,
+    );
+  }
 
   async listOrders() {
     const [events, orders] = await Promise.all([
@@ -99,6 +126,8 @@ export class AdminOrdersService {
               status: true,
               amountCents: true,
               paidAt: true,
+              refundedAt: true,
+              metadata: true,
             },
           },
         },
@@ -161,7 +190,75 @@ export class AdminOrdersService {
       };
     });
 
-    const effectiveSales = orders.filter(activePaidOrder);
+    const presentedOrders = orders.map(
+      (order) => {
+        const paymentNeedingRefund =
+          order.payments.find(
+            (payment) =>
+              payment.status === "PAID" &&
+              metadataRecord(
+                payment.metadata,
+              ).requiresManualRefund ===
+                true,
+          );
+        const refundMetadata =
+          paymentNeedingRefund
+            ? metadataRecord(
+                paymentNeedingRefund.metadata,
+              )
+            : null;
+
+        return {
+          ...order,
+          refundIssue:
+            paymentNeedingRefund &&
+            refundMetadata
+              ? {
+                  required: true,
+                  amountCents:
+                    paymentNeedingRefund.amountCents,
+                  provider:
+                    paymentNeedingRefund.provider,
+                  reason:
+                    typeof refundMetadata
+                      .latePaymentReason ===
+                    "string"
+                      ? refundMetadata
+                          .latePaymentReason
+                      : "LATE_PAYMENT",
+                  detectedAt:
+                    typeof refundMetadata
+                      .latePaymentDetectedAt ===
+                    "string"
+                      ? refundMetadata
+                          .latePaymentDetectedAt
+                      : null,
+                  lastAttemptFailed:
+                    refundMetadata
+                      .manualRefundStatus ===
+                    "FAILED",
+                }
+              : null,
+          payments:
+            order.payments.map(
+              ({
+                metadata: _metadata,
+                ...payment
+              }) => payment,
+            ),
+        };
+      },
+    );
+
+    const effectiveSales =
+      presentedOrders.filter(
+        activePaidOrder,
+      );
+    const refundOrders =
+      presentedOrders.filter(
+        (order) =>
+          order.refundIssue?.required,
+      );
 
     const summary = {
       totalOrders: orders.length,
@@ -188,12 +285,22 @@ export class AdminOrdersService {
           !group.finalized &&
           ["OPEN", "SOLD_OUT"].includes(group.status),
       ).length,
+      manualRefundsPending:
+        refundOrders.length,
+      manualRefundsPendingCents:
+        refundOrders.reduce(
+          (total, order) =>
+            total +
+            (order.refundIssue?.amountCents ??
+              0),
+          0,
+        ),
     };
 
     return {
       summary,
       groups,
-      orders,
+      orders: presentedOrders,
     };
   }
 }

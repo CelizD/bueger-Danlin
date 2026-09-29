@@ -10,11 +10,17 @@ function statusText(status: string) {
 export function AdminOrderList({
   orders,
   expanded,
+  refundingOrderCode,
   onToggle,
+  onRefundLatePayment,
 }: {
   orders: AdminOrder[];
   expanded: string | null;
+  refundingOrderCode: string | null;
   onToggle: (orderId: string) => void;
+  onRefundLatePayment: (
+    order: AdminOrder,
+  ) => void;
 }) {
   return (
     <div className="admin-order-list">
@@ -30,7 +36,10 @@ export function AdminOrderList({
             <article
               className={
                 "admin-order-row " +
-                (isOpen ? "open" : "")
+                (isOpen ? "open " : "") +
+                (order.refundIssue
+                  ? "refund-required"
+                  : "")
               }
               key={order.id}
             >
@@ -68,9 +77,13 @@ export function AdminOrderList({
                     {money.format(order.totalCents / 100)}
                   </strong>
                   <span>
-                    {order.paymentStatus === "PAID"
-                      ? "Pagado"
-                      : "Pendiente"}
+                    {order.refundIssue
+                      ? "Reembolso pendiente"
+                      : order.paymentStatus === "PAID"
+                        ? "Pagado"
+                        : order.paymentStatus === "REFUNDED"
+                          ? "Reembolsado"
+                          : "Pendiente"}
                   </span>
                 </div>
 
@@ -94,7 +107,18 @@ export function AdminOrderList({
               </button>
 
               {isOpen && (
-                <AdminOrderDetail order={order} />
+                <AdminOrderDetail
+                  order={order}
+                  refunding={
+                    refundingOrderCode ===
+                    order.orderCode
+                  }
+                  onRefundLatePayment={() =>
+                    onRefundLatePayment(
+                      order,
+                    )
+                  }
+                />
               )}
             </article>
           );
