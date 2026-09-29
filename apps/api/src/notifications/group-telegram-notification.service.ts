@@ -33,18 +33,29 @@ export class GroupTelegramNotificationService {
 
       if (!event) return false;
 
-      const paidOrderCount = await tx.order.count({
-        where: {
-          pickupEventId: eventId,
-          paymentStatus: "PAID",
-          status: {
-            notIn: ["CANCELLED", "REFUNDED"],
+      const paidOrders =
+        await tx.order.findMany({
+          where: {
+            pickupEventId: eventId,
+            paymentStatus: "PAID",
+            status: {
+              notIn: ["CANCELLED", "REFUNDED"],
+            },
           },
-        },
-      });
+          select: {
+            comboQuantity: true,
+          },
+        });
+      const paidComboCount =
+        paidOrders.reduce(
+          (sum, order) =>
+            sum + order.comboQuantity,
+          0,
+        );
 
       if (
-        paidOrderCount < event.freeDeliveryMinPaidCombos
+        paidComboCount <
+        event.freeDeliveryMinPaidCombos
       ) {
         return false;
       }
@@ -54,7 +65,7 @@ export class GroupTelegramNotificationService {
           where: { id: eventId },
           data: {
             telegramGroupCompletedAt: new Date(),
-            telegramGroupCompletedPaidCombos: paidOrderCount,
+            telegramGroupCompletedPaidCombos: paidComboCount,
           },
         });
       }
@@ -147,10 +158,11 @@ export class GroupTelegramNotificationService {
 
     const sent = await this.telegram.notifyGroupCompleted({
       locationLabel: event.locationLabel,
-      paidOrderCount:
+      paidComboCount:
         event.telegramGroupCompletedPaidCombos ??
         event.freeDeliveryMinPaidCombos,
-      minPaidOrders: event.freeDeliveryMinPaidCombos,
+      minPaidCombos:
+        event.freeDeliveryMinPaidCombos,
     });
 
     if (!sent) {
@@ -223,9 +235,10 @@ export class GroupTelegramNotificationService {
 
     const sent = await this.telegram.notifyGroupClosed({
       locationLabel: event.locationLabel,
-      paidOrderCount:
+      paidComboCount:
         event.groupDeliveryFinalPaidCombos ?? 0,
-      minPaidOrders: event.freeDeliveryMinPaidCombos,
+      minPaidCombos:
+        event.freeDeliveryMinPaidCombos,
       transportCostCents:
         event.groupDeliveryFinalTransportCostCents ?? 0,
       assignedCents:
