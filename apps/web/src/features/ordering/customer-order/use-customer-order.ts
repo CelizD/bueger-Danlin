@@ -81,19 +81,25 @@ export function useCustomerOrder(
   }, [orderCode]);
 
   async function cancelOrder() {
+    const retryingRefund =
+      order?.refundStatus === "PENDING";
+
     if (
       !order ||
       !token ||
-      !order.canCancel
+      (!order.canCancel &&
+        !retryingRefund)
     ) {
       return;
     }
 
     const confirmed =
       window.confirm(
-        order.paymentStatus === "PAID"
-          ? "¿Seguro que quieres cancelar? Se iniciará el reembolso del pago."
-          : "¿Seguro que quieres cancelar? El cupo reservado se liberará.",
+        retryingRefund
+          ? "¿Reintentar el reembolso con el proveedor de pago?"
+          : order.paymentStatus === "PAID"
+            ? "¿Seguro que quieres cancelar? Se iniciará el reembolso del pago."
+            : "¿Seguro que quieres cancelar? El cupo reservado se liberará.",
       );
 
     if (!confirmed) {

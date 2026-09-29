@@ -260,4 +260,121 @@ describe("MercadoPagoApiClient", () => {
       "Mercado Pago order API returned an invalid response",
     );
   });
+
+  it("solicita un reembolso total de una order con idempotencia", async () => {
+    vi.stubEnv(
+      "MERCADOPAGO_ACCESS_TOKEN",
+      "APP_USR-test-access-token-long-enough",
+    );
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          id: "ORDTST01",
+          status: "refunded",
+          status_detail: "refunded",
+          transactions: {
+            refunds: [
+              {
+                id: "REF01",
+                transaction_id: "PAY01",
+                amount: "130.00",
+                status: "processed",
+              },
+            ],
+          },
+        }),
+        {
+          status: 201,
+          headers: {
+            "content-type": "application/json",
+          },
+        },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result =
+      await new MercadoPagoApiClient().refundOrder({
+        orderId: "ORDTST01",
+        idempotencyKey: "refund-payment-1",
+      });
+
+    expect(result).toMatchObject({
+      id: "ORDTST01",
+      status: "refunded",
+      status_detail: "refunded",
+    });
+
+    const [url, options] = fetchMock.mock.calls[0] as [
+      string,
+      RequestInit,
+    ];
+
+    expect(url).toBe(
+      "https://api.mercadopago.com/v1/orders/ORDTST01/refund",
+    );
+    expect(options.method).toBe("POST");
+    expect(options.body).toBeUndefined();
+    expect(options.headers).toMatchObject({
+      authorization:
+        "Bearer APP_USR-test-access-token-long-enough",
+      "x-idempotency-key": "refund-payment-1",
+    });
+  });
+
+  it("mantiene el kill switch también para refunds", async () => {
+    vi.stubEnv("ENABLE_REAL_PAYMENTS", "false");
+    vi.stubEnv(
+      "MERCADOPAGO_ACCESS_TOKEN",
+      "APP_USR-test-access-token-long-enough",
+    );
+
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      new MercadoPagoApiClient().refundOrder({
+        orderId: "ORDTST01",
+        idempotencyKey: "refund-payment-1",
+      }),
+    ).rejects.toThrow("Real payment calls are disabled");
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("expone código sanitizado cuando Mercado Pago rechaza el refund", async () => {
+    vi.stubEnv(
+      "MERCADOPAGO_ACCESS_TOKEN",
+      "APP_USR-test-access-token-long-enough",
+    );
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            code: "cannot_refund_order",
+            message: "details that must not leak",
+          }),
+          {
+            status: 409,
+            headers: {
+              "content-type": "application/json",
+            },
+          },
+        ),
+      ),
+    );
+
+    await expect(
+      new MercadoPagoApiClient().refundOrder({
+        orderId: "ORDTST01",
+        idempotencyKey: "refund-payment-1",
+      }),
+    ).rejects.toThrow(
+      "Mercado Pago refund order failed (409: cannot_refund_order)",
+    );
+  });
+
 });

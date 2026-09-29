@@ -49,11 +49,11 @@ export function cancellationNotice(
   if (
     refundStatus === "REFUNDED"
   ) {
-    return "Pedido cancelado. El reembolso local ya fue completado.";
+    return "Pedido cancelado. El reembolso ya fue completado.";
   }
 
   if (refundStatus === "PENDING") {
-    return "Pedido cancelado. Tu reembolso quedó solicitado.";
+    return "Pedido cancelado. Tu reembolso sigue en proceso.";
   }
 
   return "Pedido cancelado. El cupo fue liberado.";

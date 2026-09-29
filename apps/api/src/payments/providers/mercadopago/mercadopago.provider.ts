@@ -8,8 +8,14 @@ import type {
   RefundPaymentInput,
   RefundPaymentResult,
 } from "../../domain/payment-provider.types.js";
-import { MercadoPagoApiClient } from "./mercadopago-api.client.js";
-import type { MercadoPagoOrderResponse } from "./mercadopago.types.js";
+import {
+  MercadoPagoApiClient,
+  MercadoPagoApiError,
+} from "./mercadopago-api.client.js";
+import type {
+  MercadoPagoOrderResponse,
+  MercadoPagoRefundOrderResponse,
+} from "./mercadopago.types.js";
 
 function formatAmount(amountCents: number) {
   if (!Number.isInteger(amountCents) || amountCents <= 0) {
@@ -46,7 +52,10 @@ function expirationDuration(expiresAt: Date | null | undefined) {
 }
 
 function mapOrderStatus(
-  order: Pick<MercadoPagoOrderResponse, "status" | "status_detail">,
+  order: Pick<
+    MercadoPagoOrderResponse | MercadoPagoRefundOrderResponse,
+    "status" | "status_detail"
+  >,
 ): ProviderPaymentStatus {
   switch (order.status) {
     case "created":
@@ -76,6 +85,17 @@ function mapOrderStatus(
         `Unsupported Mercado Pago order status: ${order.status}`,
       );
   }
+}
+
+function isRefundReconciliationError(error: unknown) {
+  return (
+    error instanceof MercadoPagoApiError &&
+    [
+      "order_already_refunded",
+      "order_refund_already_in_process",
+      "idempotency_key_already_used",
+    ].includes(error.code ?? "")
+  );
 }
 
 @Injectable()
@@ -159,10 +179,70 @@ export class MercadoPagoProvider implements PaymentProvider {
   }
 
   async refund(
-    _input: RefundPaymentInput,
+    input: RefundPaymentInput,
   ): Promise<RefundPaymentResult> {
-    throw new Error(
-      "Mercado Pago refund is not connected yet",
-    );
+    if (input.amountCents !== undefined) {
+      throw new Error(
+        "Mercado Pago partial refunds are not supported by this integration yet",
+      );
+    }
+
+    const current = await this.getPayment(input.externalId);
+
+    if (current.status === "REFUNDED") {
+      return {
+        externalId: current.externalId,
+        status: "REFUNDED",
+        refundedAmountCents: current.amountCents,
+      };
+    }
+
+    if (current.status !== "PAID") {
+      throw new Error(
+        `Mercado Pago order is not refundable from status ${current.status}`,
+      );
+    }
+
+    let refunded:
+      | MercadoPagoRefundOrderResponse
+      | undefined;
+
+    try {
+      refunded = await this.apiClient.refundOrder({
+        orderId: input.externalId,
+        idempotencyKey: input.idempotencyKey,
+      });
+    } catch (error) {
+      if (!isRefundReconciliationError(error)) {
+        throw error;
+      }
+
+      const reconciled =
+        await this.getPayment(input.externalId);
+
+      if (reconciled.status !== "REFUNDED") {
+        throw error;
+      }
+
+      return {
+        externalId: reconciled.externalId,
+        status: "REFUNDED",
+        refundedAmountCents: reconciled.amountCents,
+      };
+    }
+
+    const status = mapOrderStatus(refunded);
+
+    if (status !== "REFUNDED") {
+      throw new Error(
+        `Mercado Pago refund did not reach REFUNDED status: ${status}`,
+      );
+    }
+
+    return {
+      externalId: refunded.id,
+      status,
+      refundedAmountCents: current.amountCents,
+    };
   }
 }

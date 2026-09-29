@@ -29,7 +29,7 @@ function description(
   if (
     order.refundStatus === "PENDING"
   ) {
-    return "El pedido está cancelado y el reembolso sigue en proceso.";
+    return "El pedido está cancelado y el reembolso sigue en proceso. Puedes reintentarlo si el proveedor tuvo una falla temporal.";
   }
 
   return order.canCancel
@@ -50,7 +50,8 @@ export function CustomerOrderCancelCard({
     <section className="customer-cancel-card">
       <div className="customer-cancel-card-head">
         <div className="customer-cancel-card-icon">
-          {order.canCancel ? (
+          {order.canCancel ||
+          order.refundStatus === "PENDING" ? (
             <RotateCcw size={21} />
           ) : (
             <ShieldCheck size={21} />
@@ -89,7 +90,8 @@ export function CustomerOrderCancelCard({
         </strong>
       </div>
 
-      {order.canCancel && (
+      {(order.canCancel ||
+        order.refundStatus === "PENDING") && (
         <button
           type="button"
           className="customer-cancel-button"
@@ -98,11 +100,17 @@ export function CustomerOrderCancelCard({
         >
           <XCircle size={17} />
           {canceling
-            ? "Cancelando pedido…"
-            : order.paymentStatus ===
-                "PAID"
-              ? "Cancelar e iniciar reembolso"
-              : "Cancelar pedido"}
+            ? order.refundStatus ===
+                "PENDING"
+              ? "Reintentando reembolso…"
+              : "Cancelando pedido…"
+            : order.refundStatus ===
+                "PENDING"
+              ? "Reintentar reembolso"
+              : order.paymentStatus ===
+                  "PAID"
+                ? "Cancelar e iniciar reembolso"
+                : "Cancelar pedido"}
         </button>
       )}
     </section>

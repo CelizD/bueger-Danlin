@@ -325,8 +325,10 @@ describe("CustomerOrdersService.cancel", () => {
         {
           id: "payment-1",
           status: "PAID",
-          provider: "STRIPE",
-          metadata: { charge: "ch_123" },
+          provider: "MERCADOPAGO",
+          externalId: "ORDTST01",
+          amountCents: 13_000,
+          metadata: { providerOrder: "ORDTST01" },
         },
       ],
     });
@@ -342,7 +344,7 @@ describe("CustomerOrdersService.cancel", () => {
         where: { id: "payment-1" },
         data: {
           metadata: expect.objectContaining({
-            charge: "ch_123",
+            providerOrder: "ORDTST01",
             refundStatus: "requested",
             refundReason:
               "customer_cancelled_before_cutoff",

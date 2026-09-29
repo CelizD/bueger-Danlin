@@ -3,10 +3,26 @@ import { assertRealPaymentsEnabled } from "../../real-payments.guard.js";
 import type {
   MercadoPagoCreateOrderInput,
   MercadoPagoOrderResponse,
+  MercadoPagoRefundOrderInput,
+  MercadoPagoRefundOrderResponse,
 } from "./mercadopago.types.js";
 
 const MERCADO_PAGO_API_BASE_URL = "https://api.mercadopago.com";
 const REQUEST_TIMEOUT_MS = 10_000;
+
+export class MercadoPagoApiError extends Error {
+  constructor(
+    operation: string,
+    readonly status: number,
+    readonly code?: string,
+  ) {
+    super(
+      `Mercado Pago ${operation} failed (${status}${
+        code ? `: ${code}` : ""
+      })`,
+    );
+  }
+}
 
 function requireAccessToken() {
   const token = process.env.MERCADOPAGO_ACCESS_TOKEN?.trim();
@@ -28,6 +44,16 @@ function assertIdempotencyKey(idempotencyKey: string) {
       "Mercado Pago idempotency key must contain between 1 and 128 characters",
     );
   }
+}
+
+function assertOrderId(externalId: string) {
+  const id = externalId.trim();
+
+  if (!id || id.length > 128) {
+    throw new Error("Mercado Pago order id is invalid");
+  }
+
+  return id;
 }
 
 function errorCode(payload: unknown) {
@@ -66,6 +92,27 @@ function assertOrderResponse(
   ) {
     throw new Error(
       "Mercado Pago order API returned an invalid response",
+    );
+  }
+}
+
+function assertRefundOrderResponse(
+  payload: unknown,
+): asserts payload is MercadoPagoRefundOrderResponse {
+  if (!payload || typeof payload !== "object") {
+    throw new Error(
+      "Mercado Pago refund API returned an invalid response",
+    );
+  }
+
+  const record = payload as Record<string, unknown>;
+
+  if (
+    typeof record.id !== "string" ||
+    typeof record.status !== "string"
+  ) {
+    throw new Error(
+      "Mercado Pago refund API returned an invalid response",
     );
   }
 }
@@ -122,11 +169,7 @@ export class MercadoPagoApiClient {
     assertRealPaymentsEnabled();
 
     const accessToken = requireAccessToken();
-    const id = externalId.trim();
-
-    if (!id || id.length > 128) {
-      throw new Error("Mercado Pago order id is invalid");
-    }
+    const id = assertOrderId(externalId);
 
     const response = await fetch(
       `${MERCADO_PAGO_API_BASE_URL}/v1/orders/${encodeURIComponent(id)}`,
@@ -152,6 +195,44 @@ export class MercadoPagoApiClient {
     }
 
     assertOrderResponse(payload);
+    return payload;
+  }
+
+  async refundOrder(
+    input: MercadoPagoRefundOrderInput,
+  ): Promise<MercadoPagoRefundOrderResponse> {
+    assertRealPaymentsEnabled();
+
+    const accessToken = requireAccessToken();
+    const id = assertOrderId(input.orderId);
+
+    assertIdempotencyKey(input.idempotencyKey);
+
+    const response = await fetch(
+      `${MERCADO_PAGO_API_BASE_URL}/v1/orders/${encodeURIComponent(id)}/refund`,
+      {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+          authorization: `Bearer ${accessToken}`,
+          "x-idempotency-key": input.idempotencyKey,
+        },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      },
+    );
+
+    const payload = await response.json().catch(() => undefined);
+
+    if (!response.ok) {
+      throw new MercadoPagoApiError(
+        "refund order",
+        response.status,
+        errorCode(payload),
+      );
+    }
+
+    assertRefundOrderResponse(payload);
     return payload;
   }
 }
