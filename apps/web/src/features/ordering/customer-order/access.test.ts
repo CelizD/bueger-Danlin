@@ -22,10 +22,10 @@ describe("customer order helpers", () => {
 
     expect(
       cancellationNotice("PENDING"),
-    ).toContain("reembolso quedó solicitado");
+    ).toContain("reembolso sigue en proceso");
 
     expect(
       cancellationNotice("REFUNDED"),
-    ).toContain("reembolso local ya fue completado");
+    ).toContain("reembolso ya fue completado");
   });
 });
