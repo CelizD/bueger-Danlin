@@ -97,6 +97,18 @@ export async function saveAdminPickupEvent(
     Number(
       form.freeDeliveryMinPaidOrders,
     );
+  if (!form.locationAddress.trim()) {
+    throw new Error(
+      "Agrega la dirección exacta del punto de entrega.",
+    );
+  }
+
+  if (!form.transportCostPesos.trim()) {
+    throw new Error(
+      "Agrega el costo total de traslado.",
+    );
+  }
+
   const transportCostPesos =
     Number(form.transportCostPesos);
   const transportCostCents =
@@ -173,6 +185,15 @@ export async function saveAdminPickupEvent(
   ) {
     throw new Error(
       "La longitud debe estar entre -180 y 180.",
+    );
+  }
+
+  if (
+    (latitude === undefined) !==
+    (longitude === undefined)
+  ) {
+    throw new Error(
+      "Si agregas coordenadas, captura latitud y longitud.",
     );
   }
 
