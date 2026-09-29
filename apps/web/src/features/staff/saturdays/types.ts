@@ -36,15 +36,15 @@ export type PickupEvent = {
   remainingCombos: number;
   orderCount: number;
   groupDelivery: {
-    minPaidOrders: number;
-    paidOrderCount: number;
-    remainingPaidOrders: number;
+    minPaidCombos: number;
+    paidComboCount: number;
+    remainingPaidCombos: number;
     transportCostCents: number;
     estimatedDeliveryFeeCents: number | null;
     freeDeliveryUnlocked: boolean;
     finalized: boolean;
     finalizedAt: string | null;
-    finalPaidOrderCount: number | null;
+    finalPaidComboCount: number | null;
     finalTransportCostCents: number | null;
     finalAssignedCents: number | null;
   };
