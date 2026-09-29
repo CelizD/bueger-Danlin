@@ -68,7 +68,7 @@ export function buildDashboardDay(
 
       const paidOrderCount =
         finalized
-          ? event.groupDeliveryFinalPaidOrders ??
+          ? event.groupDeliveryFinalPaidCombos ??
             paidOrders.length
           : paidOrders.length;
 
@@ -77,7 +77,7 @@ export function buildDashboardDay(
           ? event.groupDeliveryFinalFreeUnlocked ??
             false
           : paidOrderCount >=
-            event.freeDeliveryMinPaidOrders;
+            event.freeDeliveryMinPaidCombos;
 
       const estimatedFeeCents =
         finalized
@@ -137,11 +137,11 @@ export function buildDashboardDay(
               0,
             ),
         minPaidOrders:
-          event.freeDeliveryMinPaidOrders,
+          event.freeDeliveryMinPaidCombos,
         remainingPaidOrders:
           Math.max(
             0,
-            event.freeDeliveryMinPaidOrders -
+            event.freeDeliveryMinPaidCombos -
               paidOrderCount,
           ),
         transportCostCents:
