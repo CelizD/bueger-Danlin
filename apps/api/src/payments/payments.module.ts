@@ -20,6 +20,6 @@ import { WebhookSecurityService } from "./webhook-security.service.js";
     PaymentProviderRegistry,
     WebhookSecurityService,
   ],
-  exports: [WebhookSecurityService],
+  exports: [WebhookSecurityService, PaymentProviderRegistry],
 })
 export class PaymentsModule {}
