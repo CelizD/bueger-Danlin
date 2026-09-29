@@ -10,7 +10,7 @@ describe("GroupTelegramNotificationService", () => {
       pickupEvent: {
         findUnique: vi.fn().mockResolvedValue({
           id: "event-1",
-          freeDeliveryMinPaidOrders: 5,
+          freeDeliveryMinPaidCombos: 5,
           telegramGroupCompletedAt: null,
         }),
         update: vi.fn().mockResolvedValue(undefined),
@@ -34,8 +34,8 @@ describe("GroupTelegramNotificationService", () => {
         findUnique: vi.fn().mockResolvedValue({
           id: "event-1",
           locationLabel: "Universidad",
-          freeDeliveryMinPaidOrders: 5,
-          telegramGroupCompletedPaidOrders: 5,
+          freeDeliveryMinPaidCombos: 5,
+          telegramGroupCompletedPaidCombos: 5,
         }),
       },
     } as unknown as PrismaService;
@@ -56,7 +56,7 @@ describe("GroupTelegramNotificationService", () => {
       where: { id: "event-1" },
       data: expect.objectContaining({
         telegramGroupCompletedAt: expect.any(Date),
-        telegramGroupCompletedPaidOrders: 5,
+        telegramGroupCompletedPaidCombos: 5,
       }),
     });
     expect(telegram.notifyGroupCompleted).toHaveBeenCalledWith({
@@ -77,8 +77,8 @@ describe("GroupTelegramNotificationService", () => {
         findUnique: vi.fn().mockResolvedValue({
           id: "event-1",
           locationLabel: "Cucapá",
-          freeDeliveryMinPaidOrders: 5,
-          groupDeliveryFinalPaidOrders: 3,
+          freeDeliveryMinPaidCombos: 5,
+          groupDeliveryFinalPaidCombos: 3,
           groupDeliveryFinalTransportCostCents: 10_000,
           groupDeliveryFinalAssignedCents: 10_000,
           groupDeliveryFinalFreeUnlocked: false,
@@ -129,8 +129,8 @@ describe("GroupTelegramNotificationService", () => {
         findUnique: vi.fn().mockResolvedValue({
           id: "event-1",
           locationLabel: "Universidad",
-          freeDeliveryMinPaidOrders: 5,
-          telegramGroupCompletedPaidOrders: 5,
+          freeDeliveryMinPaidCombos: 5,
+          telegramGroupCompletedPaidCombos: 5,
         }),
       },
     } as unknown as PrismaService;
