@@ -65,6 +65,7 @@ export class AdminOrdersService {
               id: true,
               status: true,
               paymentStatus: true,
+              comboQuantity: true,
               groupDeliveryFinalFeeCents: true,
             },
           },
@@ -137,12 +138,21 @@ export class AdminOrdersService {
     const groups = events.map((event) => {
       const paidOrders = event.orders.filter(activePaidOrder);
       const finalized = !!event.groupDeliveryFinalizedAt;
-      const paidOrderCount = finalized
-        ? event.groupDeliveryFinalPaidCombos ?? paidOrders.length
-        : paidOrders.length;
+      const paidOrderCount =
+        paidOrders.length;
+      const livePaidComboCount =
+        paidOrders.reduce(
+          (sum, order) =>
+            sum + order.comboQuantity,
+          0,
+        );
+      const paidComboCount = finalized
+        ? event.groupDeliveryFinalPaidCombos ??
+          livePaidComboCount
+        : livePaidComboCount;
       const freeDeliveryUnlocked = finalized
         ? event.groupDeliveryFinalFreeUnlocked ?? false
-        : paidOrderCount >= event.freeDeliveryMinPaidCombos;
+        : paidComboCount >= event.freeDeliveryMinPaidCombos;
 
       const estimatedFeeCents = finalized
         ? null
@@ -170,11 +180,11 @@ export class AdminOrdersService {
         startsAt: event.startsAt,
         closesAt: event.closesAt,
         pickupPoint: event.pickupPoint,
-        minPaidOrders: event.freeDeliveryMinPaidCombos,
-        paidOrderCount,
-        remainingPaidOrders: Math.max(
+        minPaidCombos: event.freeDeliveryMinPaidCombos,
+        paidComboCount,
+        remainingPaidCombos: Math.max(
           0,
-          event.freeDeliveryMinPaidCombos - paidOrderCount,
+          event.freeDeliveryMinPaidCombos - paidComboCount,
         ),
         transportCostCents: finalized
           ? event.groupDeliveryFinalTransportCostCents ??
