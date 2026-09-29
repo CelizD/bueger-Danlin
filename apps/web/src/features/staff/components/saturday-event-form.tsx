@@ -30,6 +30,26 @@ export function SaturdayEventForm({
   onClose,
   onSubmit,
 }: Props) {
+  const parsedMaxCombos = Number(
+    form.maxCombos,
+  );
+  const parsedFreeDeliveryTarget =
+    Number(
+      form.freeDeliveryMinPaidOrders,
+    );
+  const minimumMaxCombos =
+    Number.isInteger(
+      parsedFreeDeliveryTarget,
+    ) &&
+    parsedFreeDeliveryTarget > 0
+      ? parsedFreeDeliveryTarget
+      : 1;
+  const maximumFreeDeliveryTarget =
+    Number.isInteger(parsedMaxCombos) &&
+    parsedMaxCombos > 0
+      ? Math.min(100, parsedMaxCombos)
+      : 100;
+
   return (
     <section className="saturday-form-card">
       <div className="saturday-form-head">
@@ -196,7 +216,7 @@ export function SaturdayEventForm({
           <input
             required
             type="number"
-            min="1"
+            min={minimumMaxCombos}
             max="500"
             step="1"
             value={form.maxCombos}
@@ -217,7 +237,7 @@ export function SaturdayEventForm({
             required
             type="number"
             min="1"
-            max="100"
+            max={maximumFreeDeliveryTarget}
             step="1"
             value={
               form.freeDeliveryMinPaidOrders
@@ -261,6 +281,7 @@ export function SaturdayEventForm({
         )}
 
         <div className="saturday-form-note">
+          La meta de envío gratis nunca puede ser mayor al límite de combos.
           Si se alcanza la meta de pedidos pagados, el envío queda gratis.
           Si no se alcanza, el costo de traslado se divide entre los pedidos
           pagados y se cobra al entregar. La meta y el costo quedan bloqueados
