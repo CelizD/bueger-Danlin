@@ -203,11 +203,6 @@ export async function updateAdminPickupEvent(
       freeDeliveryMinPaidOrders,
     );
 
-    assertGroupDeliveryCapacity(
-      event.maxCombos,
-      event.freeDeliveryMinPaidOrders,
-    );
-
     const capacity = await tx.order.aggregate({
       where: {
         pickupEventId: id,
@@ -422,6 +417,11 @@ export async function openAdminPickupEvent(
         "No puedes abrir una entrega cuya fecha de cierre o entrega ya pasó.",
       );
     }
+
+    assertGroupDeliveryCapacity(
+      event.maxCombos,
+      event.freeDeliveryMinPaidOrders,
+    );
 
     const capacity = await tx.order.aggregate({
       where: {
