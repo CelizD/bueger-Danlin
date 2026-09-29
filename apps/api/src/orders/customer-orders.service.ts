@@ -80,7 +80,7 @@ export class CustomerOrdersService {
       !!order.pickupEvent.groupDeliveryFinalizedAt;
 
     const paidOrderCount = finalized
-      ? order.pickupEvent.groupDeliveryFinalPaidOrders ?? 0
+      ? order.pickupEvent.groupDeliveryFinalPaidCombos ?? 0
       : await this.prisma.order.count({
           where: {
             pickupEventId: order.pickupEventId,
@@ -94,7 +94,7 @@ export class CustomerOrdersService {
     const freeDeliveryUnlocked = finalized
       ? order.pickupEvent.groupDeliveryFinalFreeUnlocked ?? false
       : paidOrderCount >=
-        order.pickupEvent.freeDeliveryMinPaidOrders;
+        order.pickupEvent.freeDeliveryMinPaidCombos;
 
     const estimatedDeliveryFeeCents = finalized
       ? order.groupDeliveryFinalFeeCents
@@ -137,11 +137,11 @@ export class CustomerOrdersService {
       },
       groupDelivery: {
         minPaidOrders:
-          order.pickupEvent.freeDeliveryMinPaidOrders,
+          order.pickupEvent.freeDeliveryMinPaidCombos,
         paidOrderCount,
         remainingPaidOrders: Math.max(
           0,
-          order.pickupEvent.freeDeliveryMinPaidOrders -
+          order.pickupEvent.freeDeliveryMinPaidCombos -
             paidOrderCount,
         ),
         transportCostCents: finalized
