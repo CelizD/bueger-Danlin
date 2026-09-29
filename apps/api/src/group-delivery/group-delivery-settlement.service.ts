@@ -120,7 +120,7 @@ export class GroupDeliverySettlementService {
           alreadyFinalized: true,
           eventId: event.id,
           finalizedAt: event.groupDeliveryFinalizedAt,
-          paidOrderCount: event.groupDeliveryFinalPaidOrders ?? 0,
+          paidOrderCount: event.groupDeliveryFinalPaidCombos ?? 0,
           freeDeliveryUnlocked:
             event.groupDeliveryFinalFreeUnlocked ?? false,
           assignedCents:
@@ -246,7 +246,7 @@ export class GroupDeliverySettlementService {
 
       const paidOrderCount = paidOrders.length;
       const freeDeliveryUnlocked =
-        paidOrderCount >= event.freeDeliveryMinPaidOrders;
+        paidOrderCount >= event.freeDeliveryMinPaidCombos;
 
       const allocations = allocateTransportCost(
         paidOrders.map((order) => order.id),
@@ -274,7 +274,7 @@ export class GroupDeliverySettlementService {
         data: {
           status: "CLOSED",
           groupDeliveryFinalizedAt: now,
-          groupDeliveryFinalPaidOrders: paidOrderCount,
+          groupDeliveryFinalPaidCombos: paidOrderCount,
           groupDeliveryFinalTransportCostCents:
             event.transportCostCents,
           groupDeliveryFinalAssignedCents: assignedCents,
@@ -301,8 +301,8 @@ export class GroupDeliverySettlementService {
               options.reason ??
               (options.force ? "manual" : "cutoff"),
             paidOrderCount,
-            freeDeliveryMinPaidOrders:
-              event.freeDeliveryMinPaidOrders,
+            freeDeliveryMinPaidCombos:
+              event.freeDeliveryMinPaidCombos,
             transportCostCents: event.transportCostCents,
             assignedCents,
             freeDeliveryUnlocked,
