@@ -20,6 +20,34 @@ function databaseProvider(name: PaymentProviderName) {
   }
 }
 
+function checkoutReturnUrls(orderCode: string) {
+  const configuredOrigin = process.env.APP_ORIGIN
+    ?.split(",")
+    .map((origin) => origin.trim())
+    .find(Boolean);
+
+  if (!configuredOrigin) {
+    return undefined;
+  }
+
+  let origin: string;
+
+  try {
+    origin = new URL(configuredOrigin).origin;
+  } catch {
+    return undefined;
+  }
+
+  const orderPath =
+    `${origin}/pedido/${encodeURIComponent(orderCode)}`;
+
+  return {
+    successUrl: `${orderPath}?payment=success`,
+    failureUrl: `${orderPath}?payment=failure`,
+    pendingUrl: `${orderPath}?payment=pending`,
+  };
+}
+
 function checkoutUrlFromMetadata(metadata: unknown) {
   if (
     !metadata ||
@@ -236,6 +264,9 @@ export async function createPaymentCheckout(
         email: prepared.order.customer.email,
         phone: prepared.order.customer.phone,
       },
+      returnUrls: checkoutReturnUrls(
+        prepared.order.orderCode,
+      ),
     });
 
     if (!providerCheckout.checkoutUrl) {
