@@ -89,7 +89,7 @@ describe("TelegramNotificationService", () => {
 
     const sent = await service.notifyGroupClosed({
       locationLabel: "Universidad",
-      paidOrderCount: 3,
+      paidComboCount: 3,
       minPaidCombos: 5,
       transportCostCents: 10_000,
       assignedCents: 10_000,
@@ -106,6 +106,7 @@ describe("TelegramNotificationService", () => {
 
     expect(body.text).toContain("Universidad");
     expect(body.text).toContain("3 de 5");
+    expect(body.text).toContain("Combos pagados");
     expect(body.text).toContain("$100.00");
     expect(body.text).toContain("cancelados: 1");
     expect(body.text).not.toContain("cliente@example.com");
@@ -122,7 +123,7 @@ describe("TelegramNotificationService", () => {
     await expect(
       service.notifyGroupCompleted({
         locationLabel: "Cucapá",
-        paidOrderCount: 5,
+        paidComboCount: 5,
         minPaidCombos: 5,
       }),
     ).resolves.toBe(false);
