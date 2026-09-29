@@ -4,7 +4,7 @@ import type { TelegramNotificationService } from "./telegram-notification.servic
 import { GroupTelegramNotificationService } from "./group-telegram-notification.service.js";
 
 describe("GroupTelegramNotificationService", () => {
-  it("marca una sola vez el hito 5/5 y envía el aviso", async () => {
+  it("marca una sola vez el hito de cinco combos aunque sean dos pedidos", async () => {
     const tx = {
       $queryRaw: vi.fn().mockResolvedValue([{ id: "event-1" }]),
       pickupEvent: {
@@ -16,7 +16,10 @@ describe("GroupTelegramNotificationService", () => {
         update: vi.fn().mockResolvedValue(undefined),
       },
       order: {
-        count: vi.fn().mockResolvedValue(5),
+        findMany: vi.fn().mockResolvedValue([
+          { comboQuantity: 3 },
+          { comboQuantity: 2 },
+        ]),
       },
     };
 
@@ -61,7 +64,7 @@ describe("GroupTelegramNotificationService", () => {
     });
     expect(telegram.notifyGroupCompleted).toHaveBeenCalledWith({
       locationLabel: "Universidad",
-      paidOrderCount: 5,
+      paidComboCount: 5,
       minPaidCombos: 5,
     });
   });
@@ -101,7 +104,7 @@ describe("GroupTelegramNotificationService", () => {
 
     expect(telegram.notifyGroupClosed).toHaveBeenCalledWith({
       locationLabel: "Cucapá",
-      paidOrderCount: 3,
+      paidComboCount: 3,
       minPaidCombos: 5,
       transportCostCents: 10_000,
       assignedCents: 10_000,
