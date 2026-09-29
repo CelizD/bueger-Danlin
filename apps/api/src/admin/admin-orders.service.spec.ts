@@ -35,18 +35,21 @@ describe("AdminOrdersService", () => {
                 id: "order-a",
                 status: "PAID",
                 paymentStatus: "PAID",
+                comboQuantity: 2,
                 groupDeliveryFinalFeeCents: 3_334,
               },
               {
                 id: "order-b",
                 status: "READY",
                 paymentStatus: "PAID",
+                comboQuantity: 1,
                 groupDeliveryFinalFeeCents: 3_333,
               },
               {
                 id: "order-c",
                 status: "CANCELLED",
                 paymentStatus: "CANCELLED",
+                comboQuantity: 1,
                 groupDeliveryFinalFeeCents: null,
               },
             ],
@@ -76,24 +79,28 @@ describe("AdminOrdersService", () => {
                 id: "order-d",
                 status: "PAID",
                 paymentStatus: "PAID",
+                comboQuantity: 2,
                 groupDeliveryFinalFeeCents: null,
               },
               {
                 id: "order-e",
                 status: "PAID",
                 paymentStatus: "PAID",
+                comboQuantity: 1,
                 groupDeliveryFinalFeeCents: null,
               },
               {
                 id: "order-f",
                 status: "PAID",
                 paymentStatus: "PAID",
+                comboQuantity: 1,
                 groupDeliveryFinalFeeCents: null,
               },
               {
                 id: "order-g",
                 status: "PAID",
                 paymentStatus: "PAID",
+                comboQuantity: 1,
                 groupDeliveryFinalFeeCents: null,
               },
             ],
@@ -157,8 +164,8 @@ describe("AdminOrdersService", () => {
 
     expect(result.groups[0]).toMatchObject({
       eventId: "event-universidad",
-      paidOrderCount: 3,
-      remainingPaidOrders: 2,
+      paidComboCount: 3,
+      remainingPaidCombos: 2,
       finalized: true,
       cashToCollectCents: 6_667,
       estimatedFeeCents: null,
@@ -166,10 +173,11 @@ describe("AdminOrdersService", () => {
 
     expect(result.groups[1]).toMatchObject({
       eventId: "event-cucapa",
-      paidOrderCount: 4,
-      remainingPaidOrders: 1,
+      paidComboCount: 5,
+      remainingPaidCombos: 0,
       finalized: false,
-      estimatedFeeCents: 2_500,
+      estimatedFeeCents: 0,
+      freeDeliveryUnlocked: true,
       cashToCollectCents: 0,
     });
 
