@@ -282,7 +282,7 @@ export function SaturdayEventForm({
 
         <div className="saturday-form-note">
           La meta de envío gratis nunca puede ser mayor al límite de combos.
-          Si se alcanza la meta de pedidos pagados, el envío queda gratis.
+          Si se alcanza la meta de combos pagados, el envío queda gratis.
           Si no se alcanza, el costo de traslado se divide entre los pedidos
           pagados y se cobra al entregar. La meta y el costo quedan bloqueados
           desde que existe el primer pedido.
