@@ -10,7 +10,7 @@ describe("GroupDeliveryProgress", () => {
         paymentStatus="PAID"
         group={{
           minPaidCombos: 5,
-          paidOrderCount: 4,
+          paidComboCount: 4,
           remainingPaidCombos: 1,
           transportCostCents: 10_000,
           estimatedDeliveryFeeCents: 2_500,
@@ -19,7 +19,7 @@ describe("GroupDeliveryProgress", () => {
       />,
     );
 
-    expect(html).toContain("4 de 5 pedidos pagados");
+    expect(html).toContain("4 de 5 combos pagados");
     expect(html).toContain("Falta");
     expect(html).toContain("$25");
   });
@@ -31,7 +31,7 @@ describe("GroupDeliveryProgress", () => {
         paymentStatus="PAID"
         group={{
           minPaidCombos: 5,
-          paidOrderCount: 3,
+          paidComboCount: 3,
           remainingPaidCombos: 2,
           transportCostCents: 10_000,
           estimatedDeliveryFeeCents: 3_334,
@@ -55,7 +55,7 @@ describe("GroupDeliveryProgress", () => {
         paymentStatus="PAID"
         group={{
           minPaidCombos: 5,
-          paidOrderCount: 5,
+          paidComboCount: 5,
           remainingPaidCombos: 0,
           transportCostCents: 10_000,
           estimatedDeliveryFeeCents: 0,
