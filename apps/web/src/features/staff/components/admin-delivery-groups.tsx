@@ -4,7 +4,7 @@ import {
   CheckCircle2,
   MapPin,
   Truck,
-  Users,
+  Package,
   Wallet,
 } from "lucide-react";
 
@@ -21,9 +21,9 @@ export type AdminDeliveryGroup = {
     name: string;
     address: string | null;
   };
-  minPaidOrders: number;
-  paidOrderCount: number;
-  remainingPaidOrders: number;
+  minPaidCombos: number;
+  paidComboCount: number;
+  remainingPaidCombos: number;
   transportCostCents: number;
   estimatedFeeCents: number | null;
   freeDeliveryUnlocked: boolean;
@@ -56,8 +56,8 @@ function dateLabel(group: AdminDeliveryGroup) {
 }
 
 function progressIcons(group: AdminDeliveryGroup) {
-  const goal = Math.min(Math.max(group.minPaidOrders, 1), 10);
-  const filled = Math.min(group.paidOrderCount, goal);
+  const goal = Math.min(Math.max(group.minPaidCombos, 1), 10);
+  const filled = Math.min(group.paidComboCount, goal);
 
   return Array.from({ length: goal }, (_, index) =>
     index < filled ? "🍔" : "⬜",
@@ -149,20 +149,20 @@ export function AdminDeliveryGroups({
                     {progressIcons(group)}
                   </span>
                   <strong>
-                    {group.paidOrderCount} de {group.minPaidOrders}
-                    {" "}pagados
+                    {group.paidComboCount} de {group.minPaidCombos}
+                    {" "}combos pagados
                   </strong>
                 </div>
 
                 <div className="admin-group-stats">
                   <div>
-                    <Users size={14} />
+                    <Package size={14} />
                     <span>
                       {group.freeDeliveryUnlocked
                         ? "Meta completa"
-                        : group.remainingPaidOrders +
-                          " faltante" +
-                          (group.remainingPaidOrders === 1 ? "" : "s")}
+                        : group.remainingPaidCombos +
+                          " combo faltante" +
+                          (group.remainingPaidCombos === 1 ? "" : "s")}
                     </span>
                   </div>
 
