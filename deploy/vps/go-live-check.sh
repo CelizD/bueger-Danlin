@@ -23,6 +23,7 @@ get_env() {
 APP_ORIGIN="$(get_env APP_ORIGIN)"
 API_URL="$(get_env NEXT_PUBLIC_API_URL)"
 PAYMENT_PROVIDER="$(get_env PAYMENT_PROVIDER)"
+REAL_PAYMENTS="$(get_env ENABLE_REAL_PAYMENTS)"
 OFFSITE_ENABLED="$(get_env OFFSITE_BACKUP_ENABLED)"
 AUTH_SECRET="$(get_env AUTH_JWT_SECRET)"
 QR_SECRET="$(get_env QR_TOKEN_SECRET)"
@@ -43,9 +44,14 @@ case "${API_URL}" in
 esac
 
 case "${PAYMENT_PROVIDER}" in
-  stripe|mercadopago) pass "real payment provider selected: ${PAYMENT_PROVIDER}" ;;
+  mercadopago) pass "Mercado Pago selected for MVP" ;;
   mock|"") fail "PAYMENT_PROVIDER=mock is not allowed for go-live" ;;
-  *) fail "unsupported production payment provider: ${PAYMENT_PROVIDER}" ;;
+  *) fail "MVP go-live currently supports PAYMENT_PROVIDER=mercadopago only" ;;
+esac
+
+case "${REAL_PAYMENTS}" in
+  true|TRUE) pass "real payments kill switch enabled" ;;
+  *) fail "ENABLE_REAL_PAYMENTS must be true before go-live" ;;
 esac
 
 case "${OFFSITE_ENABLED}" in
@@ -70,16 +76,8 @@ done
 pass "database admin/runtime identities are separated"
 pass "database, Redis, backup encryption, and offsite storage settings are present"
 
-case "${PAYMENT_PROVIDER}" in
-  stripe)
-    [ -n "$(get_env STRIPE_SECRET_KEY)" ] || fail "STRIPE_SECRET_KEY is required"
-    [ -n "$(get_env STRIPE_WEBHOOK_SECRET)" ] || fail "STRIPE_WEBHOOK_SECRET is required"
-    ;;
-  mercadopago)
-    [ -n "$(get_env MERCADOPAGO_ACCESS_TOKEN)" ] || fail "MERCADOPAGO_ACCESS_TOKEN is required"
-    [ -n "$(get_env MERCADOPAGO_WEBHOOK_SECRET)" ] || fail "MERCADOPAGO_WEBHOOK_SECRET is required"
-    ;;
-esac
-pass "payment provider secrets are present"
+[ -n "$(get_env MERCADOPAGO_ACCESS_TOKEN)" ] || fail "MERCADOPAGO_ACCESS_TOKEN is required"
+[ -n "$(get_env MERCADOPAGO_WEBHOOK_SECRET)" ] || fail "MERCADOPAGO_WEBHOOK_SECRET is required"
+pass "Mercado Pago secrets are present"
 
 echo "Go-live environment gate passed."

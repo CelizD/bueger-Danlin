@@ -10,7 +10,6 @@ const weakValues = new Set([
 ]);
 
 const productionPaymentProviders = new Set([
-  "stripe",
   "mercadopago",
 ]);
 
@@ -141,13 +140,8 @@ export function validateProductionEnvironment() {
 
   if (!productionPaymentProviders.has(provider)) {
     throw new Error(
-      "PAYMENT_PROVIDER must be either stripe or mercadopago in production",
+      "PAYMENT_PROVIDER must be mercadopago in production",
     );
-  }
-
-  if (realPaymentsEnabled && provider === "stripe") {
-    requireStrongSecret("STRIPE_SECRET_KEY", 24);
-    requireStrongSecret("STRIPE_WEBHOOK_SECRET", 24);
   }
 
   if (realPaymentsEnabled && provider === "mercadopago") {

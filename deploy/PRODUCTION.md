@@ -77,9 +77,9 @@ Las contraseñas de ambos roles deben ser distintas.
 
 La API solo recibe las variables `POSTGRES_RUNTIME_*`.
 
-En producción, `PAYMENT_PROVIDER` debe ser exactamente `stripe` o `mercadopago`. El valor `mock` está reservado para desarrollo y pruebas; si se configura `mock`, un valor vacío o un proveedor desconocido con `NODE_ENV=production`, la API rechazará el arranque. Configura también los secretos del proveedor seleccionado antes de desplegar.
+Para el MVP, `PAYMENT_PROVIDER` debe ser exactamente `mercadopago`. `mock` está reservado para desarrollo/pruebas y Stripe permanece reservado para una integración futura; la API rechaza esos valores en producción para evitar una configuración aparentemente válida pero no operativa.
 
-`ENABLE_REAL_PAYMENTS` es un kill switch adicional y debe permanecer en `false` hasta completar y validar sandbox, webhooks firmados, reconciliación, reembolsos y pruebas end-to-end. Mientras no sea exactamente `true`, el backend bloquea el checkout real antes de persistir un intento de pago y el cliente HTTP vuelve a bloquear cualquier llamada saliente al proveedor. Tener credenciales configuradas no habilita pagos por sí solo.
+`ENABLE_REAL_PAYMENTS` es un kill switch adicional y debe permanecer en `false` mientras preparas infraestructura y credenciales. Después de validar sandbox, webhooks firmados, reconciliación, pago fallido, refund y pruebas end-to-end, cámbialo a `true`. El `go-live-check.sh` exige `PAYMENT_PROVIDER=mercadopago`, `ENABLE_REAL_PAYMENTS=true` y los secretos de Mercado Pago antes de permitir el lanzamiento.
 
 Si ya existe un volumen creado con el esquema anterior de un solo superusuario, sigue:
 
