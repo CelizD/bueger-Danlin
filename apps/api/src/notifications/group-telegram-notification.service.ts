@@ -26,7 +26,7 @@ export class GroupTelegramNotificationService {
         where: { id: eventId },
         select: {
           id: true,
-          freeDeliveryMinPaidOrders: true,
+          freeDeliveryMinPaidCombos: true,
           telegramGroupCompletedAt: true,
         },
       });
@@ -44,7 +44,7 @@ export class GroupTelegramNotificationService {
       });
 
       if (
-        paidOrderCount < event.freeDeliveryMinPaidOrders
+        paidOrderCount < event.freeDeliveryMinPaidCombos
       ) {
         return false;
       }
@@ -54,7 +54,7 @@ export class GroupTelegramNotificationService {
           where: { id: eventId },
           data: {
             telegramGroupCompletedAt: new Date(),
-            telegramGroupCompletedPaidOrders: paidOrderCount,
+            telegramGroupCompletedPaidCombos: paidOrderCount,
           },
         });
       }
@@ -135,8 +135,8 @@ export class GroupTelegramNotificationService {
       select: {
         id: true,
         locationLabel: true,
-        freeDeliveryMinPaidOrders: true,
-        telegramGroupCompletedPaidOrders: true,
+        freeDeliveryMinPaidCombos: true,
+        telegramGroupCompletedPaidCombos: true,
       },
     });
 
@@ -148,9 +148,9 @@ export class GroupTelegramNotificationService {
     const sent = await this.telegram.notifyGroupCompleted({
       locationLabel: event.locationLabel,
       paidOrderCount:
-        event.telegramGroupCompletedPaidOrders ??
-        event.freeDeliveryMinPaidOrders,
-      minPaidOrders: event.freeDeliveryMinPaidOrders,
+        event.telegramGroupCompletedPaidCombos ??
+        event.freeDeliveryMinPaidCombos,
+      minPaidOrders: event.freeDeliveryMinPaidCombos,
     });
 
     if (!sent) {
@@ -207,8 +207,8 @@ export class GroupTelegramNotificationService {
       select: {
         id: true,
         locationLabel: true,
-        freeDeliveryMinPaidOrders: true,
-        groupDeliveryFinalPaidOrders: true,
+        freeDeliveryMinPaidCombos: true,
+        groupDeliveryFinalPaidCombos: true,
         groupDeliveryFinalTransportCostCents: true,
         groupDeliveryFinalAssignedCents: true,
         groupDeliveryFinalFreeUnlocked: true,
@@ -224,8 +224,8 @@ export class GroupTelegramNotificationService {
     const sent = await this.telegram.notifyGroupClosed({
       locationLabel: event.locationLabel,
       paidOrderCount:
-        event.groupDeliveryFinalPaidOrders ?? 0,
-      minPaidOrders: event.freeDeliveryMinPaidOrders,
+        event.groupDeliveryFinalPaidCombos ?? 0,
+      minPaidOrders: event.freeDeliveryMinPaidCombos,
       transportCostCents:
         event.groupDeliveryFinalTransportCostCents ?? 0,
       assignedCents:
