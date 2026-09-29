@@ -62,7 +62,7 @@ describe("GroupTelegramNotificationService", () => {
     expect(telegram.notifyGroupCompleted).toHaveBeenCalledWith({
       locationLabel: "Universidad",
       paidOrderCount: 5,
-      minPaidOrders: 5,
+      minPaidCombos: 5,
     });
   });
 
@@ -102,7 +102,7 @@ describe("GroupTelegramNotificationService", () => {
     expect(telegram.notifyGroupClosed).toHaveBeenCalledWith({
       locationLabel: "Cucapá",
       paidOrderCount: 3,
-      minPaidOrders: 5,
+      minPaidCombos: 5,
       transportCostCents: 10_000,
       assignedCents: 10_000,
       freeDeliveryUnlocked: false,
