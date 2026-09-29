@@ -1,0 +1,7 @@
+# Known historical false positives only.
+# Keep these as exact fingerprints so future findings in the same files still fail.
+bb34b08d067ee5c505afec1b27ddf29d874394be:apps/api/src/auth/password-security.ts:generic-api-key:22
+81eddc147bb54f4438be4e64a3e47fb5fffef69b:apps/api/src/orders/orders.idempotency.spec.ts:generic-api-key:75
+af4713ed93cb22b47179f0b71006f3a3a0a9f389:apps/api/src/orders/orders.idempotency.spec.ts:generic-api-key:75
+3963a6af45efefcfdabe8205303c23bfad846cf1:README.md:generic-api-key:292
+1bc73fc163ca7a5ee21fd5aec947c77f5ecebed5:README.md:generic-api-key:127
