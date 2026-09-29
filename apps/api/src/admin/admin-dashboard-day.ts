@@ -67,16 +67,24 @@ export function buildDashboardDay(
         !!event.groupDeliveryFinalizedAt;
 
       const paidOrderCount =
+        paidOrders.length;
+      const livePaidComboCount =
+        paidOrders.reduce(
+          (sum, order) =>
+            sum + order.comboQuantity,
+          0,
+        );
+      const groupPaidComboCount =
         finalized
           ? event.groupDeliveryFinalPaidCombos ??
-            paidOrders.length
-          : paidOrders.length;
+            livePaidComboCount
+          : livePaidComboCount;
 
       const freeDeliveryUnlocked =
         finalized
           ? event.groupDeliveryFinalFreeUnlocked ??
             false
-          : paidOrderCount >=
+          : groupPaidComboCount >=
             event.freeDeliveryMinPaidCombos;
 
       const estimatedFeeCents =
@@ -102,12 +110,7 @@ export function buildDashboardDay(
         activeOrders:
           activeOrders.length,
         paidOrders: paidOrderCount,
-        combosPaid: paidOrders.reduce(
-          (sum, order) =>
-            sum +
-            order.comboQuantity,
-          0,
-        ),
+        combosPaid: livePaidComboCount,
         combosToPrepare:
           paidOrders
             .filter(
@@ -136,13 +139,15 @@ export function buildDashboardDay(
                 order.comboQuantity,
               0,
             ),
-        minPaidOrders:
+        minPaidCombos:
           event.freeDeliveryMinPaidCombos,
-        remainingPaidOrders:
+        paidComboCount:
+          groupPaidComboCount,
+        remainingPaidCombos:
           Math.max(
             0,
             event.freeDeliveryMinPaidCombos -
-              paidOrderCount,
+              groupPaidComboCount,
           ),
         transportCostCents:
           finalized
