@@ -59,17 +59,19 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 
 ### Pagos
 
-- [ ] Elegir Stripe o Mercado Pago para lanzamiento.
+- [x] Proveedor del MVP definido: Mercado Pago.
 - [ ] Configurar credenciales reales.
 - [ ] Configurar en Mercado Pago el endpoint HTTPS `/api/v1/payments/webhooks/mercadopago`.
 - [x] Validación HMAC + ventana anti-replay implementada en código.
 - [x] Deduplicación persistente + recuperación de PROCESSING abandonado implementadas.
 - [x] Reconciliación canónica contra `GET /v1/orders/{id}` implementada.
+- [x] Refund total idempotente de Mercado Pago implementado en código.
 - [ ] Probar pago real en entorno permitido por el proveedor.
 - [ ] Probar reintentos/idempotencia con credenciales sandbox.
 - [ ] Probar pago fallido.
 - [ ] Probar cancelación/refund según política.
-- [ ] Desactivar mock antes de go-live.
+- [ ] Cambiar `ENABLE_REAL_PAYMENTS=true` únicamente después de las pruebas sandbox/reales.
+- [x] El gate de go-live bloquea `mock`, Stripe no implementado y `ENABLE_REAL_PAYMENTS=false`.
 
 ### Backup offsite
 
