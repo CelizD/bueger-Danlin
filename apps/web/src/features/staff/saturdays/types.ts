@@ -57,7 +57,7 @@ export type SaturdayFormState = {
   locationAddress: string;
   latitude: string;
   longitude: string;
-  freeDeliveryMinPaidOrders: string;
+  freeDeliveryMinPaidCombos: string;
   transportCostMx: string;
   pickupDate: string;
   pickupTime: string;
