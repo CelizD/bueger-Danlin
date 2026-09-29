@@ -86,10 +86,12 @@ export async function reconcileMercadoPagoWebhook(
 
   const result = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw<Array<{ id: string }>>`
-      SELECT "id"
-      FROM "Payment"
-      WHERE "id" = ${payment.id}
-      FOR UPDATE
+      SELECT p."id"
+      FROM "Payment" AS p
+      INNER JOIN "Order" AS o
+        ON o."id" = p."orderId"
+      WHERE p."id" = ${payment.id}
+      FOR UPDATE OF p, o
     `;
 
     const current = await tx.payment.findUnique({
@@ -158,16 +160,44 @@ export async function reconcileMercadoPagoWebhook(
       };
     }
 
-    const now = new Date();
     const order = current.order;
+    let inventoryAlreadyReleased = false;
+
+    if (
+      incomingStatus === "PAID" &&
+      order.status === "PENDING_PAYMENT"
+    ) {
+      await tx.$queryRaw<
+        Array<{ id: string }>
+      >`
+        SELECT "id"
+        FROM "InventoryAllocation"
+        WHERE "orderId" = ${order.id}
+        FOR UPDATE
+      `;
+
+      inventoryAlreadyReleased =
+        !!(await tx.inventoryAllocation.findFirst({
+          where: {
+            orderId: order.id,
+            status: "RELEASED",
+          },
+          select: { id: true },
+        }));
+    }
+
+    const now = new Date();
     const reservationExpired =
       order.status === "PENDING_PAYMENT" &&
       (!order.reservationExpiresAt ||
         order.reservationExpiresAt <= now);
+    const reservationUnavailable =
+      reservationExpired ||
+      inventoryAlreadyReleased;
     const latePaid =
       incomingStatus === "PAID" &&
       (order.status !== "PENDING_PAYMENT" ||
-        reservationExpired);
+        reservationUnavailable);
 
     const paymentData: {
       status: ProviderPaymentStatus;
@@ -187,9 +217,12 @@ export async function reconcileMercadoPagoWebhook(
           {
             latePaymentDetectedAt: now.toISOString(),
             latePaymentOrderStatus: order.status,
-            latePaymentReason: reservationExpired
-              ? "RESERVATION_EXPIRED"
-              : "ORDER_ALREADY_CLOSED",
+            latePaymentReason:
+              reservationExpired
+                ? "RESERVATION_EXPIRED"
+                : inventoryAlreadyReleased
+                  ? "INVENTORY_ALREADY_RELEASED"
+                  : "ORDER_ALREADY_CLOSED",
             ...(reservationExpired &&
             order.reservationExpiresAt
               ? {
@@ -214,7 +247,8 @@ export async function reconcileMercadoPagoWebhook(
 
     if (
       incomingStatus === "PAID" &&
-      reservationExpired
+      order.status === "PENDING_PAYMENT" &&
+      reservationUnavailable
     ) {
       await inventory.releaseOrder(
         tx,
@@ -238,7 +272,7 @@ export async function reconcileMercadoPagoWebhook(
           from: "PENDING_PAYMENT",
           to: "CANCELLED",
           note:
-            "Pago recibido después de vencer la reserva. El pedido no se reactivó y requiere reembolso.",
+            "Pago recibido cuando la reserva ya no estaba disponible. El pedido no se reactivó y requiere reembolso.",
         },
       });
 
@@ -261,8 +295,9 @@ export async function reconcileMercadoPagoWebhook(
             orderStatus: "CANCELLED",
             paymentStatus: "PAID",
             providerStatus: "PAID",
-            reason:
-              "RESERVATION_EXPIRED",
+            reason: reservationExpired
+              ? "RESERVATION_EXPIRED"
+              : "INVENTORY_ALREADY_RELEASED",
             requiresManualRefund: true,
             source: "WEBHOOK",
           },
