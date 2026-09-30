@@ -45,6 +45,9 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   ).toBeVisible();
 
   await expect(page.getByText("Combo 1")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Abrir ubicación exacta" }),
+  ).toBeVisible();
 
   await page.getByLabel("Nombre *").fill("Cliente E2E");
   await page.getByLabel("Teléfono *").fill("6641234567");
