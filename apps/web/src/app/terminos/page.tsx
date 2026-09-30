@@ -32,8 +32,8 @@ export default function TermsPage() {
           Términos y Condiciones
         </h1>
         <p>
-          Versión 2026-09-29-v1 ·
-          Actualizado el 29 de septiembre
+          Versión 2026-09-30-v2 ·
+          Actualizado el 30 de septiembre
           de 2026.
         </p>
       </header>
