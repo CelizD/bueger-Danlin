@@ -8,6 +8,7 @@ import { PrismaService } from "../database/prisma.service.js";
 import { InventoryService } from "../inventory/inventory.service.js";
 import { GroupTelegramNotificationService } from "../notifications/group-telegram-notification.service.js";
 import { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
+import { PurchaseEmailService } from "../notifications/purchase-email.service.js";
 import { reconcileMercadoPagoWebhook } from "./mercadopago-webhook-reconciliation.js";
 import { PaymentProviderRegistry } from "./payment-provider.registry.js";
 import { claimPaymentWebhookEvent } from "./payment-webhook-event.js";
@@ -72,6 +73,7 @@ export class PaymentWebhookService {
     private readonly security: WebhookSecurityService,
     private readonly telegram?: TelegramNotificationService,
     private readonly groupTelegram?: GroupTelegramNotificationService,
+    private readonly purchaseEmail?: PurchaseEmailService,
   ) {}
 
   async handleMercadoPago(input: {
@@ -159,6 +161,7 @@ export class PaymentWebhookService {
           providers: this.providers,
           telegram: this.telegram,
           groupTelegram: this.groupTelegram,
+          purchaseEmail: this.purchaseEmail,
         },
         claim.id,
         resourceId,
