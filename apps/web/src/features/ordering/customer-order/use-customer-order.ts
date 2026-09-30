@@ -7,6 +7,7 @@ import {
 import {
   cancelCustomerOrder,
   fetchCustomerOrder,
+  fetchCustomerOrderReceipt,
 } from "./api";
 import {
   cancellationNotice,
@@ -27,6 +28,10 @@ export function useCustomerOrder(
     useState(true);
   const [canceling, setCanceling] =
     useState(false);
+  const [
+    downloadingReceipt,
+    setDownloadingReceipt,
+  ] = useState(false);
   const [error, setError] =
     useState("");
   const [notice, setNotice] =
@@ -114,6 +119,54 @@ export function useCustomerOrder(
     order?.paymentStatus,
   ]);
 
+  async function downloadReceipt() {
+    if (!order || !token) {
+      return;
+    }
+
+    setDownloadingReceipt(true);
+    setError("");
+
+    try {
+      const blob =
+        await fetchCustomerOrderReceipt(
+          order.orderCode,
+          token,
+        );
+      const url =
+        window.URL.createObjectURL(
+          blob,
+        );
+      const anchor =
+        document.createElement("a");
+
+      anchor.href = url;
+      anchor.download =
+        "comprobante-" +
+        order.orderCode +
+        ".pdf";
+      document.body.appendChild(
+        anchor,
+      );
+      anchor.click();
+      anchor.remove();
+
+      window.setTimeout(() => {
+        window.URL.revokeObjectURL(
+          url,
+        );
+      }, 0);
+    } catch (receiptError) {
+      setError(
+        receiptError instanceof Error
+          ? receiptError.message
+          : "No se pudo descargar el comprobante.",
+      );
+    } finally {
+      setDownloadingReceipt(false);
+    }
+  }
+
   async function cancelOrder() {
     const retryingRefund =
       order?.refundStatus === "PENDING";
@@ -174,8 +227,10 @@ export function useCustomerOrder(
     token,
     loading,
     canceling,
+    downloadingReceipt,
     error,
     notice,
+    downloadReceipt,
     cancelOrder,
   };
 }
