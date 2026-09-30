@@ -74,6 +74,9 @@ export function SiteFooter({
           <Link href="/privacidad">
             Aviso de Privacidad
           </Link>
+          <Link href="/arco">
+            Derechos ARCO
+          </Link>
         </nav>
       </div>
 
