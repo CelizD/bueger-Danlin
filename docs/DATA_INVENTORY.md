@@ -30,7 +30,8 @@ No sustituye un aviso de privacidad legal.
 | Order | fechas de reserva/cancelación/entrega | Interno | operación | PostgreSQL |
 | OrderItem | productos, extras, cantidades, precios | Interno | preparar pedido | PostgreSQL |
 | Payment | proveedor, estado, monto, moneda | Financiero/operativo | pago y conciliación | PostgreSQL |
-| Payment | externalId | Financiero/operativo | correlación con proveedor | PostgreSQL |
+| Payment | externalId | Financiero/operativo | correlación con proveedor y evidencia de conciliación | PostgreSQL |
+| Payment | provider/status/amountCents/currency/paidAt/refundedAt | Financiero/fiscal | soporte de la operación, conciliación y conservación fiscal | PostgreSQL |
 | Payment | idempotencyKey | Interno | evitar duplicados | PostgreSQL |
 | Payment | metadata | Potencialmente sensible | integración proveedor | PostgreSQL; debe mantenerse minimizada |
 | User | nombre/email/rol | Personal interno | cuenta de staff | PostgreSQL |
@@ -158,6 +159,8 @@ PostgreSQL
 7. AuditLog no debe convertirse en copia completa de objetos con PII salvo necesidad de auditoría.
 8. Nuevos campos personales requieren actualizar este inventario.
 9. Las solicitudes ARCO no deben copiarse completas a AuditLog ni a correos operativos.
+10. El núcleo fiscal de pedidos/pagos completados no debe eliminarse por un cleanup basado únicamente en la fecha de compra; el CFF art. 30 toma como referencia la declaración fiscal relacionada.
+11. La anonimización de nombre/teléfono/email del cliente debe mantenerse separada de la conservación del núcleo contable/financiero.
 
 ## 7. Acceso por rol
 
