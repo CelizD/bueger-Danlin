@@ -56,7 +56,7 @@ Permitida antes del cierre. Después del cierre no hay cancelación automática.
 - Los términos integrales están disponibles en `/terminos`.
 - El cliente debe aceptarlos explícitamente antes de crear un pedido.
 - Cada pedido guarda `purchaseTermsAcceptedAt` y `purchaseTermsVersion`.
-- Versión inicial: `2026-09-29-v1`.
+- Versión inicial: `2026-09-29-v1`; versión vigente tras incorporar identidad pública del vendedor: `2026-09-30-v2`.
 - La política documenta reserva de 15 minutos, pago, entrega grupal, cancelación antes del corte, reembolso y derechos del consumidor.
 - La aceptación de términos de compra es independiente de la aceptación de condiciones de entrega grupal.
 
