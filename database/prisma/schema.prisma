@@ -263,6 +263,8 @@ model Order {
   reservationExpiresAt                    DateTime?
   cancelledAt                             DateTime?
   deliveredAt                             DateTime?
+  purchaseTermsAcceptedAt                 DateTime?
+  purchaseTermsVersion                    String?
   groupDeliveryTermsAcceptedAt            DateTime?
   groupDeliveryTermsVersion               String?
   groupDeliveryMinPaidCombosAtOrder       Int?
