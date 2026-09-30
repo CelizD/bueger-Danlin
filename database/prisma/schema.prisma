@@ -74,6 +74,20 @@ enum EmailNotificationStatus {
   SKIPPED
 }
 
+enum ArcoRight {
+  ACCESS
+  RECTIFICATION
+  CANCELLATION
+  OPPOSITION
+}
+
+enum ArcoRequestStatus {
+  IDENTITY_VERIFICATION_REQUIRED
+  IN_REVIEW
+  RESOLVED
+  DENIED
+}
+
 enum PickupEventStatus {
   DRAFT
   OPEN
@@ -463,6 +477,29 @@ model EmailNotification {
   @@unique([orderId, type])
   @@index([status, createdAt])
   @@index([claimedAt])
+}
+
+model ArcoRequest {
+  id                   String            @id @default(cuid())
+  folio                String            @unique
+  name                 String
+  email                String
+  phone                String?
+  rights               ArcoRight[]
+  description          String
+  locatorInfo          String?
+  rectificationDetails String?
+  cancellationReason   String?
+  oppositionReason     String?
+  status               ArcoRequestStatus @default(IDENTITY_VERIFICATION_REQUIRED)
+  identityVerifiedAt   DateTime?
+  resolvedAt           DateTime?
+  adminNote            String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  @@index([status, createdAt])
+  @@index([email, createdAt])
 }
 
 model AuditLog {
