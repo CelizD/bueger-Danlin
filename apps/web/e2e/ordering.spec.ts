@@ -222,6 +222,56 @@ test("publica términos de compra, cancelación y reembolso", async ({ page }) =
   ).toBeVisible();
 });
 
+test("permite presentar una solicitud ARCO pública y entrega folio", async ({
+  page,
+}) => {
+  await page.goto("/arco");
+
+  await expect(
+    page.getByRole("heading", {
+      name: "Derechos ARCO",
+    }),
+  ).toBeVisible();
+
+  await page
+    .getByLabel("Nombre completo *")
+    .fill("Daniel Celiz");
+  await page
+    .getByLabel("Correo electrónico *")
+    .fill("daniel@example.com");
+  await page
+    .getByLabel(/Acceso/)
+    .check();
+  await page
+    .getByLabel("¿Qué necesitas? *")
+    .fill(
+      "Quiero conocer los datos personales asociados a mi pedido.",
+    );
+  await page
+    .getByLabel(
+      /Entiendo que será necesario verificar mi identidad/,
+    )
+    .check();
+
+  await page
+    .getByRole("button", {
+      name: "Enviar solicitud ARCO",
+    })
+    .click();
+
+  await expect(
+    page.getByRole("heading", {
+      name: "ARCO-20260930-ABCDEF12",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "verificación de identidad está pendiente",
+      { exact: false },
+    ),
+  ).toBeVisible();
+});
+
 test("preselecciona el punto desde ?pickup para QR/cartel futuro", async ({
   page,
 }) => {
