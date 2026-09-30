@@ -153,3 +153,19 @@ export function containsForbiddenDisplayLanguage(
     matchesObfuscatedTerm(normalized, term),
   );
 }
+
+
+const SAFE_PERSON_NAME_PATTERN =
+  /^[\p{L}\p{M}][\p{L}\p{M} .'’\-‐‑]*$/u;
+
+export function isSafePersonDisplayName(
+  value: string,
+) {
+  if (
+    /[\p{Cc}\p{Cf}]/u.test(value)
+  ) {
+    return false;
+  }
+
+  return SAFE_PERSON_NAME_PATTERN.test(value);
+}
