@@ -1,6 +1,7 @@
 import {
   Injectable,
 } from "@nestjs/common";
+import { randomUUID } from "node:crypto";
 import net from "node:net";
 import tls from "node:tls";
 import type {
@@ -81,14 +82,6 @@ function wrapBase64(
 ") ?? "";
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 function mimeMessage(
   from: string,
   replyTo: string,
@@ -104,11 +97,11 @@ function mimeMessage(
     sanitizeHeader(message.subject);
   const mixed =
     "mix_" +
-    crypto.randomUUID()
+    randomUUID()
       .replace(/-/g, "");
   const alt =
     "alt_" +
-    crypto.randomUUID()
+    randomUUID()
       .replace(/-/g, "");
 
   const lines = [
