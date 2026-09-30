@@ -72,26 +72,84 @@ function normalizeForModeration(value: string) {
     );
 }
 
-function termPattern(term: string) {
-  const letters = [...term]
-    .map((letter) => `${letter}+`)
-    .join("[^a-z]*");
+function collapseRepeatedLetters(value: string) {
+  let result = "";
 
-  return new RegExp(
-    `(?:^|[^a-z])${letters}(?=$|[^a-z])`,
-    "i",
+  for (const character of value) {
+    if (result.at(-1) !== character) {
+      result += character;
+    }
+  }
+
+  return result;
+}
+
+const FORBIDDEN_MATCH_TERMS =
+  FORBIDDEN_DISPLAY_TERMS.map(collapseRepeatedLetters);
+
+function isAsciiLetter(character: string | undefined) {
+  return (
+    character !== undefined &&
+    character >= "a" &&
+    character <= "z"
   );
 }
 
-const FORBIDDEN_PATTERNS =
-  FORBIDDEN_DISPLAY_TERMS.map(termPattern);
+function matchesObfuscatedTerm(
+  value: string,
+  term: string,
+) {
+  for (let start = 0; start < value.length; start += 1) {
+    if (value[start] !== term[0]) {
+      continue;
+    }
+
+    if (start > 0 && isAsciiLetter(value[start - 1])) {
+      continue;
+    }
+
+    let cursor = start;
+    let termIndex = 0;
+
+    while (termIndex < term.length) {
+      const expected = term[termIndex];
+
+      if (value[cursor] !== expected) {
+        break;
+      }
+
+      while (value[cursor] === expected) {
+        cursor += 1;
+      }
+
+      termIndex += 1;
+
+      if (termIndex === term.length) {
+        if (!isAsciiLetter(value[cursor])) {
+          return true;
+        }
+
+        break;
+      }
+
+      while (
+        cursor < value.length &&
+        !isAsciiLetter(value[cursor])
+      ) {
+        cursor += 1;
+      }
+    }
+  }
+
+  return false;
+}
 
 export function containsForbiddenDisplayLanguage(
   value: string,
 ) {
   const normalized = normalizeForModeration(value);
 
-  return FORBIDDEN_PATTERNS.some((pattern) =>
-    pattern.test(normalized),
+  return FORBIDDEN_MATCH_TERMS.some((term) =>
+    matchesObfuscatedTerm(normalized, term),
   );
 }
