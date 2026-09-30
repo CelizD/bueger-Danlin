@@ -102,7 +102,10 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 
 ### Operación
 
-- [ ] Validar plazos legales/fiscales de retención.
+- [x] Revisar piso fiscal federal de retención: CFF art. 30 exige conservar contabilidad/documentación fiscal cinco años desde la declaración relacionada.
+- [x] Proteger en código pagos completados/reembolsados frente a limpieza automática de metadata sin ancla fiscal.
+- [ ] Confirmar con contador el régimen fiscal real, calendario de declaraciones y estrategia de CFDI individual/global del negocio.
+- [ ] Mantener `RETENTION_CLEANUP_ENABLED=false` hasta completar esa confirmación y revisar el dry-run.
 - [ ] Ejecutar retention cleanup en dry-run y revisar candidatos.
 - [ ] Cambiar RETENTION_CLEANUP_ENABLED=true solo después de esa revisión.
 - [ ] Ejecutar una aplicación manual controlada y revisar el resultado.
