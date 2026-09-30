@@ -16,22 +16,20 @@ export class CreatePickupEventDto {
   @MaxLength(120)
   locationLabel!: string;
 
-  @IsOptional()
   @IsString()
+  @MinLength(5)
   @MaxLength(220)
-  locationAddress?: string;
+  locationAddress!: string;
 
-  @IsOptional()
   @IsNumber()
   @Min(-90)
   @Max(90)
-  latitude?: number | null;
+  latitude!: number;
 
-  @IsOptional()
   @IsNumber()
   @Min(-180)
   @Max(180)
-  longitude?: number | null;
+  longitude!: number;
 
   @IsISO8601()
   startsAt!: string;
