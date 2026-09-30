@@ -6084,3 +6084,18 @@ textarea:focus-visible,
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+
+.legal-links {
+  margin: 18px 0 0;
+  text-align: center;
+  color: #756e64;
+  font-size: 11px;
+}
+
+.legal-links a {
+  color: #4f6f46;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
