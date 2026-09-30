@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { containsForbiddenDisplayLanguage } from "./text-moderation.js";
+import {
+  containsForbiddenDisplayLanguage,
+  isSafePersonDisplayName,
+} from "./text-moderation.js";
 
 describe("containsForbiddenDisplayLanguage", () => {
   it.each([
@@ -32,5 +35,33 @@ describe("containsForbiddenDisplayLanguage", () => {
     expect(
       containsForbiddenDisplayLanguage(value),
     ).toBe(false);
+  });
+});
+
+
+describe("isSafePersonDisplayName", () => {
+  it.each([
+    "Daniel Celiz",
+    "José María",
+    "Ana-María",
+    "O'Connor",
+    "D’Angelo",
+    "J. Ramón",
+  ])("acepta nombres humanos válidos: %j", (value) => {
+    expect(isSafePersonDisplayName(value)).toBe(true);
+  });
+
+  it.each([
+    "<script>alert(1)</script>",
+    "<img src=x onerror=alert(1)>",
+    "javascript:alert(1)",
+    "\" onmouseover=\"alert(1)",
+    "{{constructor.constructor('alert(1)')()}}",
+    "${alert(1)}",
+    "<svg onload=alert(1)>",
+    "'; DROP TABLE Customer; --",
+    "Daniel\u200BCeliz",
+  ])("rechaza markup o payloads de inyección: %j", (value) => {
+    expect(isSafePersonDisplayName(value)).toBe(false);
   });
 });
