@@ -66,6 +66,13 @@ export class CreateOrderDto {
   @IsBoolean()
   @Equals(true, {
     message:
+      "Debes aceptar los términos y condiciones de compra antes de continuar.",
+  })
+  purchaseTermsAccepted!: boolean;
+
+  @IsBoolean()
+  @Equals(true, {
+    message:
       "Debes aceptar las condiciones de entrega grupal antes de continuar.",
   })
   groupDeliveryTermsAccepted!: boolean;
