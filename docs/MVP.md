@@ -59,3 +59,11 @@ Permitida antes del cierre. Después del cierre no hay cancelación automática.
 - Versión inicial: `2026-09-29-v1`.
 - La política documenta reserva de 15 minutos, pago, entrega grupal, cancelación antes del corte, reembolso y derechos del consumidor.
 - La aceptación de términos de compra es independiente de la aceptación de condiciones de entrega grupal.
+
+
+## Datos del vendedor y soporte
+- El checkout muestra antes del pago el nombre legal del vendedor, nombre comercial, RFC, domicilio y medios de soporte.
+- El footer público mantiene visibles esos datos y enlaces a `/terminos` y `/privacidad`.
+- Los datos también permanecen accesibles desde `Administrar mi pedido`.
+- Producción exige `BUSINESS_LEGAL_NAME`, `BUSINESS_TRADE_NAME`, `BUSINESS_RFC`, `BUSINESS_ADDRESS`, `SUPPORT_PHONE` y `SUPPORT_EMAIL`.
+- El `go-live-check` bloquea el lanzamiento si faltan esos datos o si teléfono/correo/RFC no cumplen validaciones básicas.
