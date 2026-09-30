@@ -59,6 +59,16 @@ Permitida antes del cierre. Después del cierre no hay cancelación automática.
 - Versión inicial: `2026-09-29-v1`; versión vigente tras incorporar identidad pública del vendedor: `2026-09-29-v2`.
 - La política documenta reserva de 15 minutos, pago, entrega grupal, cancelación antes del corte, reembolso y derechos del consumidor.
 - La aceptación de términos de compra es independiente de la aceptación de condiciones de entrega grupal.
+- Versión vigente de términos tras incorporar la confirmación de edad/autorización: `2026-09-30-v3`.
+
+
+## Menores de edad
+- Antes de crear un pedido, el cliente debe confirmar expresamente que es mayor de edad o, si es menor de 18 años, que cuenta con autorización de su madre, padre o tutor.
+- El backend exige `ageAuthorizationConfirmed=true`; no basta con ocultar o saltarse el checkbox del frontend.
+- Cada pedido guarda `ageAuthorizationConfirmedAt` y `ageAuthorizationVersion`.
+- Versión inicial del aviso: `2026-09-30-v1`.
+- El flujo no solicita fecha de nacimiento, identificación ni datos adicionales del adulto responsable.
+- El aviso integral de privacidad explica el tratamiento aplicable a menores.
 
 
 ## Datos del vendedor y soporte
