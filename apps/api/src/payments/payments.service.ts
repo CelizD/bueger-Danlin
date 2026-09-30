@@ -3,6 +3,7 @@ import { PrismaService } from "../database/prisma.service.js";
 import { InventoryService } from "../inventory/inventory.service.js";
 import { GroupTelegramNotificationService } from "../notifications/group-telegram-notification.service.js";
 import { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
+import { PurchaseEmailService } from "../notifications/purchase-email.service.js";
 import { confirmMockOrderPayment } from "./mock-payment-confirmation.js";
 import { createPaymentCheckout } from "./payment-checkout.js";
 import { PaymentProviderRegistry } from "./payment-provider.registry.js";
@@ -15,6 +16,7 @@ export class PaymentsService {
     private readonly paymentProviderRegistry: PaymentProviderRegistry,
     private readonly telegram?: TelegramNotificationService,
     private readonly groupTelegram?: GroupTelegramNotificationService,
+    private readonly purchaseEmail?: PurchaseEmailService,
   ) {}
 
   async createCheckout(
@@ -39,6 +41,7 @@ export class PaymentsService {
       this.paymentProviderRegistry,
       this.telegram,
       this.groupTelegram,
+      this.purchaseEmail,
       orderCode,
       verificationToken,
     );
