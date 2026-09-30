@@ -6,7 +6,7 @@ import type {
 export const RETENTION = {
   pendingPaymentDays: 30,
   cancelledDays: 90,
-  historicalDays: 365,
+  historicalPiiDays: 365,
   orphanCustomerDays: 30,
   auditDays: 365,
   securityAuditDays: 180,
@@ -24,6 +24,28 @@ const SECURITY_AUDIT_ACTIONS = [
   "STAFF_LOGIN_LOCKED",
 ] as const;
 
+const NON_FISCAL_PAYMENT_STATUSES = [
+  "PENDING",
+  "PROCESSING",
+  "FAILED",
+  "CANCELLED",
+] as const;
+
+/**
+ * Completed/refunded payment evidence is intentionally excluded from
+ * automated metadata cleanup.
+ *
+ * CFF art. 30 measures the general five-year fiscal retention period from
+ * the filing/due date of the related tax return, not from the payment date.
+ * This application does not currently track that tax-return anchor, so it
+ * must not guess a destructive cutoff for completed financial evidence.
+ */
+export const FISCAL_CORE_PAYMENT_STATUSES = [
+  "PAID",
+  "REFUNDED",
+  "PARTIALLY_REFUNDED",
+] as const;
+
 function daysAgo(now: Date, days: number) {
   return new Date(now.getTime() - days * 86_400_000);
 }
@@ -32,7 +54,7 @@ export function retentionCutoffs(now = new Date()) {
   return {
     pendingPayment: daysAgo(now, RETENTION.pendingPaymentDays),
     cancelled: daysAgo(now, RETENTION.cancelledDays),
-    historical: daysAgo(now, RETENTION.historicalDays),
+    historicalPii: daysAgo(now, RETENTION.historicalPiiDays),
     orphanCustomer: daysAgo(now, RETENTION.orphanCustomerDays),
     audit: daysAgo(now, RETENTION.auditDays),
     securityAudit: daysAgo(now, RETENTION.securityAuditDays),
@@ -66,13 +88,13 @@ export function eligibleOrderWhere(
         paymentStatus: {
           in: ["PAID", "REFUNDED", "PARTIALLY_REFUNDED"],
         },
-        createdAt: { lt: cutoffs.historical },
+        createdAt: { lt: cutoffs.historicalPii },
       },
       {
         status: {
           in: ["DELIVERED", "REFUNDED", "NO_SHOW"],
         },
-        createdAt: { lt: cutoffs.historical },
+        createdAt: { lt: cutoffs.historicalPii },
       },
     ],
   };
@@ -151,7 +173,7 @@ export class RetentionCleanupService {
           status: {
             in: ["PAID", "CONFIRMED", "PREPARING", "READY"],
           },
-          createdAt: { lt: cutoffs.historical },
+          createdAt: { lt: cutoffs.historicalPii },
         },
       }),
       this.prisma.paymentWebhookEvent.count({
@@ -225,6 +247,11 @@ export class RetentionCleanupService {
                 : await tx.payment.updateMany({
                     where: {
                       orderId: { in: orderIds },
+                      status: {
+                        in: [
+                          ...NON_FISCAL_PAYMENT_STATUSES,
+                        ],
+                      },
                     },
                     data: {
                       metadata: {},
@@ -277,7 +304,7 @@ export class RetentionCleanupService {
           status: {
             in: ["PAID", "CONFIRMED", "PREPARING", "READY"],
           },
-          createdAt: { lt: cutoffs.historical },
+          createdAt: { lt: cutoffs.historicalPii },
         },
       });
 

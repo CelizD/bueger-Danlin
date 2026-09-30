@@ -7,6 +7,7 @@ import {
 import type { PrismaClient } from "../generated/prisma/client.js";
 import {
   ANONYMIZED_CUSTOMER,
+  FISCAL_CORE_PAYMENT_STATUSES,
   RetentionCleanupService,
   eligibleOrderWhere,
   retentionCutoffs,
@@ -96,7 +97,7 @@ describe("retention policy", () => {
       cancelled: new Date(
         "2026-06-29T18:00:00.000Z",
       ),
-      historical: new Date(
+      historicalPii: new Date(
         "2025-09-27T18:00:00.000Z",
       ),
     });
@@ -137,6 +138,14 @@ describe("retention policy", () => {
     );
   });
 
+  it("protege evidencia de pagos completados del cleanup automático", () => {
+    expect(FISCAL_CORE_PAYMENT_STATUSES).toEqual([
+      "PAID",
+      "REFUNDED",
+      "PARTIALLY_REFUNDED",
+    ]);
+  });
+
   it("dry-run no modifica datos", async () => {
     const { service, prisma } = harness();
 
@@ -175,6 +184,14 @@ describe("retention policy", () => {
       where: {
         orderId: {
           in: ["order-1", "order-2"],
+        },
+        status: {
+          in: [
+            "PENDING",
+            "PROCESSING",
+            "FAILED",
+            "CANCELLED",
+          ],
         },
       },
       data: { metadata: {} },

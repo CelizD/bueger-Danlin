@@ -353,6 +353,17 @@ export default function PrivacyPage() {
             el tiempo necesario para la
             operación, soporte, conciliación,
             seguridad y obligaciones aplicables.
+            La evidencia contable o financiera
+            puede conservarse durante los plazos
+            exigidos por la legislación fiscal,
+            con acceso restringido. Esto no
+            implica conservar indefinidamente
+            nombre, teléfono o correo: esos datos
+            pueden anonimizarse antes cuando ya
+            no sean necesarios para una finalidad
+            vigente u obligación legal.
+          </p>
+          <p>
             Los plazos pueden ampliarse cuando
             exista una disputa de pago,
             investigación, incidente de
