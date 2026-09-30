@@ -96,6 +96,17 @@ test("cliente crea pedido, paga y obtiene QR", async ({
     .check();
   await expect(continueButton).toBeDisabled();
 
+  await expect(
+    page.getByRole("heading", {
+      name: "Autorización para realizar el pedido",
+    }),
+  ).toBeVisible();
+
+  await page
+    .getByLabel(/Confirmo que soy mayor de edad/)
+    .check();
+  await expect(continueButton).toBeDisabled();
+
   await page
     .getByLabel(/Entiendo y acepto que/)
     .check();
