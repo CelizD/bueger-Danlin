@@ -4,6 +4,7 @@ import { BurgerBuilder } from "./burger-builder";
 import { CustomerFields } from "./customer-fields";
 import { DrinkSelector } from "./drink-selector";
 import { PickupPointSelector } from "./pickup-point-selector";
+import { PurchaseTermsConsent } from "./purchase-terms-consent";
 import type {
   InventoryAvailability,
   ModifierOption,
@@ -127,6 +128,28 @@ describe("ordering components", () => {
     expect(html).toContain("Aviso de privacidad simplificado");
     expect(html).toContain("/privacidad");
     expect(html).toContain("privacidad@example.test");
+  });
+
+  it("muestra aceptación explícita de términos de compra", () => {
+    const html = renderToStaticMarkup(
+      <PurchaseTermsConsent
+        checked={false}
+        onChange={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain(
+      "Términos y Condiciones",
+    );
+    expect(html).toContain(
+      "política de cancelación y reembolso",
+    );
+    expect(html).toContain(
+      'href="/terminos"',
+    );
+    expect(html).toContain(
+      'required=""',
+    );
   });
 
   it("muestra bebida agotada y deshabilita aumentar cantidad", () => {
