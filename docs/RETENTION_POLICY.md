@@ -40,6 +40,7 @@ Esta es una política técnica de ingeniería. Los plazos legales/fiscales aplic
 | Backup local cifrado | 7 días | rotación automática objetivo |
 | Backup offsite cifrado | 30 días baseline | Object Lock/Versioning según política final |
 | Artifacts CI/SBOM | 90 días o política GitHub | expirar según necesidad operativa |
+| Solicitud ARCO | mientras esté abierta + 12 meses después del cierre como baseline técnica | restringir acceso; revisar plazo legal definitivo antes de automatizar eliminación |
 
 ## 4. Anonimización de pedidos históricos
 
@@ -143,6 +144,8 @@ Implementado en el repositorio:
 10. timer systemd diario preparado;
 11. backup local alineado a 7 días;
 12. purga de `PaymentWebhookEvent` procesados/ignorados a 90 días; los FAILED se conservan.
+
+Las solicitudes ARCO no se incluyen todavía en el cleanup automático. No deben eliminarse mientras estén abiertas, durante verificación de identidad o mientras exista una controversia relacionada.
 
 Pendiente antes de considerar el ciclo de vida completo cerrado:
 

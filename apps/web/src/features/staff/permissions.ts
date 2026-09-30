@@ -7,6 +7,7 @@ export type AdminSection =
   | "entrega"
   | "sabados"
   | "inventario"
+  | "arco"
   | "personal";
 
 const sectionRoles: Record<AdminSection, readonly StaffRole[]> = {
@@ -16,6 +17,7 @@ const sectionRoles: Record<AdminSection, readonly StaffRole[]> = {
   entrega: ["ADMIN", "DELIVERY"],
   sabados: ["ADMIN"],
   inventario: ["ADMIN"],
+  arco: ["ADMIN"],
   personal: ["ADMIN"],
 };
 

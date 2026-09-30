@@ -13,6 +13,7 @@ import { MetricsService } from "./metrics/metrics.service.js";
 import { NotificationsModule } from "./notifications/notifications.module.js";
 import { OrdersModule } from "./orders/orders.module.js";
 import { PaymentsModule } from "./payments/payments.module.js";
+import { PrivacyModule } from "./privacy/privacy.module.js";
 import { PickupEventsModule } from "./pickup-events/pickup-events.module.js";
 import { StaffModule } from "./staff/staff.module.js";
 import { TelemetryController } from "./telemetry/telemetry.controller.js";
@@ -29,6 +30,7 @@ import { TelemetryController } from "./telemetry/telemetry.controller.js";
     PickupEventsModule,
     OrdersModule,
     PaymentsModule,
+    PrivacyModule,
     StaffModule,
     ThrottlerModule.forRoot([
       {

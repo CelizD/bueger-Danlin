@@ -109,7 +109,11 @@ export function CustomerFields({
           No usamos estos datos para marketing
           directo en el flujo actual. Puedes
           limitar su uso o divulgación y ejercer
-          tus derechos ARCO escribiendo a{" "}
+          tus derechos ARCO desde el{" "}
+          <a href="/arco">
+            formulario público ARCO
+          </a>
+          {" "}o escribiendo a{" "}
           <a
             href={
               "mailto:" + privacy.email

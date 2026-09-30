@@ -50,6 +50,12 @@ Permitida antes del cierre. Después del cierre no hay cancelación automática.
 - El flujo actual no usa los datos del pedido para marketing directo.
 - En producción son obligatorios `PRIVACY_RESPONSIBLE`, `PRIVACY_ADDRESS` y `PRIVACY_EMAIL`.
 - El go-live check impide lanzar si faltan identidad, domicilio o correo de privacidad/ARCO.
+- Existe un mecanismo público en `/arco` para presentar solicitudes de Acceso, Rectificación, Cancelación u Oposición.
+- Cada solicitud genera un folio y queda en estado de verificación de identidad pendiente.
+- No existe consulta pública de solicitudes por folio.
+- El detalle solo es visible para ADMIN autenticado con MFA en `/admin/arco`.
+- El formulario no almacena identificaciones oficiales; la acreditación de identidad o representación se coordina después por un canal controlado.
+- AuditLog registra recepción/cambios de estado sin copiar nombre, correo ni descripción completa.
 
 
 ## Términos de compra

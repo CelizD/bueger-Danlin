@@ -6237,3 +6237,213 @@ textarea:focus-visible,
     gap: 3px;
   }
 }
+
+
+/* ARCO privacy workflow */
+.arco-form {
+  display: grid;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.arco-form .section,
+.arco-success {
+  padding: 24px;
+  border: 1px solid #ddd7ca;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.arco-rights {
+  display: grid;
+  gap: 10px;
+}
+
+.arco-right-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  border: 1px solid #ddd7ca;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.arco-right-card input {
+  margin-top: 4px;
+}
+
+.arco-right-card span {
+  display: grid;
+  gap: 3px;
+}
+
+.arco-right-card small {
+  color: #716b62;
+  line-height: 1.45;
+}
+
+.arco-text-fields,
+.arco-admin-note {
+  display: grid;
+  gap: 12px;
+}
+
+.arco-text-fields label,
+.arco-admin-note {
+  display: grid;
+  gap: 7px;
+}
+
+.arco-text-fields label > span,
+.arco-admin-note > span {
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.arco-text-fields textarea,
+.arco-admin-note textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  padding: 12px 14px;
+  border: 1px solid #d9d3c7;
+  border-radius: 12px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #171714;
+  font: inherit;
+  line-height: 1.5;
+}
+
+.arco-text-fields textarea:focus,
+.arco-admin-note textarea:focus {
+  border-color: #75634f;
+  box-shadow: 0 0 0 3px rgba(117, 99, 79, 0.11);
+}
+
+.arco-success {
+  margin-top: 24px;
+}
+
+.arco-success h2 {
+  margin: 8px 0 12px;
+  overflow-wrap: anywhere;
+}
+
+.arco-admin-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0 24px;
+}
+
+.arco-admin-summary > div {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border: 1px solid #ddd7ca;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.arco-admin-summary span {
+  color: #716b62;
+  font-size: 13px;
+}
+
+.arco-admin-summary strong {
+  font-size: 28px;
+}
+
+.arco-admin-list {
+  display: grid;
+  gap: 16px;
+}
+
+.arco-admin-card {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid #ddd7ca;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.arco-admin-card > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.arco-admin-card h2 {
+  margin: 4px 0;
+}
+
+.arco-admin-card p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.arco-meta,
+.arco-right-tags,
+.arco-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.arco-meta {
+  color: #716b62;
+  font-size: 13px;
+}
+
+.arco-right-tags span,
+.arco-status {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #f2efe8;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.arco-admin-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid #d9d3c7;
+  border-radius: 10px;
+  background: #fff;
+  font-weight: 700;
+}
+
+.arco-admin-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.arco-status-resolved {
+  background: #e8f3e4;
+}
+
+.arco-status-denied {
+  background: #f7e7e4;
+}
+
+.arco-status-in-review {
+  background: #fff2cf;
+}
+
+@media (max-width: 760px) {
+  .arco-admin-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .arco-admin-card > header {
+    display: grid;
+  }
+}

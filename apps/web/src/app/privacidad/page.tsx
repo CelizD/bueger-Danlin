@@ -242,7 +242,15 @@ export default function PrivacyPage() {
             Puedes solicitar acceso,
             rectificación, cancelación u
             oposición respecto de tus datos
-            personales enviando una solicitud a{" "}
+            personales mediante nuestro{" "}
+            <Link href="/arco">
+              mecanismo público para derechos ARCO
+            </Link>
+            . Al enviar el formulario recibirás
+            un folio de seguimiento.
+          </p>
+          <p>
+            También puedes escribir a{" "}
             <a
               href={
                 "mailto:" +
@@ -251,17 +259,21 @@ export default function PrivacyPage() {
             >
               {privacy.email}
             </a>
-            .
+            . La solicitud debe incluir tu
+            nombre, un medio para recibir
+            notificaciones, el derecho que deseas
+            ejercer y la información necesaria
+            para localizar los datos.
           </p>
           <p>
-            Incluye tu nombre, el derecho que
-            deseas ejercer, una descripción
-            clara de los datos relacionados y
-            un medio de contacto. Cuando sea
-            necesario podremos solicitar
-            información razonable para verificar
-            tu identidad y evitar que otra
-            persona acceda a tus datos.
+            Antes de entregar, rectificar,
+            cancelar u oponernos al tratamiento
+            de datos se verificará la identidad
+            de la persona titular o, en su caso,
+            de su representante. El formulario
+            público no solicita subir
+            identificaciones para reducir la
+            exposición de documentos sensibles.
           </p>
         </section>
 

@@ -168,6 +168,12 @@ No abrir tráfico público hasta que:
 - [ ] `PRIVACY_EMAIL` es un correo atendido para privacidad, limitación de uso y derechos ARCO.
 - [ ] Abrir `/privacidad` en producción y verificar el aviso integral.
 - [ ] Confirmar que el checkout muestra el aviso simplificado antes de enviar nombre/teléfono/correo.
+- [ ] Abrir `/arco` y enviar una solicitud de prueba.
+- [ ] Confirmar que se genera un folio y no se exponen solicitudes mediante consulta pública.
+- [ ] Confirmar que la solicitud aparece únicamente para ADMIN en `/admin/arco`.
+- [ ] Verificar el flujo: identidad pendiente → en revisión → resuelta/denegada.
+- [ ] Confirmar que el correo de privacidad recibe el aviso de nueva solicitud cuando SMTP esté activo.
+- [ ] Confirmar que el formulario no permite subir documentos oficiales.
 
 
 ## Términos, cancelación y reembolso

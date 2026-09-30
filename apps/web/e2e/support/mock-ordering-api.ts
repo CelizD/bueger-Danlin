@@ -313,6 +313,20 @@ export async function mockOrderingApi(page: Page) {
     }
 
     if (
+      path.endsWith("/privacy/arco") &&
+      method === "POST"
+    ) {
+      await json(route, {
+        folio: "ARCO-20260930-ABCDEF12",
+        status: "IDENTITY_VERIFICATION_REQUIRED",
+        receivedAt: "2026-09-30T12:00:00.000Z",
+        identityVerificationRequired: true,
+        message: "Solicitud recibida.",
+      });
+      return;
+    }
+
+    if (
       path.endsWith("/orders/H-TEST01/cancel") &&
       method === "POST"
     ) {

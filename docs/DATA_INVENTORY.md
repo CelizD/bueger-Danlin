@@ -46,6 +46,8 @@ No sustituye un aviso de privacidad legal.
 | Variables de entorno | DB, Redis, JWT, MFA, QR, pagos | Secreto | operación | archivo/entorno del host |
 | Backup DB | copia de tablas | Personal + secreto derivado + financiero | recuperación | archivo cifrado age/offsite |
 | Catálogo/inventario | producto, precio, stock | Público/Interno | venta/operación | PostgreSQL |
+| ArcoRequest | nombre, email, teléfono opcional, derechos solicitados, descripción y datos para localizar información | Personal | recibir y atender derechos ARCO | PostgreSQL |
+| ArcoRequest | estado, verificación de identidad, notas internas y fechas de atención | Personal/Interno | seguimiento y evidencia de atención | PostgreSQL |
 
 ## 4. Datos que el sistema no debería almacenar
 
@@ -60,7 +62,7 @@ Salvo un cambio explícito de alcance, Burger Danlin no debe guardar:
 - verificationToken en logs;
 - secretos de proveedor en base de datos;
 - cuerpos completos de requests en logs;
-- documentos oficiales;
+- documentos oficiales mediante el formulario ARCO público;
 - ubicación precisa del cliente;
 - datos biométricos.
 
@@ -112,6 +114,22 @@ API
 
 Solo deben enviarse los datos mínimos requeridos por el proveedor.
 
+### Solicitudes ARCO
+
+Titular
+→ formulario público `/arco`
+→ API `POST /privacy/arco`
+→ PostgreSQL
+→ folio de recepción
+
+El formulario no acepta carga de identificaciones oficiales. La acreditación de identidad o representación debe coordinarse posteriormente por un canal controlado antes de entregar o modificar datos.
+
+ADMIN con MFA
+→ `/admin/arco`
+→ revisión y actualización de estado
+
+No existe consulta pública por folio para evitar enumeración o exposición de solicitudes.
+
 ### Logs
 
 API/Web
@@ -139,6 +157,7 @@ PostgreSQL
 6. Payment.metadata debe limitarse a identificadores/estado necesarios.
 7. AuditLog no debe convertirse en copia completa de objetos con PII salvo necesidad de auditoría.
 8. Nuevos campos personales requieren actualizar este inventario.
+9. Las solicitudes ARCO no deben copiarse completas a AuditLog ni a correos operativos.
 
 ## 7. Acceso por rol
 
