@@ -183,6 +183,34 @@ describe("OrdersService idempotency", () => {
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
+  it.each(["   ", " A "])(
+    "rechaza nombre inválido después de normalizar: %j",
+    async (name) => {
+      const prisma = {
+        order: { findUnique: vi.fn() },
+        $transaction: vi.fn(),
+      } as unknown as PrismaService;
+      const inventory = {} as InventoryService;
+      const service = new OrdersService(prisma, inventory);
+
+      await expect(
+        service.create(
+          {
+            ...dto,
+            customer: {
+              ...dto.customer,
+              name,
+            },
+          },
+          "idempotency-key-123456",
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(prisma.order.findUnique).not.toHaveBeenCalled();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    },
+  );
+
   it("rechaza Idempotency-Key demasiado corta antes de escribir", async () => {
     const prisma = {
       order: { findUnique: vi.fn() },
