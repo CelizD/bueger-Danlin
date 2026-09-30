@@ -1,5 +1,5 @@
 CREATE TYPE "EmailNotificationType" AS ENUM ('PURCHASE_CONFIRMATION');
-CREATE TYPE "EmailNotificationStatus" AS ENUM ('PENDING', 'PROCESSING', 'SENT', 'FAILED');
+CREATE TYPE "EmailNotificationStatus" AS ENUM ('PENDING', 'PROCESSING', 'SENT', 'FAILED', 'SKIPPED');
 
 CREATE TABLE "EmailNotification" (
   "id" TEXT NOT NULL,
