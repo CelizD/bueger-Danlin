@@ -68,7 +68,7 @@ export function GroupDeliveryConsent({
           }
         />
         <span>
-          Entiendo y acepto que, si no se completa el mínimo de pedidos
+          Entiendo y acepto que, si no se completa el mínimo de combos
           pagados, tendré que pagar en efectivo mi parte correspondiente
           del envío al momento de la entrega.
         </span>

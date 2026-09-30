@@ -62,6 +62,11 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await expect(continueButton).toBeDisabled();
 
   await page
+    .getByLabel(/He leído y acepto los/)
+    .check();
+  await expect(continueButton).toBeDisabled();
+
+  await page
     .getByLabel(/Entiendo y acepto que/)
     .check();
 

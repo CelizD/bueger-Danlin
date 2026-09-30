@@ -25,6 +25,7 @@ const originalQrSecret = process.env.QR_TOKEN_SECRET;
 
 const dto: CreateOrderDto = {
   pickupEventId: "event-1",
+  purchaseTermsAccepted: true,
   groupDeliveryTermsAccepted: true,
   customer: {
     name: " Cliente ",
@@ -44,7 +45,8 @@ const dto: CreateOrderDto = {
 function normalizedHash(input: CreateOrderDto) {
   const normalized = {
     pickupEventId: input.pickupEventId,
-    groupDeliveryTermsAccepted: true,
+    purchaseTermsAccepted: true,
+  groupDeliveryTermsAccepted: true,
     customer: {
       name: input.customer.name.trim(),
       phone: input.customer.phone,
@@ -113,6 +115,28 @@ afterEach(() => {
 });
 
 describe("OrdersService idempotency", () => {
+  it("rechaza crear un pedido sin aceptar términos de compra", async () => {
+    const prisma = {
+      order: { findUnique: vi.fn() },
+      $transaction: vi.fn(),
+    } as unknown as PrismaService;
+    const inventory = {} as InventoryService;
+    const service = new OrdersService(prisma, inventory);
+
+    await expect(
+      service.create(
+        {
+          ...dto,
+          purchaseTermsAccepted: false,
+        },
+        "idempotency-key-123456",
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(prisma.order.findUnique).not.toHaveBeenCalled();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
   it("rechaza crear un pedido sin aceptar la entrega grupal", async () => {
     const prisma = {
       order: { findUnique: vi.fn() },

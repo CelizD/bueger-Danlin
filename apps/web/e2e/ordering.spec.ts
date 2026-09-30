@@ -64,6 +64,19 @@ test("cliente crea pedido, paga y obtiene QR", async ({
 
   await expect(continueButton).toBeDisabled();
 
+  const termsLink = page.getByRole("link", {
+    name: "Términos y Condiciones",
+  });
+  await expect(termsLink).toHaveAttribute(
+    "href",
+    "/terminos",
+  );
+
+  await page
+    .getByLabel(/He leído y acepto los/)
+    .check();
+  await expect(continueButton).toBeDisabled();
+
   await page
     .getByLabel(/Entiendo y acepto que/)
     .check();
@@ -135,6 +148,26 @@ test("cliente crea pedido, paga y obtiene QR", async ({
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Abrir ubicación exacta" }),
+  ).toBeVisible();
+});
+
+test("publica términos de compra, cancelación y reembolso", async ({ page }) => {
+  await page.goto("/terminos");
+
+  await expect(
+    page.getByRole("heading", {
+      name: "Términos y Condiciones",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Cancelación por el cliente",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Reembolsos",
+    }),
   ).toBeVisible();
 });
 

@@ -22,6 +22,7 @@ const CAPACITY_STATUSES = [
 ] as const;
 
 const RESERVATION_MINUTES = 15;
+const PURCHASE_TERMS_VERSION = "2026-09-29-v1";
 const GROUP_DELIVERY_TERMS_VERSION = "2026-09-29-v2";
 
 export async function createOrderTransaction(
@@ -229,6 +230,9 @@ export async function createOrderTransaction(
         comboQuantity,
         verificationTokenHash,
         reservationExpiresAt,
+        purchaseTermsAcceptedAt: now,
+        purchaseTermsVersion:
+          PURCHASE_TERMS_VERSION,
         groupDeliveryTermsAcceptedAt: now,
         groupDeliveryTermsVersion:
           GROUP_DELIVERY_TERMS_VERSION,
@@ -309,6 +313,10 @@ export async function createOrderTransaction(
             order.comboQuantity,
           totalCents: order.totalCents,
           currency: order.currency,
+          purchaseTermsVersion:
+            PURCHASE_TERMS_VERSION,
+          purchaseTermsAccepted:
+            true,
           groupDeliveryTermsVersion:
             GROUP_DELIVERY_TERMS_VERSION,
           groupDeliveryTermsAccepted:

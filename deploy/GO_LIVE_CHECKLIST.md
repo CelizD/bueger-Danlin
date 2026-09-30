@@ -168,3 +168,12 @@ No abrir tráfico público hasta que:
 - [ ] `PRIVACY_EMAIL` es un correo atendido para privacidad, limitación de uso y derechos ARCO.
 - [ ] Abrir `/privacidad` en producción y verificar el aviso integral.
 - [ ] Confirmar que el checkout muestra el aviso simplificado antes de enviar nombre/teléfono/correo.
+
+
+## Términos, cancelación y reembolso
+- [ ] Abrir `/terminos` en producción y revisar identidad, domicilio y correo de contacto.
+- [ ] Confirmar que el checkout no permite continuar sin aceptar los Términos y Condiciones.
+- [ ] Confirmar que la condición de entrega grupal requiere una aceptación separada.
+- [ ] Probar cancelación de pedido no pagado antes del corte.
+- [ ] Probar cancelación de pedido pagado antes del corte y reembolso.
+- [ ] Probar pago tardío después de expirar la reserva y verificar que no reactive el pedido.
