@@ -1,5 +1,8 @@
 # Backend Audit — Burger Danlin
 
+> **Snapshot histórico:** este documento refleja principalmente el estado del **19 de septiembre de 2026** y conserva pendientes que posteriormente fueron resueltos. No usarlo como lista vigente de lanzamiento. La fuente actual es `docs/MVP_FINAL_STATUS.md` junto con `deploy/GO_LIVE_CHECKLIST.md`.
+
+
 Fecha: 2026-09-19
 
 Base: "Backend para un SaaS bien diseñado: requisitos, arquitectura, prácticas y checklist completos".
@@ -38,7 +41,7 @@ Leyenda:
 | Control | Estado | Evaluación |
 |---|---|---|
 | REST versionada | ✅ | prefijo /api/v1 |
-| OpenAPI como contrato | 🟡 | Swagger/OpenAPI + plugin DTO implementados; pendiente actualizar lockfile y validar build |
+| OpenAPI como contrato | ✅ | Swagger/OpenAPI + plugin DTO implementados; lockfile/build validados en CI |
 | Validación mediante schemas/DTO | ✅ | ValidationPipe whitelist + forbidNonWhitelisted + class-validator |
 | Validación semántica | ✅ | Productos/modificadores, capacidad, fechas, estados e inventario se revalidan server-side |
 | Request size limit explícito | ✅ | JSON 256kb y urlencoded 64kb configurados explícitamente antes de DTO validation |
@@ -47,9 +50,9 @@ Leyenda:
 | Rate limit login/API crítica | ✅ | throttler global + login reforzado + lockout persistente |
 | CORS allowlist | ✅ | APP_ORIGIN |
 | CSRF | ✅ | Origin + Fetch Metadata para mutaciones de staff |
-| Webhook signature validation | ✅ | Stripe y Mercado Pago preparados |
-| Webhook handlers reales | 🔴 | Aún no existen porque pagos reales aún no están integrados |
-| API inventory documentado/machine-readable | 🟡 | rutas conocidas en código/README; falta OpenAPI |
+| Webhook signature validation | ✅ | Mercado Pago valida HMAC + ventana anti-replay; Stripe queda fuera del alcance del MVP |
+| Webhook handlers reales | ✅ | Mercado Pago persiste/deduplica eventos, reconcilia estado canónico y protege pagos tardíos |
+| API inventory documentado/machine-readable | ✅ | Swagger/OpenAPI disponible fuera de producción por defecto |
 
 ## P0 — Identidad y autorización
 

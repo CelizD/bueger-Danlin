@@ -2,6 +2,8 @@
 
 Plataforma web de preventa de hamburguesas con pedidos programados para sábado, control de capacidad, inventario, cocina, entrega por QR y panel administrativo.
 
+> **Estado del MVP al 30 de septiembre de 2026:** código funcional completo y validado por CI/Security. Los pendientes reales antes de abrir tráfico son infraestructura, credenciales/proveedores y validación operativa en producción. Consulta `docs/MVP_FINAL_STATUS.md`.
+
 ## Estado actual
 
 El flujo principal ya funciona de extremo a extremo con PostgreSQL, NestJS, Next.js y Playwright reales:
@@ -118,6 +120,7 @@ Rutas principales:
 - `/admin/personal`
 - `/admin/cocina`
 - `/admin/entrega`
+- `/admin/arco`
 
 Incluye:
 
@@ -127,6 +130,8 @@ Incluye:
 - cuentas de personal;
 - roles `ADMIN`, `KITCHEN` y `DELIVERY`;
 - historial de estados;
+- gestión de solicitudes ARCO;
+- pagos tardíos y flujo de resolución/reembolso;
 - `AuditLog` para múltiples operaciones administrativas.
 
 ## Inventario y capacidad
@@ -193,35 +198,37 @@ Documentación de seguridad y privacidad técnica:
 
 ## Pagos
 
-Los pagos reales están **intencionalmente deshabilitados** mientras el resto del producto termina de validarse.
+El proveedor definido para el MVP es **Mercado Pago**. En desarrollo y CI se mantiene `MockPaymentProvider`.
 
-Desarrollo:
+Desarrollo/tests:
 
 ```text
 PAYMENT_PROVIDER=mock
 ENABLE_REAL_PAYMENTS=false
 ```
 
-Existe arquitectura desacoplada mediante `PaymentProvider` y `PaymentProviderRegistry`.
+Implementado en código:
 
-Actualmente:
-
-- `MockPaymentProvider`: activo para desarrollo/tests;
-- Mercado Pago: cliente Orders API y creación de checkout preparados;
-- Stripe: reservado en la arquitectura;
-- `ENABLE_REAL_PAYMENTS=false`: kill switch global;
-- el backend bloquea tráfico real antes de persistir checkout y antes de cualquier `fetch` al proveedor.
-
-Todavía pendientes antes de pagos reales:
-
-- webhook real;
+- cliente de Mercado Pago Orders API;
+- creación de checkout;
+- webhook firmado con HMAC y ventana anti-replay;
 - deduplicación persistente de eventos;
-- `getPayment()`;
-- reembolsos reales;
-- reconciliación;
-- sandbox end-to-end;
-- pruebas de fallo/reintentos;
-- activación explícita de `ENABLE_REAL_PAYMENTS=true`.
+- recuperación de eventos `PROCESSING` abandonados;
+- reconciliación canónica contra la API del proveedor;
+- protección contra transiciones regresivas y pagos tardíos;
+- reembolso total idempotente;
+- cancelación/reembolso de pedido;
+- `ENABLE_REAL_PAYMENTS=false` como kill switch global.
+
+Antes de habilitar pagos reales todavía se debe:
+
+1. configurar credenciales reales/sandbox;
+2. registrar el webhook HTTPS;
+3. ejecutar pago end-to-end con Mercado Pago;
+4. probar reintentos/idempotencia;
+5. probar pago fallido;
+6. probar cancelación y refund reales;
+7. activar `ENABLE_REAL_PAYMENTS=true` únicamente después de esas pruebas.
 
 ## Desarrollo local
 
@@ -400,7 +407,7 @@ $env:RETENTION_CLEANUP_ENABLED="true"
 pnpm retention:apply
 ```
 
-En producción existe un servicio Docker y timer systemd diario preparado. El timer no debe habilitarse hasta validar los plazos legales/fiscales y revisar primero un dry-run.
+En producción existe un servicio Docker y timer systemd diario preparado. El piso fiscal federal ya fue revisado y el núcleo financiero de pagos completados está protegido; el timer destructivo no debe habilitarse hasta confirmar con contador el régimen/CFDI real y revisar primero un dry-run.
 
 Consulta `docs/RETENTION_POLICY.md`.
 
@@ -438,24 +445,22 @@ Documentación:
 
 ## Pendientes prioritarios
 
-Los siguientes bloques todavía sí están pendientes:
+El **código funcional del MVP ya está completo**. Lo que falta antes de lanzar es principalmente producción:
 
-1. ejecutar el benchmark Argon2id en el hardware objetivo y registrar el resultado;
-2. aviso de privacidad final y validación legal/fiscal de retención antes de producción;
-3. legal/incident hold por registro y alerta de fallo del cleanup;
-4. validar Grafana/Prometheus/Loki/Alloy en el VPS y definir canal de notificaciones;
-5. distributed tracing con OpenTelemetry/Tempo si se requiere;
-6. runbooks de incidentes;
-7. ADRs;
-8. load/stress testing;
-9. staging y rollback probado;
-10. DAST;
-11. infraestructura real: dominio, TLS, WAF/CDN y backup offsite real;
-12. simulacro completo de pérdida del VPS;
-13. pentest prelaunch;
-14. integración completa de pagos reales.
+1. contratar/configurar VPS y usuario deploy no-root;
+2. dominio, DNS y TLS reales;
+3. credenciales Mercado Pago + webhook + pruebas sandbox/reales;
+4. SMTP real para confirmaciones de compra;
+5. bucket offsite real y prueba de restore descargado;
+6. levantar Grafana/Prometheus/Loki/Alloy y alertas en el VPS;
+7. ejecutar preflight + go-live check;
+8. benchmark Argon2id en el hardware objetivo;
+9. confirmar con contador régimen fiscal, calendario de declaraciones y CFDI antes de habilitar cleanup destructivo;
+10. simulacro de pérdida total del VPS y medición real de RPO/RTO.
 
-No se planean microservicios ni Kubernetes para el MVP salvo que una necesidad técnica real lo justifique.
+Mejoras como OpenTelemetry/Tempo, WAF/CDN, DAST, pentest externo, load testing avanzado, artifact signing o Kubernetes quedan como **madurez posterior**, no como bloqueo del MVP actual.
+
+Consulta `docs/MVP_FINAL_STATUS.md` y `deploy/GO_LIVE_CHECKLIST.md`.
 
 ## Solución de problemas en Windows
 

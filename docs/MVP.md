@@ -1,5 +1,9 @@
 # Reglas del MVP
 
+Fecha de corte: **30 de septiembre de 2026**
+
+> Estado: reglas funcionales del MVP cerradas en código. Para el estado técnico completo y los pendientes reales de producción consulta `docs/MVP_FINAL_STATUS.md`.
+
 ## Venta
 - Combo Hamburguesa + Papas: $130 MXN.
 - Máximo 50 combos por evento.
@@ -22,7 +26,12 @@ Pan, carne, queso, tocino, lechuga, tomate, cebolla caramelizada, cebolla blanca
 Nombre y teléfono obligatorios. Correo opcional. +52 por defecto.
 
 ## Pago
-Obligatorio. Mock en local. Stripe y Mercado Pago previstos para producción.
+- El pago es obligatorio para que un pedido cuente como confirmado.
+- Mock se usa en local/CI.
+- Proveedor definido para producción: **Mercado Pago**.
+- La integración incluye checkout, webhook firmado, deduplicación persistente, reconciliación canónica, reembolso total idempotente y protección ante pagos tardíos.
+- `ENABLE_REAL_PAYMENTS=false` permanece como kill switch hasta probar credenciales/webhook/sandbox en infraestructura real.
+- Stripe no forma parte del alcance del MVP actual.
 
 ## Cancelación
 Permitida antes del cierre. Después del cierre no hay cancelación automática.
@@ -92,3 +101,27 @@ Permitida antes del cierre. Después del cierre no hay cancelación automática.
 - El comprobante separa el total del pedido del posible traslado en efectivo.
 - El documento se identifica expresamente como comprobante informativo y no como CFDI/factura fiscal.
 - El comprobante permanece disponible para estados terminales como entregado, cancelado o reembolsado mientras el pedido permanezca en el sistema.
+
+
+## Confirmación por correo
+- Cuando un pago queda confirmado y el pedido tiene correo, se crea una notificación de compra persistente.
+- La entrega usa outbox para evitar duplicados.
+- Existen reintentos y recuperación de trabajos atascados.
+- El correo adjunta el comprobante PDF de compra.
+- SMTP usa TLS/STARTTLS en producción y verificación de certificado.
+- `EMAIL_NOTIFICATIONS_ENABLED=false` debe permanecer en producción hasta configurar y probar SMTP.
+
+
+## Pagos tardíos
+- Una reserva expirada libera inventario/capacidad y no revive aunque el proveedor confirme el pago después.
+- Un pago confirmado después del cierre/expiración se registra como caso tardío.
+- Admin puede identificar el caso y resolver/reembolsar sin reasignar inventario automáticamente.
+- La protección está cubierta por lógica de webhook/reconciliación y auditoría.
+
+
+## Calidad y supply chain
+- CI integrado valida instalación frozen-lockfile, Prisma, migraciones, TypeScript, tests, build y E2E completo.
+- Security valida Gitleaks, Semgrep, auditoría de dependencias, SBOM y Trivy en API/Web/Backup.
+- Dependabot quedó limpio al cierre del MVP.
+- Versiones de cierre relevantes: Next.js 16.3.5, class-validator 0.15.1 y @nestjs/throttler 6.7.0.
+- Upgrades major de TypeScript y Vitest se difirieron explícitamente para después del MVP.

@@ -20,7 +20,7 @@ PostgreSQL           Redis
 4. Un pago solo se confirma con el proveedor, no por redirección del navegador.
 5. Los QR no contienen datos personales.
 6. Zona horaria de negocio: America/Tijuana.
-7. Pagos desacoplados: Mock, Stripe y Mercado Pago.
+7. Pagos desacoplados: Mock para desarrollo/CI y Mercado Pago para el MVP; Stripe queda reservado fuera del alcance actual.
 8. Redis no es fuente de verdad y solo se usa cuando aporta valor.
 
 ## Módulos previstos

@@ -1,5 +1,8 @@
 # Frontend Audit — Burger Danlin
 
+> **Snapshot histórico:** varias brechas descritas aquí fueron cerradas durante el desarrollo posterior del MVP. Para el estado actual de lanzamiento consulta `docs/MVP_FINAL_STATUS.md` y `deploy/GO_LIVE_CHECKLIST.md`.
+
+
 Base de evaluación: documento interno "Diseño profesional de Frontend para un SaaS: arquitectura, seguridad, UX, rendimiento y operación" y estado actual del repositorio.
 
 ## Objetivo

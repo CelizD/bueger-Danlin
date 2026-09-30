@@ -1,5 +1,10 @@
 # Go-live checklist — Burger Danlin
 
+Fecha de corte documental: **30 de septiembre de 2026**
+
+> **Estado del código del MVP:** completo y validado en CI/Security. Este checklist contiene principalmente tareas que solo pueden cerrarse con VPS, dominio, credenciales reales, SMTP, almacenamiento offsite y pruebas operativas. Consulta `docs/MVP_FINAL_STATUS.md` para el resumen final.
+
+
 Este checklist separa lo que puede prepararse ahora de lo que solo puede verificarse cuando exista infraestructura real.
 
 ## Ya preparado en el repositorio
@@ -72,6 +77,17 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [ ] Probar cancelación/refund según política.
 - [ ] Cambiar `ENABLE_REAL_PAYMENTS=true` únicamente después de las pruebas sandbox/reales.
 - [x] El gate de go-live bloquea `mock`, Stripe no implementado y `ENABLE_REAL_PAYMENTS=false`.
+
+### Correo de confirmación
+
+- [x] Outbox persistente, reintentos y recuperación de claims atascados implementados.
+- [x] Comprobante PDF adjunto implementado.
+- [x] SMTP TLS/STARTTLS y validación de certificado implementados.
+- [x] Timer/servicio para procesar correos pendientes preparado.
+- [ ] Configurar `MAIL_HOST`, `MAIL_PORT`, `MAIL_SECURITY`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` y reply-to reales.
+- [ ] Enviar una compra de prueba y confirmar recepción del correo + PDF.
+- [ ] Confirmar reintento controlado ante fallo SMTP.
+- [ ] Cambiar `EMAIL_NOTIFICATIONS_ENABLED=true` únicamente después de probar SMTP real.
 
 ### Backup offsite
 
