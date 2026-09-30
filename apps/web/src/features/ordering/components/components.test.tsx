@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { BurgerBuilder } from "./burger-builder";
+import { AgeAuthorizationConsent } from "./age-authorization-consent";
 import { CustomerFields } from "./customer-fields";
 import { DrinkSelector } from "./drink-selector";
 import { PickupPointSelector } from "./pickup-point-selector";
@@ -146,6 +147,31 @@ describe("ordering components", () => {
     );
     expect(html).toContain(
       'href="/terminos"',
+    );
+    expect(html).toContain(
+      'required=""',
+    );
+  });
+
+  it("muestra confirmación explícita para menores de edad", () => {
+    const html = renderToStaticMarkup(
+      <AgeAuthorizationConsent
+        checked={false}
+        onChange={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain(
+      "Menores de edad",
+    );
+    expect(html).toContain(
+      "menor de 18 años",
+    );
+    expect(html).toContain(
+      "madre, padre o tutor",
+    );
+    expect(html).toContain(
+      'href="/privacidad"',
     );
     expect(html).toContain(
       'required=""',
