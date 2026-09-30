@@ -60,6 +60,7 @@ enum PaymentWebhookEventStatus {
   PROCESSED
   IGNORED
   FAILED
+  SKIPPED
 }
 
 enum EmailNotificationType {
