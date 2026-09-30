@@ -21,6 +21,7 @@ describe("AdminSidebar", () => {
     expect(html).toContain("Entrega");
     expect(html).toContain("Sábados");
     expect(html).toContain("Inventario");
+    expect(html).toContain("Privacidad ARCO");
     expect(html).toContain("Personal");
     expect(html).toContain('aria-current="page"');
   });
@@ -42,6 +43,7 @@ describe("AdminSidebar", () => {
     expect(html).not.toContain(">Panel del día<");
     expect(html).not.toContain(">Pedidos<");
     expect(html).not.toContain(">Inventario<");
+    expect(html).not.toContain(">Privacidad ARCO<");
     expect(html).not.toContain(">Personal<");
   });
 
