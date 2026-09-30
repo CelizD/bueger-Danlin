@@ -211,7 +211,7 @@ describe("OrdersService concurrency", () => {
     ).toBeInstanceOf(Date);
     expect(
       createdOrder.purchaseTermsVersion,
-    ).toBe("2026-09-30-v2");
+    ).toBe("2026-09-29-v2");
     const audit = await prisma.auditLog.findFirst({
       where: {
         action: "ORDER_CREATED",
