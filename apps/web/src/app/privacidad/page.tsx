@@ -33,7 +33,7 @@ export default function PrivacyPage() {
         </p>
         <h1>Aviso de Privacidad</h1>
         <p>
-          Última actualización: 30 de septiembre de 2026.
+          Última actualización: 29 de septiembre de 2026.
         </p>
       </header>
 
