@@ -53,6 +53,10 @@ export function useOrderCheckout({
     purchaseTermsAccepted,
     setPurchaseTermsAccepted,
   ] = useState(false);
+  const [
+    ageAuthorizationConfirmed,
+    setAgeAuthorizationConfirmed,
+  ] = useState(false);
   const [submitting, setSubmitting] =
     useState(false);
   const [paying, setPaying] =
@@ -87,6 +91,13 @@ export function useOrderCheckout({
     if (!purchaseTermsAccepted) {
       setError(
         "Debes aceptar los términos y condiciones de compra antes de continuar.",
+      );
+      return;
+    }
+
+    if (!ageAuthorizationConfirmed) {
+      setError(
+        "Debes confirmar que eres mayor de edad o que cuentas con autorización de tu madre, padre o tutor.",
       );
       return;
     }
@@ -136,6 +147,7 @@ export function useOrderCheckout({
         await createOrder({
           pickupEventId: event.id,
           purchaseTermsAccepted,
+          ageAuthorizationConfirmed,
           groupDeliveryTermsAccepted:
             groupDeliveryAccepted,
           customer: {
@@ -323,6 +335,7 @@ export function useOrderCheckout({
     phone,
     email,
     purchaseTermsAccepted,
+    ageAuthorizationConfirmed,
     submitting,
     paying,
     canceling,
@@ -334,6 +347,7 @@ export function useOrderCheckout({
     setPhone,
     setEmail,
     setPurchaseTermsAccepted,
+    setAgeAuthorizationConfirmed,
     submitOrder,
     cancelCreatedOrder,
     confirmPayment,
