@@ -5,6 +5,7 @@ import type { CreateOrderDto } from "./dto/create-order.dto.js";
 export type NormalizedCreateOrderRequest = {
   pickupEventId: string;
   purchaseTermsAccepted: true;
+  ageAuthorizationConfirmed: true;
   groupDeliveryTermsAccepted: true;
   customer: {
     name: string;
@@ -40,6 +41,12 @@ export function prepareCreateOrderRequest(
     );
   }
 
+  if (dto.ageAuthorizationConfirmed !== true) {
+    throw new BadRequestException(
+      "Debes confirmar que eres mayor de edad o que cuentas con autorización de tu madre, padre o tutor.",
+    );
+  }
+
   if (dto.groupDeliveryTermsAccepted !== true) {
     throw new BadRequestException(
       "Debes aceptar las condiciones de entrega grupal antes de continuar.",
@@ -49,6 +56,7 @@ export function prepareCreateOrderRequest(
   const normalizedRequest: NormalizedCreateOrderRequest = {
     pickupEventId: dto.pickupEventId,
     purchaseTermsAccepted: true,
+    ageAuthorizationConfirmed: true,
     groupDeliveryTermsAccepted: true,
     customer: {
       name: dto.customer.name.trim(),
