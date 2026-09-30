@@ -112,7 +112,8 @@ async function cleanupFixture(fixture: CreatedFixture) {
 function orderDto(eventId: string, productId: string, phone: string) {
   return {
     pickupEventId: eventId,
-    groupDeliveryTermsAccepted: true,
+    purchaseTermsAccepted: true,
+      groupDeliveryTermsAccepted: true,
     customer: {
       name: "Cliente prueba",
       phone,
