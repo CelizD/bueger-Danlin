@@ -1,4 +1,3 @@
-import "server-only";
 import type { PublicPrivacyConfig } from "./types";
 
 function setting(name: string) {
