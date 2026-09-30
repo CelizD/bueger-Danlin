@@ -25,7 +25,8 @@ const originalQrSecret = process.env.QR_TOKEN_SECRET;
 
 const dto: CreateOrderDto = {
   pickupEventId: "event-1",
-  groupDeliveryTermsAccepted: true,
+  purchaseTermsAccepted: true,
+      groupDeliveryTermsAccepted: true,
   customer: {
     name: " Cliente ",
     phone: "+526641234567",
@@ -44,7 +45,8 @@ const dto: CreateOrderDto = {
 function normalizedHash(input: CreateOrderDto) {
   const normalized = {
     pickupEventId: input.pickupEventId,
-    groupDeliveryTermsAccepted: true,
+    purchaseTermsAccepted: true,
+      groupDeliveryTermsAccepted: true,
     customer: {
       name: input.customer.name.trim(),
       phone: input.customer.phone,
