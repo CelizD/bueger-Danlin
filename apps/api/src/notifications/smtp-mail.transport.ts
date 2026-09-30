@@ -2,14 +2,10 @@ import {
   Injectable,
 } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
-import net from "node:net";
-import tls from "node:tls";
-import type {
-  Socket,
-} from "node:net";
-import type {
-  TLSSocket,
-} from "node:tls";
+import * as net from "node:net";
+import type { Socket } from "node:net";
+import * as tls from "node:tls";
+import type { TLSSocket } from "node:tls";
 
 export type MailAttachment = {
   filename: string;
@@ -44,8 +40,7 @@ function enabled() {
 }
 
 function sanitizeHeader(value: string) {
-  if (/[
-]/.test(value)) {
+  if (/[\r\n]/.test(value)) {
     throw new Error(
       "Invalid mail header value.",
     );
@@ -75,11 +70,12 @@ function encodeHeader(value: string) {
 function wrapBase64(
   value: Buffer,
 ) {
-  return value
-    .toString("base64")
-    .match(/.{1,76}/g)
-    ?.join("
-") ?? "";
+  return (
+    value
+      .toString("base64")
+      .match(/.{1,76}/g)
+      ?.join("\r\n") ?? ""
+  );
 }
 
 function mimeMessage(
@@ -97,12 +93,10 @@ function mimeMessage(
     sanitizeHeader(message.subject);
   const mixed =
     "mix_" +
-    randomUUID()
-      .replace(/-/g, "");
+    randomUUID().replace(/-/g, "");
   const alt =
     "alt_" +
-    randomUUID()
-      .replace(/-/g, "");
+    randomUUID().replace(/-/g, "");
 
   const lines = [
     "MIME-Version: 1.0",
@@ -111,15 +105,16 @@ function mimeMessage(
     "Reply-To: " + safeReply,
     "Subject: " +
       encodeHeader(safeSubject),
-    "Date: " + new Date().toUTCString(),
-    "Content-Type: multipart/mixed; boundary="" +
+    "Date: " +
+      new Date().toUTCString(),
+    "Content-Type: multipart/mixed; boundary=\"" +
       mixed +
-      """,
+      "\"",
     "",
     "--" + mixed,
-    "Content-Type: multipart/alternative; boundary="" +
+    "Content-Type: multipart/alternative; boundary=\"" +
       alt +
-      """,
+      "\"",
     "",
     "--" + alt,
     "Content-Type: text/plain; charset=UTF-8",
@@ -160,12 +155,12 @@ function mimeMessage(
       "--" + mixed,
       "Content-Type: " +
         attachment.contentType +
-        "; name="" +
+        "; name=\"" +
         filename +
-        """,
-      "Content-Disposition: attachment; filename="" +
+        "\"",
+      "Content-Disposition: attachment; filename=\"" +
         filename +
-        """,
+        "\"",
       "Content-Transfer-Encoding: base64",
       "",
       wrapBase64(
@@ -180,8 +175,7 @@ function mimeMessage(
     "",
   );
 
-  return lines.join("
-");
+  return lines.join("\r\n");
 }
 
 async function waitForResponse(
@@ -191,6 +185,17 @@ async function waitForResponse(
   return new Promise<string>(
     (resolve, reject) => {
       let buffer = "";
+
+      const cleanup = () => {
+        clearTimeout(timer);
+        socket.off("data", onData);
+        socket.off("error", onError);
+        socket.off(
+          "close",
+          onClose,
+        );
+      };
+
       const timer = setTimeout(
         () => {
           cleanup();
@@ -202,16 +207,6 @@ async function waitForResponse(
         },
         12_000,
       );
-
-      const cleanup = () => {
-        clearTimeout(timer);
-        socket.off("data", onData);
-        socket.off("error", onError);
-        socket.off(
-          "close",
-          onClose,
-        );
-      };
 
       const onError = (
         error: Error,
@@ -235,13 +230,13 @@ async function waitForResponse(
         buffer += chunk.toString(
           "utf8",
         );
+
         const lines =
-          buffer.split(/?
-/);
+          buffer.split(/\r?\n/);
 
         for (const line of lines) {
           const match =
-            /^(d{3})([ -])/.exec(
+            /^(\d{3})([ -])/.exec(
               line,
             );
 
@@ -290,8 +285,7 @@ async function command(
   expected: number[],
 ) {
   socket.write(
-    value + "
-",
+    value + "\r\n",
     "utf8",
   );
 
@@ -416,8 +410,7 @@ function dotStuff(
   value: string,
 ) {
   return value.replace(
-    /(^|
-)./g,
+    /(^|\r\n)\./g,
     "$1..",
   );
 }
@@ -498,11 +491,12 @@ export class SmtpMailTransport {
 
     socket.setTimeout(
       15_000,
-      () => socket.destroy(
-        new Error(
-          "SMTP socket timeout.",
+      () =>
+        socket.destroy(
+          new Error(
+            "SMTP socket timeout.",
+          ),
         ),
-      ),
     );
 
     try {
@@ -552,6 +546,7 @@ export class SmtpMailTransport {
           ">",
         [250],
       );
+
       await command(
         socket,
         "RCPT TO:<" +
@@ -561,6 +556,7 @@ export class SmtpMailTransport {
           ">",
         [250, 251],
       );
+
       await command(
         socket,
         "DATA",
@@ -575,9 +571,7 @@ export class SmtpMailTransport {
 
       socket.write(
         dotStuff(raw) +
-          "
-.
-",
+          "\r\n.\r\n",
         "utf8",
       );
 
@@ -603,6 +597,5 @@ export class SmtpMailTransport {
 }
 
 export const smtpTestExports = {
-  escapeHtml,
   mimeMessage,
 };
