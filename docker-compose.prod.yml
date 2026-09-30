@@ -110,6 +110,15 @@ services:
       BUSINESS_ADDRESS: ${BUSINESS_ADDRESS:?BUSINESS_ADDRESS is required}
       SUPPORT_PHONE: ${SUPPORT_PHONE:?SUPPORT_PHONE is required}
       SUPPORT_EMAIL: ${SUPPORT_EMAIL:?SUPPORT_EMAIL is required}
+      EMAIL_NOTIFICATIONS_ENABLED: ${EMAIL_NOTIFICATIONS_ENABLED:-false}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_SECURITY: ${MAIL_SECURITY:-starttls}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      MAIL_REPLY_TO: ${MAIL_REPLY_TO:-}
+      MAIL_REJECT_UNAUTHORIZED: ${MAIL_REJECT_UNAUTHORIZED:-true}
       FORCE_HTTPS: "true"
       ENABLE_API_DOCS: "false"
       JSON_BODY_LIMIT: ${JSON_BODY_LIMIT:-256kb}
@@ -187,6 +196,47 @@ services:
       - deploy
 
 
+
+  purchase-email-worker:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    profiles:
+      - ops
+    depends_on:
+      db-bootstrap:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_RUNTIME_USER:?POSTGRES_RUNTIME_USER is required}:${POSTGRES_RUNTIME_PASSWORD:?POSTGRES_RUNTIME_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}?schema=public
+      EMAIL_NOTIFICATIONS_ENABLED: ${EMAIL_NOTIFICATIONS_ENABLED:-false}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_SECURITY: ${MAIL_SECURITY:-starttls}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      MAIL_REPLY_TO: ${MAIL_REPLY_TO:-}
+      MAIL_REJECT_UNAUTHORIZED: ${MAIL_REJECT_UNAUTHORIZED:-true}
+      BUSINESS_LEGAL_NAME: ${BUSINESS_LEGAL_NAME:?BUSINESS_LEGAL_NAME is required}
+      BUSINESS_TRADE_NAME: ${BUSINESS_TRADE_NAME:-Burger Danlin}
+      BUSINESS_RFC: ${BUSINESS_RFC:?BUSINESS_RFC is required}
+      BUSINESS_ADDRESS: ${BUSINESS_ADDRESS:?BUSINESS_ADDRESS is required}
+      SUPPORT_PHONE: ${SUPPORT_PHONE:?SUPPORT_PHONE is required}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:?SUPPORT_EMAIL is required}
+    networks:
+      - data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    working_dir: /app/apps/api
+    command:
+      - node
+      - dist/scripts/send-purchase-emails.js
 
   retention-cleanup:
     build:
