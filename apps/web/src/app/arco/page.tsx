@@ -75,6 +75,19 @@ export default function ArcoPage() {
               contacto proporcionado.
             </p>
             <p>
+              La determinación sobre
+              la solicitud se comunica
+              en un máximo de 20 días
+              desde su recepción. Si
+              resulta procedente, el
+              derecho se hace efectivo
+              dentro de los 15 días
+              siguientes, sin perjuicio
+              de la ampliación que la
+              ley permita cuando esté
+              justificada.
+            </p>
+            <p>
               También puedes contactar
               al responsable mediante{" "}
               <a
