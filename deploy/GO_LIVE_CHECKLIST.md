@@ -78,6 +78,17 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [ ] Cambiar `ENABLE_REAL_PAYMENTS=true` únicamente después de las pruebas sandbox/reales.
 - [x] El gate de go-live bloquea `mock`, Stripe no implementado y `ENABLE_REAL_PAYMENTS=false`.
 
+### Correo de confirmación
+
+- [x] Outbox persistente, reintentos y recuperación de claims atascados implementados.
+- [x] Comprobante PDF adjunto implementado.
+- [x] SMTP TLS/STARTTLS y validación de certificado implementados.
+- [x] Timer/servicio para procesar correos pendientes preparado.
+- [ ] Configurar `MAIL_HOST`, `MAIL_PORT`, `MAIL_SECURITY`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` y reply-to reales.
+- [ ] Enviar una compra de prueba y confirmar recepción del correo + PDF.
+- [ ] Confirmar reintento controlado ante fallo SMTP.
+- [ ] Cambiar `EMAIL_NOTIFICATIONS_ENABLED=true` únicamente después de probar SMTP real.
+
 ### Backup offsite
 
 - [ ] Crear bucket privado independiente del VPS.
