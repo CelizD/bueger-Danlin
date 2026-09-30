@@ -46,7 +46,7 @@ export class ArcoNotificationService {
           input.folio +
           ". Derechos solicitados: " +
           rights +
-          ". Antes de entregar, rectificar, cancelar u oponernos al tratamiento de datos, necesitaremos verificar tu identidad. La determinación se comunicará dentro del plazo legal aplicable. Conserva este folio para tus registros.",
+          ". Antes de entregar, rectificar, cancelar u oponernos al tratamiento de datos, necesitaremos verificar tu identidad. La determinación se comunicará en un máximo de 20 días desde la recepción y, si procede, se hará efectiva dentro de los 15 días siguientes, sin perjuicio de la ampliación legal aplicable. Conserva este folio para tus registros.",
         html:
           "<p>Recibimos tu solicitud ARCO con folio <strong>" +
           input.folio +
