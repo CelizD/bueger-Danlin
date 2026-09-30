@@ -22,7 +22,7 @@ const CAPACITY_STATUSES = [
 ] as const;
 
 const RESERVATION_MINUTES = 15;
-const PURCHASE_TERMS_VERSION = "2026-09-29-v1";
+const PURCHASE_TERMS_VERSION = "2026-09-29-v2";
 const GROUP_DELIVERY_TERMS_VERSION = "2026-09-29-v2";
 
 export async function createOrderTransaction(

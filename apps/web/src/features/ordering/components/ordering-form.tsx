@@ -4,11 +4,13 @@ import { DrinkSelector } from "./drink-selector";
 import { GroupDeliveryConsent } from "./group-delivery-consent";
 import { PickupPointSelector } from "./pickup-point-selector";
 import { PurchaseTermsConsent } from "./purchase-terms-consent";
+import { SellerDisclosure } from "./seller-disclosure";
 import {
   formatPickup,
   money,
 } from "../formatters";
 import type { PublicPrivacyConfig } from "@/features/privacy/types";
+import type { PublicSellerConfig } from "@/features/seller/types";
 import type {
   BurgerSelection,
   CatalogProduct,
@@ -20,6 +22,7 @@ import type { FormEvent } from "react";
 
 type Props = {
   privacy: PublicPrivacyConfig;
+  seller: PublicSellerConfig;
   events: PickupEvent[];
   event: PickupEvent | null;
   combo: CatalogProduct | undefined;
@@ -81,6 +84,7 @@ type Props = {
 
 export function OrderingForm({
   privacy,
+  seller,
   events,
   event,
   combo,
@@ -287,6 +291,8 @@ export function OrderingForm({
               onEmailChange
             }
           />
+
+          <SellerDisclosure seller={seller} />
 
           <PurchaseTermsConsent
             checked={

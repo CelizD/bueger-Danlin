@@ -33,6 +33,12 @@ POSTGRES_RUNTIME_USER="$(get_env POSTGRES_RUNTIME_USER)"
 PRIVACY_RESPONSIBLE="$(get_env PRIVACY_RESPONSIBLE)"
 PRIVACY_ADDRESS="$(get_env PRIVACY_ADDRESS)"
 PRIVACY_EMAIL="$(get_env PRIVACY_EMAIL)"
+BUSINESS_LEGAL_NAME="$(get_env BUSINESS_LEGAL_NAME)"
+BUSINESS_TRADE_NAME="$(get_env BUSINESS_TRADE_NAME)"
+BUSINESS_RFC="$(get_env BUSINESS_RFC)"
+BUSINESS_ADDRESS="$(get_env BUSINESS_ADDRESS)"
+SUPPORT_PHONE="$(get_env SUPPORT_PHONE)"
+SUPPORT_EMAIL="$(get_env SUPPORT_EMAIL)"
 
 case "${APP_ORIGIN}" in
   https://*example.com*|"") fail "APP_ORIGIN must be a real HTTPS production origin" ;;
@@ -75,6 +81,20 @@ pass "MFA encryption key is configured"
 case "${PRIVACY_EMAIL}" in
   *@*.*) pass "privacy notice identity and contact are configured" ;;
   *) fail "PRIVACY_EMAIL must be a valid contact email" ;;
+esac
+
+[ "${#BUSINESS_LEGAL_NAME}" -ge 3 ] || fail "BUSINESS_LEGAL_NAME is required"
+[ -n "${BUSINESS_TRADE_NAME}" ] || fail "BUSINESS_TRADE_NAME is required"
+case "${#BUSINESS_RFC}" in
+  12|13) ;;
+  *) fail "BUSINESS_RFC must contain a 12 or 13 character RFC" ;;
+esac
+[ "${#BUSINESS_ADDRESS}" -ge 10 ] || fail "BUSINESS_ADDRESS must contain a real physical contact address"
+SUPPORT_PHONE_DIGITS="$(printf '%s' "${SUPPORT_PHONE}" | tr -cd '0-9')"
+[ "${#SUPPORT_PHONE_DIGITS}" -ge 10 ] || fail "SUPPORT_PHONE must contain at least 10 digits"
+case "${SUPPORT_EMAIL}" in
+  *@*.*) pass "seller identity, RFC, address and support channels are configured" ;;
+  *) fail "SUPPORT_EMAIL must be a valid support email" ;;
 esac
 
 for key in   POSTGRES_ADMIN_USER   POSTGRES_ADMIN_PASSWORD   POSTGRES_RUNTIME_USER   POSTGRES_RUNTIME_PASSWORD   REDIS_PASSWORD   BACKUP_AGE_RECIPIENT   S3_ENDPOINT_URL   S3_BUCKET   S3_ACCESS_KEY_ID   S3_SECRET_ACCESS_KEY

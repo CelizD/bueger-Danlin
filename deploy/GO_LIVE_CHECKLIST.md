@@ -177,3 +177,13 @@ No abrir tráfico público hasta que:
 - [ ] Probar cancelación de pedido no pagado antes del corte.
 - [ ] Probar cancelación de pedido pagado antes del corte y reembolso.
 - [ ] Probar pago tardío después de expirar la reserva y verificar que no reactive el pedido.
+
+
+## Datos públicos del vendedor
+- [ ] `BUSINESS_LEGAL_NAME` contiene el nombre o razón social real del proveedor.
+- [ ] `BUSINESS_TRADE_NAME` contiene el nombre comercial visible.
+- [ ] `BUSINESS_RFC` contiene el RFC real del proveedor.
+- [ ] `BUSINESS_ADDRESS` contiene un domicilio físico real para aclaraciones/reclamaciones.
+- [ ] `SUPPORT_PHONE` es un número atendido.
+- [ ] `SUPPORT_EMAIL` es un correo atendido.
+- [ ] Verificar los datos en checkout, footer, `/terminos` y `/pedido/:orderCode`.

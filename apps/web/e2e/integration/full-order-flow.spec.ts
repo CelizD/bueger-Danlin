@@ -55,6 +55,12 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     .getByLabel("Correo (opcional)")
     .fill("cliente.e2e@example.test");
 
+  await expect(
+    page.getByLabel(
+      "Datos del vendedor y soporte",
+    ),
+  ).toBeVisible();
+
   const continueButton = page.getByRole("button", {
     name: "Continuar al pago",
   });

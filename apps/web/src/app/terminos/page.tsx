@@ -1,4 +1,5 @@
-import { getPublicPrivacyConfig } from "@/features/privacy/privacy-config";
+import { SiteFooter } from "@/components/site-footer";
+import { getPublicSellerConfig } from "@/features/seller/seller-config";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -12,9 +13,10 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   const business =
-    getPublicPrivacyConfig();
+    getPublicSellerConfig();
 
   return (
+    <>
     <main className="privacy-page">
       <header className="privacy-hero">
         <Link
@@ -30,7 +32,7 @@ export default function TermsPage() {
           Términos y Condiciones
         </h1>
         <p>
-          Versión 2026-09-29-v1 ·
+          Versión 2026-09-29-v2 ·
           Actualizado el 29 de septiembre
           de 2026.
         </p>
@@ -55,22 +57,38 @@ export default function TermsPage() {
             Las ventas realizadas mediante
             este sitio corresponden a{" "}
             <strong>
-              {business.responsible}
+              {business.legalName}
             </strong>
             , con domicilio de contacto en{" "}
             <strong>
               {business.address}
             </strong>
+            . Nombre comercial:{" "}
+            <strong>{business.tradeName}</strong>.
+            RFC:{" "}
+            <strong>{business.rfc}</strong>.
+            Teléfono de soporte:{" "}
+            <a
+              href={
+                "tel:" +
+                business.supportPhone.replace(
+                  /[^\d+]/g,
+                  "",
+                )
+              }
+            >
+              {business.supportPhone}
+            </a>
             . Para aclaraciones relacionadas
             con estos términos puedes escribir
             a{" "}
             <a
               href={
                 "mailto:" +
-                business.email
+                business.supportEmail
               }
             >
-              {business.email}
+              {business.supportEmail}
             </a>
             .
           </p>
@@ -326,5 +344,7 @@ export default function TermsPage() {
         </section>
       </article>
     </main>
+    <SiteFooter seller={business} />
+    </>
   );
 }

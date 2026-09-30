@@ -49,6 +49,25 @@ test("cliente crea pedido, paga y obtiene QR", async ({
       "Aviso de privacidad simplificado",
     ),
   ).toBeVisible();
+
+  const sellerDisclosure =
+    page.getByLabel(
+      "Datos del vendedor y soporte",
+    );
+  await expect(
+    sellerDisclosure,
+  ).toBeVisible();
+  await expect(
+    sellerDisclosure.getByText(
+      "Información del vendedor",
+    ),
+  ).toBeVisible();
+  await expect(
+    sellerDisclosure.getByText(
+      "RFC",
+      { exact: true },
+    ),
+  ).toBeVisible();
   await expect(
     page.getByRole("link", {
       name: "Aviso de Privacidad integral",
@@ -148,6 +167,9 @@ test("cliente crea pedido, paga y obtiene QR", async ({
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Abrir ubicación exacta" }),
+  ).toBeVisible();
+  await expect(
+    page.locator(".site-footer"),
   ).toBeVisible();
 });
 
