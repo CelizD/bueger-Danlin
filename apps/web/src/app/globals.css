@@ -6099,3 +6099,126 @@ textarea:focus-visible,
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+
+.seller-disclosure {
+  display: grid;
+  gap: 14px;
+  margin: 24px 0;
+  padding: 18px;
+  border: 1px solid #d9d2c7;
+  border-radius: 16px;
+  background: #fbfaf7;
+}
+
+.seller-disclosure h2 {
+  margin: 5px 0 0;
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}
+
+.seller-disclosure dl {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+}
+
+.seller-disclosure dl > div {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.seller-disclosure dt {
+  color: #81796e;
+  font-size: 10px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.seller-disclosure dd {
+  margin: 0;
+  color: #3c3731;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.seller-disclosure > p {
+  margin: 0;
+  color: #625b52;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.seller-disclosure a,
+.site-footer a {
+  color: #4f6f46;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-footer {
+  width: min(1120px, calc(100% - 32px));
+  margin: 18px auto 36px;
+  padding: 22px;
+  border: 1px solid #ded8ce;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.site-footer-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1.3fr)
+    minmax(160px, 0.7fr);
+  gap: 22px;
+}
+
+.site-footer section,
+.site-footer nav {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+}
+
+.site-footer p,
+.site-footer small {
+  margin: 0;
+  color: #625b52;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.site-footer-brand {
+  color: #29251f !important;
+  font-size: 13px !important;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.site-footer-links {
+  gap: 10px !important;
+}
+
+.site-footer-warning {
+  margin-top: 16px !important;
+  padding-top: 14px;
+  border-top: 1px dashed #d5cdc1;
+  color: #8a3e2d !important;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .site-footer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .seller-disclosure dl > div {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+}
