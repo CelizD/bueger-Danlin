@@ -125,6 +125,7 @@ export type CheckoutResult = {
 export type CreateOrderInput = {
   pickupEventId: string;
   purchaseTermsAccepted: boolean;
+  ageAuthorizationConfirmed: boolean;
   groupDeliveryTermsAccepted: boolean;
   customer: {
     name: string;
