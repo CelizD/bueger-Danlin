@@ -49,7 +49,7 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     page.getByRole("link", { name: "Abrir ubicación exacta" }),
   ).toBeVisible();
 
-  await page.getByLabel("Nombre *").fill("Cliente E2E");
+  await page.getByLabel("Nombre *").fill("Cliente Prueba");
   await page.getByLabel("Teléfono *").fill("6641234567");
   await page
     .getByLabel("Correo (opcional)")
