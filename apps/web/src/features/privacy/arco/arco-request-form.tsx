@@ -166,11 +166,15 @@ export function ArcoRequestForm() {
         </p>
         <p>
           La determinación se
-          comunicará dentro del plazo
-          legal aplicable. Si el
-          derecho procede, se hará
-          efectivo dentro del plazo
-          correspondiente.
+          comunicará en un máximo de
+          20 días desde la recepción.
+          Si el derecho procede, se
+          hará efectivo dentro de los
+          15 días siguientes a la
+          comunicación, sin perjuicio
+          de la ampliación permitida
+          por la ley cuando esté
+          justificada.
         </p>
       </section>
     );
