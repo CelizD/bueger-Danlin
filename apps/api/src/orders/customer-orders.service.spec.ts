@@ -151,6 +151,37 @@ describe("CustomerOrdersService.getOrder", () => {
     });
   });
 
+  it("protege el comprobante con el token privado del pedido", async () => {
+    const prisma = {
+      order: {
+        findUnique: vi
+          .fn()
+          .mockResolvedValue({
+            id: "order-1",
+            orderCode:
+              "H-A1B2C3D4",
+            verificationTokenHash:
+              TOKEN_HASH,
+          }),
+      },
+    } as unknown as PrismaService;
+
+    const service =
+      new CustomerOrdersService(
+        prisma,
+        {} as InventoryService,
+      );
+
+    await expect(
+      service.getReceipt(
+        "H-A1B2C3D4",
+        "token-incorrecto",
+      ),
+    ).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+  });
+
   it("devuelve el cargo final congelado después del cierre", async () => {
     const finalizedAt = new Date("2026-10-03T04:00:00.000Z");
     const prisma = {
