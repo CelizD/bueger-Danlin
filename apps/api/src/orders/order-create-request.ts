@@ -1,5 +1,6 @@
 import { BadRequestException } from "@nestjs/common";
 import { createHash } from "node:crypto";
+import { containsForbiddenDisplayLanguage } from "../common/text-moderation.js";
 import type { CreateOrderDto } from "./dto/create-order.dto.js";
 
 export type NormalizedCreateOrderRequest = {
@@ -53,13 +54,27 @@ export function prepareCreateOrderRequest(
     );
   }
 
+  const customerName = dto.customer.name.trim();
+
+  if (customerName.length < 2) {
+    throw new BadRequestException(
+      "El nombre debe tener al menos 2 caracteres.",
+    );
+  }
+
+  if (containsForbiddenDisplayLanguage(customerName)) {
+    throw new BadRequestException(
+      "El nombre contiene lenguaje no permitido.",
+    );
+  }
+
   const normalizedRequest: NormalizedCreateOrderRequest = {
     pickupEventId: dto.pickupEventId,
     purchaseTermsAccepted: true,
     ageAuthorizationConfirmed: true,
     groupDeliveryTermsAccepted: true,
     customer: {
-      name: dto.customer.name.trim(),
+      name: customerName,
       phone: dto.customer.phone,
       email:
         dto.customer.email?.trim().toLowerCase() ?? null,
