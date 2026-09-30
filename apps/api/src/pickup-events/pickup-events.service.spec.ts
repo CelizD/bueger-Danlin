@@ -24,9 +24,9 @@ describe("PickupEventsService", () => {
               id: "point-1",
               code: "UNIVERSIDAD",
               name: "Universidad",
-              address: null,
-              latitude: null,
-              longitude: null,
+              address: "Entrada principal",
+              latitude: 32.5149,
+              longitude: -117.0382,
               active: true,
             },
             orders: [
@@ -66,6 +66,18 @@ describe("PickupEventsService", () => {
     const service = new PickupEventsService(prisma);
     const [event] = await service.getOpen();
 
+    expect(prisma.pickupEvent.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          pickupPoint: expect.objectContaining({
+            active: true,
+            address: { not: null },
+            latitude: { not: null },
+            longitude: { not: null },
+          }),
+        }),
+      }),
+    );
     expect(event?.reservedCombos).toBe(4);
     expect(event?.groupDelivery).toEqual({
       minPaidCombos: 5,
@@ -98,9 +110,9 @@ describe("PickupEventsService", () => {
               id: "point-2",
               code: "CUCAPA",
               name: "Cucapá",
-              address: null,
-              latitude: null,
-              longitude: null,
+              address: "Entrada principal",
+              latitude: 32.5149,
+              longitude: -117.0382,
               active: true,
             },
             orders: [],

@@ -19,6 +19,7 @@ export class UpdatePickupEventDto {
 
   @IsOptional()
   @IsString()
+  @MinLength(5)
   @MaxLength(220)
   locationAddress?: string;
 

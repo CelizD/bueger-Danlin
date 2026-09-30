@@ -42,8 +42,8 @@ const pickupEvents: PickupEvent[] = [
       code: "UNIVERSIDAD",
       name: "Universidad",
       address: "Entrada principal",
-      latitude: null,
-      longitude: null,
+      latitude: 32.5149,
+      longitude: -117.0382,
     },
     timezone: "America/Tijuana",
     startsAt: "2026-10-03T17:00:00.000Z",
@@ -70,9 +70,9 @@ const pickupEvents: PickupEvent[] = [
       id: "point-cucapa",
       code: "CUCAPA",
       name: "Cucapá",
-      address: null,
-      latitude: null,
-      longitude: null,
+      address: "Punto Cucapá",
+      latitude: 32.4906,
+      longitude: -116.9369,
     },
     timezone: "America/Tijuana",
     startsAt: "2026-10-03T19:00:00.000Z",
@@ -177,6 +177,8 @@ describe("ordering components", () => {
     expect(html).toContain("3 de 5 combos pagados");
     expect(html).toContain("Envío gratis desbloqueado");
     expect(html).toContain("Punto seleccionado");
+    expect(html).toContain("Abrir ubicación exacta");
+    expect(html).toContain("google.com/maps/search");
   });
 
   it("deshabilita agregar combo al alcanzar la capacidad disponible", () => {

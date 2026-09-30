@@ -146,6 +146,8 @@ export class CustomerOrdersService {
           code: order.pickupEvent.pickupPoint.code,
           name: order.pickupEvent.pickupPoint.name,
           address: order.pickupEvent.pickupPoint.address,
+          latitude: order.pickupEvent.pickupPoint.latitude,
+          longitude: order.pickupEvent.pickupPoint.longitude,
         },
       },
       groupDelivery: {

@@ -99,8 +99,10 @@ export function SaturdayEventForm({
         </label>
 
         <label className="saturday-full-field">
-          <span>Dirección del punto (opcional)</span>
+          <span>Dirección exacta del punto</span>
           <input
+            required
+            minLength={5}
             maxLength={220}
             value={form.locationAddress}
             onChange={(event) =>
@@ -114,8 +116,9 @@ export function SaturdayEventForm({
         </label>
 
         <label>
-          <span>Latitud (opcional)</span>
+          <span>Latitud exacta</span>
           <input
+            required
             type="number"
             min="-90"
             max="90"
@@ -132,8 +135,9 @@ export function SaturdayEventForm({
         </label>
 
         <label>
-          <span>Longitud (opcional)</span>
+          <span>Longitud exacta</span>
           <input
+            required
             type="number"
             min="-180"
             max="180"
@@ -279,6 +283,11 @@ export function SaturdayEventForm({
             La meta de envío gratis y el costo de traslado están bloqueados porque esta entrega ya tiene pedidos.
           </div>
         )}
+
+        <div className="saturday-form-note">
+          La dirección, latitud y longitud son obligatorias para que el cliente
+          reciba el punto exacto de entrega.
+        </div>
 
         <div className="saturday-form-note">
           La meta de envío gratis nunca puede ser mayor al límite de combos.

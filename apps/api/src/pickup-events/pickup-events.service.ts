@@ -27,6 +27,9 @@ export class PickupEventsService {
         closesAt: { gt: now },
         pickupPoint: {
           active: true,
+          address: { not: null },
+          latitude: { not: null },
+          longitude: { not: null },
         },
       },
       include: {

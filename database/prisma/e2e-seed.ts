@@ -107,6 +107,8 @@ async function main() {
       code: "UNIVERSIDAD-E2E",
       name: "Universidad",
       address: "Punto de entrega E2E",
+      latitude: 32.5149,
+      longitude: -117.0382,
       active: true,
     },
   });

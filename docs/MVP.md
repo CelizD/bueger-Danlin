@@ -34,3 +34,10 @@ Permitida antes del cierre. Después del cierre no hay cancelación automática.
 - Pedidos cancelados o reembolsados no cuentan para la meta.
 - Si se alcanza la meta de combos, el envío queda gratis.
 - Si no se alcanza, el costo de traslado se divide entre los pedidos pagados y se cobra al entregar.
+
+
+## Ubicación de entrega
+- Todo punto nuevo debe tener nombre, dirección exacta, latitud y longitud.
+- Un punto heredado sin ubicación completa no puede abrir pedidos hasta corregirse.
+- Los puntos incompletos no se muestran a clientes.
+- El cliente puede abrir el pin exacto desde la selección del punto y desde su pedido.

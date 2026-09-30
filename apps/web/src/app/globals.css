@@ -2982,6 +2982,26 @@ h2 {
   white-space: nowrap;
 }
 
+.customer-order-summary small,
+.customer-order-map-link {
+  grid-column: 2;
+  margin-top: 4px;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.customer-order-summary small {
+  color: #756e64;
+}
+
+.customer-order-map-link {
+  width: fit-content;
+  color: #4f6f46;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .customer-order-items {
   margin-top: 26px;
 }
@@ -4863,6 +4883,19 @@ textarea:focus-visible,
 
 .pickup-address {
   margin: -6px 0 0;
+}
+
+.pickup-map-link {
+  width: fit-content;
+  color: #4f6f46;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.pickup-map-link:hover {
+  color: #31502d;
 }
 
 .pickup-selected-badge {

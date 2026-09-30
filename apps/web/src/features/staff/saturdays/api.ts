@@ -103,18 +103,10 @@ export async function saveAdminPickupEvent(
     Math.round(
       transportCostMx * 100,
     );
-  const latitude =
-    form.latitude.trim() === ""
-      ? null
-      : Number(form.latitude);
-  const longitude =
-    form.longitude.trim() === ""
-      ? null
-      : Number(form.longitude);
-  const hasLatitude =
-    latitude !== null;
-  const hasLongitude =
-    longitude !== null;
+  const locationAddress =
+    form.locationAddress.trim();
+  const latitude = Number(form.latitude);
+  const longitude = Number(form.longitude);
 
   if (
     Number.isNaN(
@@ -135,10 +127,19 @@ export async function saveAdminPickupEvent(
       transportCostMx,
     ) ||
     transportCostMx < 0 ||
-    transportCostCents > 100000
+    transportCostCents > 100000 ||
+    locationAddress.length < 5 ||
+    form.latitude.trim() === "" ||
+    form.longitude.trim() === "" ||
+    !Number.isFinite(latitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    !Number.isFinite(longitude) ||
+    longitude < -180 ||
+    longitude > 180
   ) {
     throw new Error(
-      "Revisa fechas, límite de combos, meta de envío gratis y costo de traslado.",
+      "Revisa fechas, límite de combos, meta de envío gratis, costo de traslado y ubicación exacta.",
     );
   }
 
@@ -151,21 +152,6 @@ export async function saveAdminPickupEvent(
     );
   }
 
-  if (
-    hasLatitude !== hasLongitude ||
-    (latitude !== null &&
-      (!Number.isFinite(latitude) ||
-        latitude < -90 ||
-        latitude > 90)) ||
-    (longitude !== null &&
-      (!Number.isFinite(longitude) ||
-        longitude < -180 ||
-        longitude > 180))
-  ) {
-    throw new Error(
-      "Ingresa latitud y longitud válidas juntas, o deja ambas vacías.",
-    );
-  }
 
   const response = await apiFetch(
     editingId
@@ -186,8 +172,7 @@ export async function saveAdminPickupEvent(
       body: JSON.stringify({
         locationLabel:
           form.locationLabel.trim(),
-        locationAddress:
-          form.locationAddress.trim(),
+        locationAddress,
         latitude,
         longitude,
         freeDeliveryMinPaidCombos,

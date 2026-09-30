@@ -15,10 +15,39 @@ export const GROUP_EXCLUDED_STATUSES = [
 
 export type PickupPointInput = {
   locationLabel: string;
-  locationAddress?: string;
-  latitude?: number | null;
-  longitude?: number | null;
+  locationAddress: string;
+  latitude: number;
+  longitude: number;
 };
+
+export function assertExactPickupLocation(
+  address: string | null | undefined,
+  latitude: number | null | undefined,
+  longitude: number | null | undefined,
+) {
+  const normalizedAddress = address?.trim() ?? "";
+
+  if (normalizedAddress.length < 5) {
+    throw new BadRequestException(
+      "La dirección exacta del punto de entrega es obligatoria.",
+    );
+  }
+
+  if (
+    latitude == null ||
+    longitude == null ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    longitude < -180 ||
+    longitude > 180
+  ) {
+    throw new BadRequestException(
+      "La latitud y longitud exactas del punto de entrega son obligatorias.",
+    );
+  }
+}
 
 export function assertPickupEventDates(
   startsAt: Date,

@@ -33,9 +33,9 @@ function event() {
       id: "point-1",
       code: "UNIVERSIDAD",
       name: "Universidad",
-      address: null,
-      latitude: null,
-      longitude: null,
+      address: "Entrada principal, Universidad",
+      latitude: 32.5149,
+      longitude: -117.0382,
       active: true,
     },
   };
@@ -87,6 +87,9 @@ describe("group delivery capacity", () => {
         prisma,
         {
           locationLabel: "Universidad",
+          locationAddress: "Entrada principal, Universidad",
+          latitude: 32.5149,
+          longitude: -117.0382,
           startsAt:
             "2030-09-07T17:00:00.000Z",
           closesAt:
@@ -182,6 +185,56 @@ describe("group delivery capacity", () => {
     expect(
       tx.pickupEvent.update,
     ).not.toHaveBeenCalled();
+  });
+});
+
+describe("exact pickup location", () => {
+  it("no abre una entrega heredada sin dirección y coordenadas", async () => {
+    const incompleteEvent = {
+      ...event(),
+      pickupPoint: {
+        ...event().pickupPoint,
+        address: null,
+        latitude: null,
+        longitude: null,
+      },
+    };
+    const tx = {
+      pickupEvent: {
+        findUnique: vi
+          .fn()
+          .mockResolvedValue(incompleteEvent),
+        update: vi.fn(),
+      },
+      order: {
+        aggregate: vi.fn(),
+      },
+      auditLog: {
+        create: vi.fn(),
+      },
+    };
+    const prisma = {
+      $transaction: vi.fn(
+        async (
+          callback: (
+            transaction: typeof tx,
+          ) => unknown,
+        ) => callback(tx),
+      ),
+    } as unknown as PrismaService;
+
+    await expect(
+      openAdminPickupEvent(
+        prisma,
+        "event-1",
+        "admin-1",
+      ),
+    ).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+
+    expect(tx.order.aggregate).not.toHaveBeenCalled();
+    expect(tx.pickupEvent.update).not.toHaveBeenCalled();
   });
 });
 

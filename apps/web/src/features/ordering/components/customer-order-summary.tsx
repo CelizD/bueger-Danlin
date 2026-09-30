@@ -11,6 +11,18 @@ export function CustomerOrderSummary({
 }: {
   order: CustomerOrder;
 }) {
+  const latitude =
+    order.pickup.pickupPoint.latitude;
+  const longitude =
+    order.pickup.pickupPoint.longitude;
+  const locationUrl =
+    latitude == null || longitude == null
+      ? null
+      : "https://www.google.com/maps/search/?api=1&query=" +
+        encodeURIComponent(
+          latitude + "," + longitude,
+        );
+
   return (
     <section className="customer-order-summary">
       <article>
@@ -62,6 +74,16 @@ export function CustomerOrderSummary({
                 .pickupPoint.address
             }
           </small>
+        )}
+        {locationUrl && (
+          <a
+            className="customer-order-map-link"
+            href={locationUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Abrir ubicación exacta
+          </a>
         )}
       </article>
     </section>

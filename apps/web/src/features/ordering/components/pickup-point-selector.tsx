@@ -17,6 +17,24 @@ function deliveryDate(event: PickupEvent) {
   }).format(new Date(event.startsAt));
 }
 
+function exactLocationUrl(event: PickupEvent) {
+  const { latitude, longitude } =
+    event.pickupPoint;
+
+  if (latitude == null || longitude == null) {
+    return null;
+  }
+
+  const query = encodeURIComponent(
+    latitude + "," + longitude,
+  );
+
+  return (
+    "https://www.google.com/maps/search/?api=1&query=" +
+    query
+  );
+}
+
 function progressIcons(event: PickupEvent) {
   const goal = Math.min(
     Math.max(event.groupDelivery.minPaidCombos, 1),
@@ -60,6 +78,8 @@ export function PickupPointSelector({
           const selected = selectedEventId === event.id;
           const soldOut = event.status === "SOLD_OUT";
           const group = event.groupDelivery;
+          const locationUrl =
+            exactLocationUrl(event);
 
           return (
             <article
@@ -80,6 +100,17 @@ export function PickupPointSelector({
 
               {event.pickupPoint.address && (
                 <p className="pickup-address">{event.pickupPoint.address}</p>
+              )}
+
+              {locationUrl && (
+                <a
+                  className="pickup-map-link"
+                  href={locationUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Abrir ubicación exacta
+                </a>
               )}
 
               <div className="pickup-group-progress" aria-label={`${group.paidComboCount} de ${group.minPaidCombos} combos pagados`}>
