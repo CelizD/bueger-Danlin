@@ -4,6 +4,7 @@ import type { CreateOrderDto } from "./dto/create-order.dto.js";
 
 export type NormalizedCreateOrderRequest = {
   pickupEventId: string;
+  purchaseTermsAccepted: true;
   groupDeliveryTermsAccepted: true;
   customer: {
     name: string;
@@ -33,6 +34,12 @@ export function prepareCreateOrderRequest(
     );
   }
 
+  if (dto.purchaseTermsAccepted !== true) {
+    throw new BadRequestException(
+      "Debes aceptar los términos y condiciones de compra antes de continuar.",
+    );
+  }
+
   if (dto.groupDeliveryTermsAccepted !== true) {
     throw new BadRequestException(
       "Debes aceptar las condiciones de entrega grupal antes de continuar.",
@@ -41,6 +48,7 @@ export function prepareCreateOrderRequest(
 
   const normalizedRequest: NormalizedCreateOrderRequest = {
     pickupEventId: dto.pickupEventId,
+    purchaseTermsAccepted: true,
     groupDeliveryTermsAccepted: true,
     customer: {
       name: dto.customer.name.trim(),
