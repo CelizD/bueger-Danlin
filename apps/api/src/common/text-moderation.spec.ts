@@ -8,7 +8,7 @@ describe("containsForbiddenDisplayLanguage", () => {
     "p.u.t.o",
     "p-u-t-o",
     "puuuuto",
-    "p4t4",
+    "p.u.t.4",
     "p3nd3j0",
     "m!erda",
     "c a b r o n",
