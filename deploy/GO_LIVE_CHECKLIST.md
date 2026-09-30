@@ -195,3 +195,12 @@ No abrir tráfico público hasta que:
 - [ ] Confirmar que el total del pedido y el posible traslado en efectivo aparecen separados.
 - [ ] Confirmar que un pedido entregado o reembolsado todavía permite descargar el comprobante.
 - [ ] Confirmar que el endpoint de comprobante rechaza solicitudes sin `X-Order-Token` válido.
+
+
+## Menores de edad
+- [ ] Confirmar que el checkout muestra el aviso para menores de edad antes del pago.
+- [ ] Confirmar que el botón de continuar permanece deshabilitado hasta aceptar la confirmación de edad/autorización.
+- [ ] Confirmar que el API rechaza `ageAuthorizationConfirmed=false`.
+- [ ] Confirmar que el pedido guarda `ageAuthorizationConfirmedAt` y `ageAuthorizationVersion`.
+- [ ] Abrir `/privacidad` y verificar la sección de menores de edad.
+- [ ] Abrir `/terminos` y verificar la condición aplicable a menores.
