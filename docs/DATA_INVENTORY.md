@@ -1,6 +1,6 @@
 # Inventario de Datos — Burger Danlin
 
-Fecha: 2026-09-27
+Fecha: 2026-09-30
 
 ## 1. Objetivo
 
