@@ -179,6 +179,16 @@ export function OrderConfirmation({
           </a>
         </div>
 
+        <p className="legal-links">
+          <a href="/terminos">
+            Términos y Condiciones
+          </a>
+          {" · "}
+          <a href="/privacidad">
+            Aviso de Privacidad
+          </a>
+        </p>
+
         <p className="technical-note">
           Estado: {order.status} · Pago: {order.paymentStatus}
           {!isCancelled && (
