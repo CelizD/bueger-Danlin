@@ -8,6 +8,7 @@ import { CreatePickupEventDto } from "./dto/create-pickup-event.dto.js";
 import { UpdatePickupEventDto } from "./dto/update-pickup-event.dto.js";
 import { ensureAdminPickupPoint } from "./admin-pickup-point.js";
 import {
+  assertExactPickupLocation,
   assertGroupDeliveryCapacity,
   assertPickupEventDates,
   assertPickupEventSaturday,
@@ -26,6 +27,11 @@ export async function createAdminPickupEvent(
 
   assertPickupEventDates(startsAt, closesAt);
   assertPickupEventSaturday(startsAt);
+  assertExactPickupLocation(
+    dto.locationAddress,
+    dto.latitude,
+    dto.longitude,
+  );
 
   if (startsAt <= new Date()) {
     throw new BadRequestException(
@@ -235,6 +241,25 @@ export async function updateAdminPickupEvent(
       );
     }
 
+    const nextLocationAddress =
+      dto.locationAddress !== undefined
+        ? dto.locationAddress.trim()
+        : event.pickupPoint.address;
+    const nextLatitude =
+      dto.latitude !== undefined
+        ? dto.latitude
+        : event.pickupPoint.latitude;
+    const nextLongitude =
+      dto.longitude !== undefined
+        ? dto.longitude
+        : event.pickupPoint.longitude;
+
+    assertExactPickupLocation(
+      nextLocationAddress,
+      nextLatitude,
+      nextLongitude,
+    );
+
     let pickupPoint = event.pickupPoint;
 
     if (
@@ -244,9 +269,9 @@ export async function updateAdminPickupEvent(
     ) {
       pickupPoint = await ensureAdminPickupPoint(tx, {
         locationLabel: dto.locationLabel,
-        locationAddress: dto.locationAddress,
-        latitude: dto.latitude,
-        longitude: dto.longitude,
+        locationAddress: nextLocationAddress!,
+        latitude: nextLatitude!,
+        longitude: nextLongitude!,
       });
     } else if (
       dto.locationAddress !== undefined ||
@@ -258,12 +283,9 @@ export async function updateAdminPickupEvent(
           id: event.pickupPointId,
         },
         data: {
-          address:
-            dto.locationAddress !== undefined
-              ? dto.locationAddress.trim() || null
-              : undefined,
-          latitude: dto.latitude,
-          longitude: dto.longitude,
+          address: nextLocationAddress,
+          latitude: nextLatitude,
+          longitude: nextLongitude,
         },
       });
     }
@@ -389,6 +411,9 @@ export async function openAdminPickupEvent(
   return prisma.$transaction(async (tx) => {
     const event = await tx.pickupEvent.findUnique({
       where: { id },
+      include: {
+        pickupPoint: true,
+      },
     });
 
     if (!event) {
@@ -417,6 +442,12 @@ export async function openAdminPickupEvent(
         "No puedes abrir una entrega cuya fecha de cierre o entrega ya pasó.",
       );
     }
+
+    assertExactPickupLocation(
+      event.pickupPoint.address,
+      event.pickupPoint.latitude,
+      event.pickupPoint.longitude,
+    );
 
     assertGroupDeliveryCapacity(
       event.maxCombos,
