@@ -113,6 +113,7 @@ function orderDto(eventId: string, productId: string, phone: string) {
   return {
     pickupEventId: eventId,
     purchaseTermsAccepted: true,
+    ageAuthorizationConfirmed: true,
     groupDeliveryTermsAccepted: true,
     customer: {
       name: "Cliente prueba",
@@ -203,6 +204,8 @@ describe("OrdersService concurrency", () => {
         id: true,
         purchaseTermsAcceptedAt: true,
         purchaseTermsVersion: true,
+        ageAuthorizationConfirmedAt: true,
+        ageAuthorizationVersion: true,
       },
     });
 
@@ -211,7 +214,13 @@ describe("OrdersService concurrency", () => {
     ).toBeInstanceOf(Date);
     expect(
       createdOrder.purchaseTermsVersion,
-    ).toBe("2026-09-29-v2");
+    ).toBe("2026-09-30-v3");
+    expect(
+      createdOrder.ageAuthorizationConfirmedAt,
+    ).toBeInstanceOf(Date);
+    expect(
+      createdOrder.ageAuthorizationVersion,
+    ).toBe("2026-09-30-v1");
     const audit = await prisma.auditLog.findFirst({
       where: {
         action: "ORDER_CREATED",
