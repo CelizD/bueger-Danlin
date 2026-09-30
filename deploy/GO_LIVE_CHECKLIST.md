@@ -187,3 +187,11 @@ No abrir tráfico público hasta que:
 - [ ] `SUPPORT_PHONE` es un número atendido.
 - [ ] `SUPPORT_EMAIL` es un correo atendido.
 - [ ] Verificar los datos en checkout, footer, `/terminos` y `/pedido/:orderCode`.
+
+
+## Comprobante de compra
+- [ ] Abrir un pedido desde `Administrar mi pedido` y descargar `comprobante-<folio>.pdf`.
+- [ ] Confirmar que el PDF muestra identidad/RFC/domicilio/soporte del vendedor.
+- [ ] Confirmar que el total del pedido y el posible traslado en efectivo aparecen separados.
+- [ ] Confirmar que un pedido entregado o reembolsado todavía permite descargar el comprobante.
+- [ ] Confirmar que el endpoint de comprobante rechaza solicitudes sin `X-Order-Token` válido.
