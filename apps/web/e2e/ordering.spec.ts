@@ -24,6 +24,9 @@ test("cliente crea pedido, paga y obtiene QR", async ({
 
   await expect(page.getByText("3 de 5 combos pagados")).toBeVisible();
   await expect(page.getByText("4 de 5 combos pagados")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Abrir ubicación exacta" }).first(),
+  ).toBeVisible();
 
   await page
     .getByRole("button", {
@@ -115,6 +118,9 @@ test("cliente crea pedido, paga y obtiene QR", async ({
   ).toBeVisible();
   await expect(
     page.getByText("4 de 5 combos pagados"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Abrir ubicación exacta" }),
   ).toBeVisible();
 });
 
