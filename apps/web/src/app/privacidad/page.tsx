@@ -1,4 +1,6 @@
+import { SiteFooter } from "@/components/site-footer";
 import { getPublicPrivacyConfig } from "@/features/privacy/privacy-config";
+import { getPublicSellerConfig } from "@/features/seller/seller-config";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -13,8 +15,11 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   const privacy =
     getPublicPrivacyConfig();
+  const seller =
+    getPublicSellerConfig();
 
   return (
+    <>
     <main className="privacy-page">
       <header className="privacy-hero">
         <Link
@@ -353,5 +358,7 @@ export default function PrivacyPage() {
         </section>
       </article>
     </main>
+    <SiteFooter seller={seller} />
+    </>
   );
 }
