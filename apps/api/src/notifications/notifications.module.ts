@@ -16,6 +16,7 @@ import { TelegramNotificationService } from "./telegram-notification.service.js"
     TelegramNotificationService,
     GroupTelegramNotificationService,
     PurchaseEmailService,
+    SmtpMailTransport,
   ],
 })
 export class NotificationsModule {}
