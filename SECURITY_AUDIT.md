@@ -1,8 +1,11 @@
 # Auditoría de seguridad — Burger Danlin
 
-Fecha de actualización: 2026-09-27
+Fecha de actualización: 2026-09-30
 
 Base de evaluación: controles del documento interno **"Ciberseguridad para diseñar un SaaS seguro"**, complementados con el estado real del repositorio y los workflows actuales.
+
+> **Nota de vigencia:** esta auditoría conserva hallazgos históricos y controles de madurez. Para decidir qué falta para el MVP actual, usar primero `docs/MVP_FINAL_STATUS.md` y `deploy/GO_LIVE_CHECKLIST.md`. El código de pagos, privacidad, ARCO, retención y supply chain avanzó después de la primera versión de esta auditoría.
+
 
 Leyenda:
 
@@ -149,12 +152,18 @@ Estado actual:
 - producción puede arrancar con pagos reales deshabilitados;
 - ninguna credencial por sí sola habilita tráfico externo.
 
+Implementado adicionalmente:
+
+- refund total real e idempotente de Mercado Pago;
+- protección ante pagos tardíos después de expirar/cerrar reserva;
+- flujo administrativo para identificar y resolver/reembolsar esos casos.
+
 Pendiente antes de habilitar pagos reales:
 
-1. refund real;
-2. sandbox end-to-end;
-3. revisión de política operativa de expiración/refund;
-4. prueba de reconciliación real con credenciales sandbox;
+1. sandbox/end-to-end con credenciales reales del entorno permitido;
+2. prueba de webhook/reintentos/idempotencia contra Mercado Pago;
+3. prueba de pago fallido;
+4. prueba real de cancelación/refund;
 5. activar `ENABLE_REAL_PAYMENTS=true` únicamente después de validar todo lo anterior.
 
 ## Controles fuertes actuales
