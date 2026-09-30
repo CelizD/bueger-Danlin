@@ -104,7 +104,7 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | Alertas | 🟡 | Reglas Prometheus para API, DB, 5xx, p95, inventario, memoria y disco; falta canal de notificaciones/Alertmanager y validación real |
 | Runbooks de incidentes | 🔴 | Falta account takeover, secret leak, DB exposure, dependency compromise, DDoS |
 | Política de retención | 🟡 | Cleanup/anonimización y purga de AuditLog implementados con dry-run, kill switch, tests y timer preparado; faltan legal hold, logs centralizados, validación offsite y revisión legal/fiscal |
-| Privacy inventory/notice | 🟡 | Inventario técnico documentado; falta aviso de privacidad legal/final y validación de plazos regulatorios |
+| Privacy inventory/notice | 🟡 | Inventario técnico + aviso integral /privacidad + aviso simplificado en checkout implementados; producción exige identidad, domicilio y correo ARCO. Falta validación legal/fiscal final de plazos de retención |
 | Incident contacts | 🔴 | No definidos |
 | ASVS baseline | 🔴 | No existe matriz verificable |
 | SSRF controls | 🔵 | No existe fetch arbitrario de URLs |

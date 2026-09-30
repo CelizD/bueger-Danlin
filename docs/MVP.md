@@ -41,3 +41,12 @@ Permitida antes del cierre. Después del cierre no hay cancelación automática.
 - Un punto heredado sin ubicación completa no puede abrir pedidos hasta corregirse.
 - Los puntos incompletos no se muestran a clientes.
 - El cliente puede abrir el pin exacto desde la selección del punto y desde su pedido.
+
+
+## Privacidad
+- El checkout muestra un aviso de privacidad simplificado antes de enviar datos personales.
+- El aviso integral está disponible en `/privacidad`.
+- El aviso cubre nombre, teléfono, correo opcional, datos del pedido, pago y datos técnicos de seguridad.
+- El flujo actual no usa los datos del pedido para marketing directo.
+- En producción son obligatorios `PRIVACY_RESPONSIBLE`, `PRIVACY_ADDRESS` y `PRIVACY_EMAIL`.
+- El go-live check impide lanzar si faltan identidad, domicilio o correo de privacidad/ARCO.

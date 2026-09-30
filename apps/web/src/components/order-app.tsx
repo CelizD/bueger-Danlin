@@ -3,6 +3,7 @@
 import { OrderingForm } from "@/features/ordering/components/ordering-form";
 import { useOrderCheckout } from "@/features/ordering/use-order-checkout";
 import { useOrderingSession } from "@/features/ordering/use-ordering-session";
+import type { PublicPrivacyConfig } from "@/features/privacy/types";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 
@@ -29,7 +30,11 @@ const OrderConfirmation = dynamic(
   },
 );
 
-export function OrderApp() {
+export function OrderApp({
+  privacy,
+}: {
+  privacy: PublicPrivacyConfig;
+}) {
   const [error, setError] =
     useState("");
 
@@ -86,6 +91,7 @@ export function OrderApp() {
 
   return (
     <OrderingForm
+      privacy={privacy}
       events={ordering.events}
       event={ordering.event}
       combo={ordering.combo}

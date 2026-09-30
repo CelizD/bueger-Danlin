@@ -44,6 +44,20 @@ test("cliente crea pedido, paga y obtiene QR", async ({
     .getByLabel("Correo (opcional)")
     .fill("daniel@example.com");
 
+  await expect(
+    page.getByText(
+      "Aviso de privacidad simplificado",
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", {
+      name: "Aviso de Privacidad integral",
+    }),
+  ).toHaveAttribute(
+    "href",
+    "/privacidad",
+  );
+
   const continueButton = page.getByRole("button", {
     name: "Continuar al pago",
   });

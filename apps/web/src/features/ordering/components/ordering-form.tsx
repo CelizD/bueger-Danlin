@@ -7,6 +7,7 @@ import {
   formatPickup,
   money,
 } from "../formatters";
+import type { PublicPrivacyConfig } from "@/features/privacy/types";
 import type {
   BurgerSelection,
   CatalogProduct,
@@ -17,6 +18,7 @@ import type {
 import type { FormEvent } from "react";
 
 type Props = {
+  privacy: PublicPrivacyConfig;
   events: PickupEvent[];
   event: PickupEvent | null;
   combo: CatalogProduct | undefined;
@@ -73,6 +75,7 @@ type Props = {
 };
 
 export function OrderingForm({
+  privacy,
   events,
   event,
   combo,
@@ -265,6 +268,7 @@ export function OrderingForm({
           />
 
           <CustomerFields
+            privacy={privacy}
             name={name}
             phone={phone}
             email={email}
