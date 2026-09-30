@@ -2811,7 +2811,8 @@ h2 {
 }
 
 .customer-cancel-button,
-.customer-manage-link {
+.customer-manage-link,
+.customer-receipt-button {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
@@ -2834,10 +2835,24 @@ h2 {
   background: #fff0ec;
 }
 
-.customer-manage-link {
+.customer-manage-link,
+.customer-receipt-button {
   border: 1px solid #d5cfc4;
   background: #fff;
   color: #33302b;
+}
+
+.customer-receipt-button {
+  cursor: pointer;
+}
+
+.customer-receipt-button:hover:not(:disabled) {
+  background: #f7f4ee;
+}
+
+.customer-receipt-button:disabled {
+  cursor: wait;
+  opacity: 0.62;
 }
 
 .customer-cancel-success {
