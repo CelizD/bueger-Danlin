@@ -321,7 +321,11 @@ function buildLines(
     },
     {
       text:
-        "Total del pedido pagado en línea: " +
+        (order.paymentStatus === "PAID"
+          ? "Total del pedido pagado en línea: "
+          : order.paymentStatus === "REFUNDED"
+            ? "Total originalmente pagado en línea: "
+            : "Total del pedido (pago no confirmado): ") +
         money(
           order.totalCents,
           order.currency,
