@@ -6053,3 +6053,34 @@ textarea:focus-visible,
     padding: 18px;
   }
 }
+
+
+.purchase-terms-consent {
+  display: grid;
+  gap: 14px;
+  margin: 24px 0;
+  padding: 20px;
+  border: 1px solid #d7d2c8;
+  border-radius: 16px;
+  background: #fbfaf7;
+}
+
+.purchase-terms-consent h2 {
+  margin: 5px 0 8px;
+  font-size: 24px;
+  letter-spacing: -0.035em;
+}
+
+.purchase-terms-consent p:not(.eyebrow) {
+  margin: 0;
+  color: #625b52;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.purchase-terms-consent a {
+  color: #4f6f46;
+  font-weight: 850;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
