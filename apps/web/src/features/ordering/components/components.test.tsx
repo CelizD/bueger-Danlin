@@ -105,6 +105,12 @@ describe("ordering components", () => {
   it("renderiza campos de cliente con autocomplete apropiado", () => {
     const html = renderToStaticMarkup(
       <CustomerFields
+        privacy={{
+          responsible: "Burger Danlin",
+          address: "Domicilio de prueba",
+          email: "privacidad@example.test",
+          configured: true,
+        }}
         name=""
         phone=""
         email=""
@@ -118,6 +124,9 @@ describe("ordering components", () => {
     expect(html).toMatch(/autocomplete="tel-national"/i);
     expect(html).toMatch(/autocomplete="email"/i);
     expect(html).toContain('type="email"');
+    expect(html).toContain("Aviso de privacidad simplificado");
+    expect(html).toContain("/privacidad");
+    expect(html).toContain("privacidad@example.test");
   });
 
   it("muestra bebida agotada y deshabilita aumentar cantidad", () => {
