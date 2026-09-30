@@ -102,6 +102,9 @@ export function OrderApp({
       name={checkout.name}
       phone={checkout.phone}
       email={checkout.email}
+      purchaseTermsAccepted={
+        checkout.purchaseTermsAccepted
+      }
       error={error}
       groupDeliveryAccepted={
         ordering.groupDeliveryAccepted
@@ -153,6 +156,9 @@ export function OrderApp({
       }
       onEmailChange={
         checkout.setEmail
+      }
+      onPurchaseTermsChange={
+        checkout.setPurchaseTermsAccepted
       }
       onGroupDeliveryChange={
         ordering.setGroupDeliveryAccepted
