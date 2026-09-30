@@ -160,3 +160,11 @@ No abrir tráfico público hasta que:
 6. el proveedor de pagos real esté validado;
 7. exista backup local y offsite;
 8. un backup recuperado desde offsite haya pasado restore drill.
+
+
+## Aviso de privacidad
+- [ ] `PRIVACY_RESPONSIBLE` contiene la identidad legal real del responsable.
+- [ ] `PRIVACY_ADDRESS` contiene un domicilio de contacto válido.
+- [ ] `PRIVACY_EMAIL` es un correo atendido para privacidad, limitación de uso y derechos ARCO.
+- [ ] Abrir `/privacidad` en producción y verificar el aviso integral.
+- [ ] Confirmar que el checkout muestra el aviso simplificado antes de enviar nombre/teléfono/correo.
