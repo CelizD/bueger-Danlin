@@ -1,5 +1,8 @@
 # Backend Audit — Burger Danlin
 
+> **Snapshot histórico:** este documento refleja principalmente el estado del **19 de septiembre de 2026** y conserva pendientes que posteriormente fueron resueltos. No usarlo como lista vigente de lanzamiento. La fuente actual es `docs/MVP_FINAL_STATUS.md` junto con `deploy/GO_LIVE_CHECKLIST.md`.
+
+
 Fecha: 2026-09-19
 
 Base: "Backend para un SaaS bien diseñado: requisitos, arquitectura, prácticas y checklist completos".
