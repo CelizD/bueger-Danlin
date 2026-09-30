@@ -30,6 +30,9 @@ QR_SECRET="$(get_env QR_TOKEN_SECRET)"
 MFA_KEY="$(get_env MFA_ENCRYPTION_KEY)"
 POSTGRES_ADMIN_USER="$(get_env POSTGRES_ADMIN_USER)"
 POSTGRES_RUNTIME_USER="$(get_env POSTGRES_RUNTIME_USER)"
+PRIVACY_RESPONSIBLE="$(get_env PRIVACY_RESPONSIBLE)"
+PRIVACY_ADDRESS="$(get_env PRIVACY_ADDRESS)"
+PRIVACY_EMAIL="$(get_env PRIVACY_EMAIL)"
 
 case "${APP_ORIGIN}" in
   https://*example.com*|"") fail "APP_ORIGIN must be a real HTTPS production origin" ;;
@@ -66,6 +69,13 @@ pass "JWT/QR secrets satisfy minimum length and separation"
 
 [ -n "${MFA_KEY}" ] || fail "MFA_ENCRYPTION_KEY is missing"
 pass "MFA encryption key is configured"
+
+[ -n "${PRIVACY_RESPONSIBLE}" ] || fail "PRIVACY_RESPONSIBLE is required"
+[ "${#PRIVACY_ADDRESS}" -ge 10 ] || fail "PRIVACY_ADDRESS must contain a real contact address"
+case "${PRIVACY_EMAIL}" in
+  *@*.*) pass "privacy notice identity and contact are configured" ;;
+  *) fail "PRIVACY_EMAIL must be a valid contact email" ;;
+esac
 
 for key in   POSTGRES_ADMIN_USER   POSTGRES_ADMIN_PASSWORD   POSTGRES_RUNTIME_USER   POSTGRES_RUNTIME_PASSWORD   REDIS_PASSWORD   BACKUP_AGE_RECIPIENT   S3_ENDPOINT_URL   S3_BUCKET   S3_ACCESS_KEY_ID   S3_SECRET_ACCESS_KEY
 do
