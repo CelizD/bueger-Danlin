@@ -67,3 +67,12 @@ Permitida antes del cierre. Después del cierre no hay cancelación automática.
 - Los datos también permanecen accesibles desde `Administrar mi pedido`.
 - Producción exige `BUSINESS_LEGAL_NAME`, `BUSINESS_TRADE_NAME`, `BUSINESS_RFC`, `BUSINESS_ADDRESS`, `SUPPORT_PHONE` y `SUPPORT_EMAIL`.
 - El `go-live-check` bloquea el lanzamiento si faltan esos datos o si teléfono/correo/RFC no cumplen validaciones básicas.
+
+
+## Comprobante de compra
+- Cada pedido puede descargar un comprobante PDF desde `Administrar mi pedido`.
+- El endpoint `GET /orders/:orderCode/receipt` exige el mismo `X-Order-Token` privado del pedido.
+- El PDF incluye folio, fecha, estado del pedido/pago, vendedor, RFC, domicilio, soporte, detalle de productos, total, punto de entrega y situación del traslado grupal.
+- El comprobante separa el total del pedido del posible traslado en efectivo.
+- El documento se identifica expresamente como comprobante informativo y no como CFDI/factura fiscal.
+- El comprobante permanece disponible para estados terminales como entregado, cancelado o reembolsado mientras el pedido permanezca en el sistema.
