@@ -109,6 +109,8 @@ describe("CustomerOrdersService.getOrder", () => {
               code: "UNIVERSIDAD",
               name: "Universidad",
               address: "Entrada principal",
+              latitude: 32.5149,
+              longitude: -117.0382,
             },
           },
         }),
@@ -144,6 +146,8 @@ describe("CustomerOrdersService.getOrder", () => {
       code: "UNIVERSIDAD",
       name: "Universidad",
       address: "Entrada principal",
+      latitude: 32.5149,
+      longitude: -117.0382,
     });
   });
 
@@ -182,6 +186,8 @@ describe("CustomerOrdersService.getOrder", () => {
               code: "UNIVERSIDAD",
               name: "Universidad",
               address: "Entrada principal",
+              latitude: 32.5149,
+              longitude: -117.0382,
             },
           },
         }),
