@@ -22,7 +22,8 @@ const CAPACITY_STATUSES = [
 ] as const;
 
 const RESERVATION_MINUTES = 15;
-const PURCHASE_TERMS_VERSION = "2026-09-29-v2";
+const PURCHASE_TERMS_VERSION = "2026-09-30-v3";
+const AGE_AUTHORIZATION_VERSION = "2026-09-30-v1";
 const GROUP_DELIVERY_TERMS_VERSION = "2026-09-29-v2";
 
 export async function createOrderTransaction(
@@ -233,6 +234,9 @@ export async function createOrderTransaction(
         purchaseTermsAcceptedAt: now,
         purchaseTermsVersion:
           PURCHASE_TERMS_VERSION,
+        ageAuthorizationConfirmedAt: now,
+        ageAuthorizationVersion:
+          AGE_AUTHORIZATION_VERSION,
         groupDeliveryTermsAcceptedAt: now,
         groupDeliveryTermsVersion:
           GROUP_DELIVERY_TERMS_VERSION,
@@ -316,6 +320,10 @@ export async function createOrderTransaction(
           purchaseTermsVersion:
             PURCHASE_TERMS_VERSION,
           purchaseTermsAccepted:
+            true,
+          ageAuthorizationVersion:
+            AGE_AUTHORIZATION_VERSION,
+          ageAuthorizationConfirmed:
             true,
           groupDeliveryTermsVersion:
             GROUP_DELIVERY_TERMS_VERSION,
