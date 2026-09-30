@@ -456,9 +456,9 @@ function escapePdfText(
   value: string,
 ) {
   return normalizeText(value)
-    .replace(/\/g, "\\")
-    .replace(/(/g, "\(")
-    .replace(/)/g, "\)");
+    .replace(/\\/g, "\\\\")
+    .replace(/\(/g, "\\(")
+    .replace(/\)/g, "\\)");
 }
 
 function wrap(
@@ -473,7 +473,7 @@ function wrap(
   }
 
   const words =
-    normalized.split(/s+/);
+    normalized.split(/\s+/);
   const result: string[] = [];
   let current = "";
 
@@ -568,8 +568,7 @@ function contentStream(
         escapePdfText(line.text) +
         ") Tj ET",
     )
-    .join("
-");
+    .join("\n");
 }
 
 function assemblePdf(
