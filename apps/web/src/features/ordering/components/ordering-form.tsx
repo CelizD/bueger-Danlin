@@ -3,6 +3,7 @@ import { CustomerFields } from "./customer-fields";
 import { DrinkSelector } from "./drink-selector";
 import { GroupDeliveryConsent } from "./group-delivery-consent";
 import { PickupPointSelector } from "./pickup-point-selector";
+import { PurchaseTermsConsent } from "./purchase-terms-consent";
 import {
   formatPickup,
   money,
@@ -29,6 +30,7 @@ type Props = {
   name: string;
   phone: string;
   email: string;
+  purchaseTermsAccepted: boolean;
   error: string;
   groupDeliveryAccepted: boolean;
   submitting: boolean;
@@ -65,6 +67,9 @@ type Props = {
   onEmailChange: (
     value: string,
   ) => void;
+  onPurchaseTermsChange: (
+    checked: boolean,
+  ) => void;
   onGroupDeliveryChange: (
     checked: boolean,
   ) => void;
@@ -86,6 +91,7 @@ export function OrderingForm({
   name,
   phone,
   email,
+  purchaseTermsAccepted,
   error,
   groupDeliveryAccepted,
   submitting,
@@ -104,6 +110,7 @@ export function OrderingForm({
   onNameChange,
   onPhoneChange,
   onEmailChange,
+  onPurchaseTermsChange,
   onGroupDeliveryChange,
   onSubmit,
 }: Props) {
@@ -281,6 +288,15 @@ export function OrderingForm({
             }
           />
 
+          <PurchaseTermsConsent
+            checked={
+              purchaseTermsAccepted
+            }
+            onChange={
+              onPurchaseTermsChange
+            }
+          />
+
           <GroupDeliveryConsent
             event={event}
             checked={
@@ -313,6 +329,7 @@ export function OrderingForm({
               disabled={
                 submitting ||
                 burgers.length === 0 ||
+                !purchaseTermsAccepted ||
                 !groupDeliveryAccepted
               }
             >
