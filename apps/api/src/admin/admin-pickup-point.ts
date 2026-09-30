@@ -1,5 +1,6 @@
 import { BadRequestException } from "@nestjs/common";
 import {
+  assertExactPickupLocation,
   buildPickupPointCode,
   type PickupPointInput,
 } from "./admin-pickup-event-rules.js";
@@ -9,6 +10,12 @@ export async function ensureAdminPickupPoint(
   input: PickupPointInput,
 ) {
   const name = input.locationLabel.trim();
+
+  assertExactPickupLocation(
+    input.locationAddress,
+    input.latitude,
+    input.longitude,
+  );
 
   if (!name) {
     throw new BadRequestException(
@@ -40,10 +47,7 @@ export async function ensureAdminPickupPoint(
       data: {
         name,
         active: true,
-        address:
-          input.locationAddress !== undefined
-            ? input.locationAddress.trim() || null
-            : undefined,
+        address: input.locationAddress.trim(),
         latitude: input.latitude,
         longitude: input.longitude,
       },
@@ -54,7 +58,7 @@ export async function ensureAdminPickupPoint(
     data: {
       code,
       name,
-      address: input.locationAddress?.trim() || null,
+      address: input.locationAddress.trim(),
       latitude: input.latitude,
       longitude: input.longitude,
       active: true,
