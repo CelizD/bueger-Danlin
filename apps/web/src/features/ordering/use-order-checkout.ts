@@ -49,6 +49,10 @@ export function useOrderCheckout({
     useState("");
   const [email, setEmail] =
     useState("");
+  const [
+    purchaseTermsAccepted,
+    setPurchaseTermsAccepted,
+  ] = useState(false);
   const [submitting, setSubmitting] =
     useState(false);
   const [paying, setPaying] =
@@ -77,6 +81,13 @@ export function useOrderCheckout({
       !combo ||
       burgers.length === 0
     ) {
+      return;
+    }
+
+    if (!purchaseTermsAccepted) {
+      setError(
+        "Debes aceptar los términos y condiciones de compra antes de continuar.",
+      );
       return;
     }
 
@@ -124,6 +135,7 @@ export function useOrderCheckout({
       const orderData =
         await createOrder({
           pickupEventId: event.id,
+          purchaseTermsAccepted,
           groupDeliveryTermsAccepted:
             groupDeliveryAccepted,
           customer: {
@@ -310,6 +322,7 @@ export function useOrderCheckout({
     name,
     phone,
     email,
+    purchaseTermsAccepted,
     submitting,
     paying,
     canceling,
@@ -320,6 +333,7 @@ export function useOrderCheckout({
     setName,
     setPhone,
     setEmail,
+    setPurchaseTermsAccepted,
     submitOrder,
     cancelCreatedOrder,
     confirmPayment,
