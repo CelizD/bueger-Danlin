@@ -313,6 +313,10 @@ export async function createOrderTransaction(
             order.comboQuantity,
           totalCents: order.totalCents,
           currency: order.currency,
+          purchaseTermsVersion:
+            PURCHASE_TERMS_VERSION,
+          purchaseTermsAccepted:
+            true,
           groupDeliveryTermsVersion:
             GROUP_DELIVERY_TERMS_VERSION,
           groupDeliveryTermsAccepted:
