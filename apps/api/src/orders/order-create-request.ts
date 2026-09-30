@@ -53,13 +53,21 @@ export function prepareCreateOrderRequest(
     );
   }
 
+  const customerName = dto.customer.name.trim();
+
+  if (customerName.length < 2) {
+    throw new BadRequestException(
+      "El nombre debe tener al menos 2 caracteres.",
+    );
+  }
+
   const normalizedRequest: NormalizedCreateOrderRequest = {
     pickupEventId: dto.pickupEventId,
     purchaseTermsAccepted: true,
     ageAuthorizationConfirmed: true,
     groupDeliveryTermsAccepted: true,
     customer: {
-      name: dto.customer.name.trim(),
+      name: customerName,
       phone: dto.customer.phone,
       email:
         dto.customer.email?.trim().toLowerCase() ?? null,
