@@ -7,6 +7,8 @@ import type { Prisma } from "../generated/prisma/client.js";
 import type { InventoryService } from "../inventory/inventory.service.js";
 import type { GroupTelegramNotificationService } from "../notifications/group-telegram-notification.service.js";
 import type { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
+import type { PurchaseEmailService } from "../notifications/purchase-email.service.js";
+import { queuePurchaseConfirmationEmail } from "../notifications/purchase-email-outbox.js";
 import type { ProviderPaymentStatus } from "./domain/payment-provider.types.js";
 import type { PaymentProviderRegistry } from "./payment-provider.registry.js";
 import { shouldApplyPaymentStatus } from "./payment-webhook-status.js";
@@ -17,6 +19,7 @@ type MercadoPagoWebhookReconcileDependencies = {
   providers: PaymentProviderRegistry;
   telegram?: TelegramNotificationService;
   groupTelegram?: GroupTelegramNotificationService;
+  purchaseEmail?: PurchaseEmailService;
 };
 
 function mergePaymentMetadata(
@@ -47,6 +50,7 @@ export async function reconcileMercadoPagoWebhook(
     providers,
     telegram,
     groupTelegram,
+    purchaseEmail,
   } = dependencies;
   const payment = await prisma.payment.findFirst({
     where: {
@@ -81,6 +85,7 @@ export async function reconcileMercadoPagoWebhook(
         currency: string;
         locationLabel?: string;
         pickupEventId: string;
+        orderId: string;
       }
     | undefined;
 
@@ -100,6 +105,7 @@ export async function reconcileMercadoPagoWebhook(
         order: {
           include: {
             pickupEvent: true,
+            customer: true,
           },
         },
       },
@@ -350,6 +356,14 @@ export async function reconcileMercadoPagoWebhook(
         },
       });
 
+      await queuePurchaseConfirmationEmail(
+        tx,
+        {
+          orderId: order.id,
+          email: order.customer.email,
+        },
+      );
+
       paymentNotice = {
         orderCode: order.orderCode,
         comboQuantity: order.comboQuantity,
@@ -357,6 +371,7 @@ export async function reconcileMercadoPagoWebhook(
         currency: order.currency,
         locationLabel: order.pickupEvent.locationLabel,
         pickupEventId: order.pickupEvent.id,
+        orderId: order.id,
       };
     } else if (latePaid) {
       await tx.order.update({
@@ -447,6 +462,12 @@ export async function reconcileMercadoPagoWebhook(
 
   if (paymentNotice) {
     telegram?.notifyPaymentConfirmed(paymentNotice);
+
+    void purchaseEmail
+      ?.trySendForOrder(
+        paymentNotice.orderId,
+      )
+      .catch(() => undefined);
     await groupTelegram?.observeCompleted(
       paymentNotice.pickupEventId,
     );
