@@ -261,6 +261,9 @@ services:
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
+      PRIVACY_RESPONSIBLE: ${PRIVACY_RESPONSIBLE:?PRIVACY_RESPONSIBLE is required}
+      PRIVACY_ADDRESS: ${PRIVACY_ADDRESS:?PRIVACY_ADDRESS is required}
+      PRIVACY_EMAIL: ${PRIVACY_EMAIL:?PRIVACY_EMAIL is required}
     ports:
       - "127.0.0.1:3000:3000"
     networks:
