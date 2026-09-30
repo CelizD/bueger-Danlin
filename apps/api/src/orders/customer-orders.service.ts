@@ -11,6 +11,7 @@ import { cancelCustomerOrder } from "./customer-order-cancellation.js";
 import { processCustomerRefund } from "./customer-order-refund-processing.js";
 import { hasRefundRequest } from "./customer-order-refund.js";
 import { assertOrderVerificationToken } from "./customer-order-security.js";
+import { buildCustomerOrderReceiptPdf } from "./customer-order-receipt.js";
 
 const TERMINAL_STATUSES = [
   "DELIVERED",
@@ -137,6 +138,20 @@ export class CustomerOrdersService {
           : refundRequested
             ? "PENDING"
             : null,
+      purchaseTermsVersion:
+        order.purchaseTermsVersion,
+      purchaseTermsAcceptedAt:
+        order.purchaseTermsAcceptedAt,
+      payment: latestPayment
+        ? {
+            provider:
+              latestPayment.provider,
+            paidAt:
+              latestPayment.paidAt,
+            refundedAt:
+              latestPayment.refundedAt,
+          }
+        : null,
       pickup: {
         locationLabel: order.pickupEvent.locationLabel,
         startsAt: order.pickupEvent.startsAt,
@@ -183,6 +198,29 @@ export class CustomerOrdersService {
           priceDeltaCents: modifier.priceDeltaCents,
         })),
       })),
+    };
+  }
+
+
+  async getReceipt(
+    orderCodeInput: string,
+    verificationToken: string,
+  ) {
+    const order = await this.getOrder(
+      orderCodeInput,
+      verificationToken,
+    );
+    const pdf =
+      buildCustomerOrderReceiptPdf(
+        order,
+      );
+
+    return {
+      filename:
+        "comprobante-" +
+        order.orderCode +
+        ".pdf",
+      pdf,
     };
   }
 

@@ -78,3 +78,37 @@ export async function cancelCustomerOrder(
 
   return data as CancelOrderResult;
 }
+
+
+export async function fetchCustomerOrderReceipt(
+  orderCode: string,
+  orderToken: string,
+) {
+  const response = await apiFetch(
+    API_URL +
+      "/orders/" +
+      encodeURIComponent(orderCode) +
+      "/receipt",
+    {
+      headers: {
+        "x-order-token": orderToken,
+      },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const data = await response
+      .json()
+      .catch(() => ({}));
+
+    throw new Error(
+      responseMessage(
+        data,
+        "No se pudo descargar el comprobante.",
+      ),
+    );
+  }
+
+  return response.blob();
+}

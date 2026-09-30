@@ -168,6 +168,24 @@ test("cliente crea pedido, paga y obtiene QR", async ({
   await expect(
     page.getByRole("link", { name: "Abrir ubicación exacta" }),
   ).toBeVisible();
+  const downloadPromise =
+    page.waitForEvent("download");
+
+  await page
+    .getByRole("button", {
+      name: "Descargar comprobante PDF",
+    })
+    .click();
+
+  const download =
+    await downloadPromise;
+
+  expect(
+    download.suggestedFilename(),
+  ).toBe(
+    "comprobante-H-TEST01.pdf",
+  );
+
   await expect(
     page.locator(".site-footer"),
   ).toBeVisible();

@@ -295,6 +295,24 @@ export async function mockOrderingApi(page: Page) {
     }
 
     if (
+      path.endsWith("/orders/H-TEST01/receipt") &&
+      method === "GET"
+    ) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/pdf",
+        headers: {
+          ...corsHeaders,
+          "content-disposition":
+            'attachment; filename="comprobante-H-TEST01.pdf"',
+        },
+        body:
+          "%PDF-1.4\n% E2E receipt\n%%EOF\n",
+      });
+      return;
+    }
+
+    if (
       path.endsWith("/orders/H-TEST01/cancel") &&
       method === "POST"
     ) {

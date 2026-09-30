@@ -10,6 +10,7 @@ import { useCustomerOrder } from "@/features/ordering/customer-order/use-custome
 import {
   ArrowLeft,
   CheckCircle2,
+  Download,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
@@ -30,8 +31,10 @@ export default function CustomerOrderPage() {
     token,
     loading,
     canceling,
+    downloadingReceipt,
     error,
     notice,
+    downloadReceipt,
     cancelOrder,
   } = useCustomerOrder(orderCode);
 
@@ -113,6 +116,27 @@ export default function CustomerOrderPage() {
                 {notice}
               </div>
             )}
+
+            <div className="customer-order-actions">
+              <button
+                type="button"
+                className="customer-receipt-button"
+                onClick={() => {
+                  void downloadReceipt();
+                }}
+                disabled={
+                  downloadingReceipt
+                }
+              >
+                <Download
+                  size={16}
+                  aria-hidden="true"
+                />
+                {downloadingReceipt
+                  ? "Generando comprobante…"
+                  : "Descargar comprobante PDF"}
+              </button>
+            </div>
 
             <CustomerOrderSummary
               order={order}

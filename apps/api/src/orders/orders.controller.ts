@@ -6,6 +6,7 @@ import {
   Get,
   Header,
   Headers,
+  StreamableFile,
   Param,
   Post,
 } from "@nestjs/common";
@@ -56,6 +57,41 @@ export class OrdersController {
     }
 
     return this.customerOrdersService.getOrder(orderCode, verificationToken);
+  }
+
+  @Get(":orderCode/receipt")
+  @Header("Cache-Control", "private, no-store")
+  @Throttle({
+    default: {
+      limit: 30,
+      ttl: 60_000,
+    },
+  })
+  async receipt(
+    @Param("orderCode", OrderCodePipe) orderCode: string,
+    @Headers("x-order-token") verificationToken?: string,
+  ) {
+    if (!verificationToken) {
+      throw new BadRequestException("Falta el encabezado X-Order-Token.");
+    }
+
+    const receipt =
+      await this.customerOrdersService.getReceipt(
+        orderCode,
+        verificationToken,
+      );
+
+    return new StreamableFile(
+      receipt.pdf,
+      {
+        type: "application/pdf",
+        disposition:
+          'attachment; filename="' +
+          receipt.filename +
+          '"',
+        length: receipt.pdf.length,
+      },
+    );
   }
 
   @Post(":orderCode/cancel")
