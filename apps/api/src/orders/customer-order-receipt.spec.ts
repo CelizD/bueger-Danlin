@@ -118,7 +118,7 @@ describe(
         "$50.00 MXN",
       );
       expect(text).toContain(
-        "no es CFDI",
+        "No es CFDI",
       );
       expect(text).toContain(
         "%%EOF",
