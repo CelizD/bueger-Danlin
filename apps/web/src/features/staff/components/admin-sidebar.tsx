@@ -13,6 +13,7 @@ import {
   ChefHat,
   LogOut,
   ShoppingBag,
+  ShieldCheck,
   Truck,
   Users,
 } from "lucide-react";
@@ -65,6 +66,12 @@ const navItems = [
     href: "/admin/inventario",
     label: "Inventario",
     icon: Boxes,
+  },
+  {
+    id: "arco",
+    href: "/admin/arco",
+    label: "Privacidad ARCO",
+    icon: ShieldCheck,
   },
   {
     id: "personal",
