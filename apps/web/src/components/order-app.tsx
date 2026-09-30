@@ -109,6 +109,9 @@ export function OrderApp({
       purchaseTermsAccepted={
         checkout.purchaseTermsAccepted
       }
+      ageAuthorizationConfirmed={
+        checkout.ageAuthorizationConfirmed
+      }
       error={error}
       groupDeliveryAccepted={
         ordering.groupDeliveryAccepted
@@ -163,6 +166,9 @@ export function OrderApp({
       }
       onPurchaseTermsChange={
         checkout.setPurchaseTermsAccepted
+      }
+      onAgeAuthorizationChange={
+        checkout.setAgeAuthorizationConfirmed
       }
       onGroupDeliveryChange={
         ordering.setGroupDeliveryAccepted

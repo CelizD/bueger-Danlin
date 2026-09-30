@@ -277,6 +277,8 @@ model Order {
   deliveredAt                             DateTime?
   purchaseTermsAcceptedAt                 DateTime?
   purchaseTermsVersion                    String?
+  ageAuthorizationConfirmedAt             DateTime?
+  ageAuthorizationVersion                 String?
   groupDeliveryTermsAcceptedAt            DateTime?
   groupDeliveryTermsVersion               String?
   groupDeliveryMinPaidCombosAtOrder       Int?

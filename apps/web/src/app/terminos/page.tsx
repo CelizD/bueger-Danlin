@@ -32,8 +32,8 @@ export default function TermsPage() {
           Términos y Condiciones
         </h1>
         <p>
-          Versión 2026-09-29-v2 ·
-          Actualizado el 29 de septiembre
+          Versión 2026-09-30-v3 ·
+          Actualizado el 30 de septiembre
           de 2026.
         </p>
       </header>
@@ -134,6 +134,28 @@ export default function TermsPage() {
             Si el pago no se confirma dentro de
             ese periodo, la reserva puede vencer
             y el inventario puede liberarse.
+          </p>
+        </section>
+
+        <section>
+          <h2>
+            3.1. Menores de edad
+          </h2>
+          <p>
+            Si eres menor de 18 años, debes
+            realizar el pedido únicamente con
+            autorización de tu madre, padre o
+            tutor. Antes de crear el pedido el
+            sitio solicita una confirmación
+            expresa de que eres mayor de edad o
+            que cuentas con dicha autorización.
+          </p>
+          <p>
+            Esta confirmación no implica que
+            Burger Danlin solicite fecha de
+            nacimiento, identificación ni datos
+            adicionales del adulto responsable
+            en el flujo normal de compra.
           </p>
         </section>
 

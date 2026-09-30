@@ -73,6 +73,13 @@ export class CreateOrderDto {
   @IsBoolean()
   @Equals(true, {
     message:
+      "Debes confirmar que eres mayor de edad o que cuentas con autorización de tu madre, padre o tutor.",
+  })
+  ageAuthorizationConfirmed!: boolean;
+
+  @IsBoolean()
+  @Equals(true, {
+    message:
       "Debes aceptar las condiciones de entrega grupal antes de continuar.",
   })
   groupDeliveryTermsAccepted!: boolean;

@@ -1,3 +1,4 @@
+import { AgeAuthorizationConsent } from "./age-authorization-consent";
 import { BurgerBuilder } from "./burger-builder";
 import { CustomerFields } from "./customer-fields";
 import { DrinkSelector } from "./drink-selector";
@@ -34,6 +35,7 @@ type Props = {
   phone: string;
   email: string;
   purchaseTermsAccepted: boolean;
+  ageAuthorizationConfirmed: boolean;
   error: string;
   groupDeliveryAccepted: boolean;
   submitting: boolean;
@@ -73,6 +75,9 @@ type Props = {
   onPurchaseTermsChange: (
     checked: boolean,
   ) => void;
+  onAgeAuthorizationChange: (
+    checked: boolean,
+  ) => void;
   onGroupDeliveryChange: (
     checked: boolean,
   ) => void;
@@ -96,6 +101,7 @@ export function OrderingForm({
   phone,
   email,
   purchaseTermsAccepted,
+  ageAuthorizationConfirmed,
   error,
   groupDeliveryAccepted,
   submitting,
@@ -115,6 +121,7 @@ export function OrderingForm({
   onPhoneChange,
   onEmailChange,
   onPurchaseTermsChange,
+  onAgeAuthorizationChange,
   onGroupDeliveryChange,
   onSubmit,
 }: Props) {
@@ -303,6 +310,15 @@ export function OrderingForm({
             }
           />
 
+          <AgeAuthorizationConsent
+            checked={
+              ageAuthorizationConfirmed
+            }
+            onChange={
+              onAgeAuthorizationChange
+            }
+          />
+
           <GroupDeliveryConsent
             event={event}
             checked={
@@ -336,6 +352,7 @@ export function OrderingForm({
                 submitting ||
                 burgers.length === 0 ||
                 !purchaseTermsAccepted ||
+                !ageAuthorizationConfirmed ||
                 !groupDeliveryAccepted
               }
             >

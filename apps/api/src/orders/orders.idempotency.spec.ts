@@ -26,6 +26,7 @@ const originalQrSecret = process.env.QR_TOKEN_SECRET;
 const dto: CreateOrderDto = {
   pickupEventId: "event-1",
   purchaseTermsAccepted: true,
+  ageAuthorizationConfirmed: true,
   groupDeliveryTermsAccepted: true,
   customer: {
     name: " Cliente ",
@@ -46,7 +47,8 @@ function normalizedHash(input: CreateOrderDto) {
   const normalized = {
     pickupEventId: input.pickupEventId,
     purchaseTermsAccepted: true,
-  groupDeliveryTermsAccepted: true,
+    ageAuthorizationConfirmed: true,
+    groupDeliveryTermsAccepted: true,
     customer: {
       name: input.customer.name.trim(),
       phone: input.customer.phone,
@@ -128,6 +130,28 @@ describe("OrdersService idempotency", () => {
         {
           ...dto,
           purchaseTermsAccepted: false,
+        },
+        "idempotency-key-123456",
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(prisma.order.findUnique).not.toHaveBeenCalled();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("rechaza crear un pedido sin confirmar edad o autorización", async () => {
+    const prisma = {
+      order: { findUnique: vi.fn() },
+      $transaction: vi.fn(),
+    } as unknown as PrismaService;
+    const inventory = {} as InventoryService;
+    const service = new OrdersService(prisma, inventory);
+
+    await expect(
+      service.create(
+        {
+          ...dto,
+          ageAuthorizationConfirmed: false,
         },
         "idempotency-key-123456",
       ),
