@@ -33,7 +33,7 @@ export default function PrivacyPage() {
         </p>
         <h1>Aviso de Privacidad</h1>
         <p>
-          Última actualización: 29 de septiembre de 2026.
+          Última actualización: 30 de septiembre de 2026.
         </p>
       </header>
 
@@ -123,6 +123,38 @@ export default function PrivacyPage() {
             completos de tarjeta ni CVV; esos
             datos permanecen con el proveedor
             de pagos.
+          </p>
+        </section>
+
+        <section>
+          <h2>
+            2.1. Menores de edad
+          </h2>
+          <p>
+            Si la persona que realiza el pedido
+            es menor de 18 años, el sitio le
+            solicita confirmar que cuenta con
+            autorización de su madre, padre o
+            tutor antes de continuar con la
+            compra.
+          </p>
+          <p>
+            Para este mecanismo no solicitamos
+            fecha de nacimiento, fotografías,
+            identificaciones ni otros datos
+            personales del adulto responsable.
+            El sistema conserva únicamente la
+            fecha de la confirmación y la
+            versión del aviso aplicable junto
+            con el pedido, para documentar que
+            el paso fue mostrado y aceptado.
+          </p>
+          <p>
+            Los datos del pedido se utilizan
+            únicamente para las finalidades
+            necesarias descritas en este aviso
+            y no se emplean para publicidad
+            dirigida a menores.
           </p>
         </section>
 
