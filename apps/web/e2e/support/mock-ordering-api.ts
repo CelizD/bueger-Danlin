@@ -275,12 +275,14 @@ export async function mockOrderingApi(page: Page) {
             code: isCucapa ? "CUCAPA" : "UNIVERSIDAD",
             name: selectedPickup,
             address: isCucapa ? "Punto Cucapá" : "Entrada principal",
+            latitude: isCucapa ? 32.4906 : 32.5149,
+            longitude: isCucapa ? -116.9369 : -117.0382,
           },
         },
         groupDelivery: {
           minPaidCombos: 5,
-          paidOrderCount,
-          remainingPaidCombos: Math.max(0, 5 - paidOrderCount),
+          paidComboCount,
+          remainingPaidCombos: Math.max(0, 5 - paidComboCount),
           transportCostCents: 10000,
           estimatedDeliveryFeeCents: freeDeliveryUnlocked
             ? 0
