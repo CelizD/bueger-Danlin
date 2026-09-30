@@ -1,0 +1,11 @@
+[Unit]
+Description=Retry Burger Danlin purchase confirmation emails every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+AccuracySec=10s
+Persistent=true
+Unit=burger-danlin-purchase-email.service
+
+[Install]
+WantedBy=timers.target

@@ -6,6 +6,8 @@ import type { PrismaService } from "../database/prisma.service.js";
 import type { InventoryService } from "../inventory/inventory.service.js";
 import type { GroupTelegramNotificationService } from "../notifications/group-telegram-notification.service.js";
 import type { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
+import type { PurchaseEmailService } from "../notifications/purchase-email.service.js";
+import { queuePurchaseConfirmationEmail } from "../notifications/purchase-email-outbox.js";
 import { assertOrderVerificationToken } from "../orders/customer-order-security.js";
 import type { PaymentProviderRegistry } from "./payment-provider.registry.js";
 export async function confirmMockOrderPayment(
@@ -14,6 +16,7 @@ export async function confirmMockOrderPayment(
   paymentProviderRegistry: PaymentProviderRegistry,
   telegram: TelegramNotificationService | undefined,
   groupTelegram: GroupTelegramNotificationService | undefined,
+  purchaseEmail: PurchaseEmailService | undefined,
   orderCode: string,
   verificationToken: string,
 ) {
@@ -42,6 +45,7 @@ export async function confirmMockOrderPayment(
           currency: string;
           locationLabel?: string;
           pickupEventId: string;
+          orderId: string;
         }
       | undefined;
 
@@ -200,6 +204,14 @@ export async function confirmMockOrderPayment(
         },
       });
 
+      await queuePurchaseConfirmationEmail(
+        tx,
+        {
+          orderId: order.id,
+          email: order.customer.email,
+        },
+      );
+
       paymentNotice = {
         orderCode: order.orderCode,
         comboQuantity: order.comboQuantity,
@@ -207,6 +219,7 @@ export async function confirmMockOrderPayment(
         currency: order.currency,
         locationLabel: order.pickupEvent.locationLabel,
         pickupEventId: order.pickupEvent.id,
+        orderId: order.id,
       };
 
       return {
@@ -221,6 +234,12 @@ export async function confirmMockOrderPayment(
 
     if (paymentNotice) {
       telegram?.notifyPaymentConfirmed(paymentNotice);
+
+      void purchaseEmail
+        ?.trySendForOrder(
+          paymentNotice.orderId,
+        )
+        .catch(() => undefined);
       await groupTelegram?.observeCompleted(
         paymentNotice.pickupEventId,
       );

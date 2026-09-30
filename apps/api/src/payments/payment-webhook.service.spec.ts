@@ -8,6 +8,7 @@ import type { PrismaService } from "../database/prisma.service.js";
 import type { InventoryService } from "../inventory/inventory.service.js";
 import type { GroupTelegramNotificationService } from "../notifications/group-telegram-notification.service.js";
 import type { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
+import type { PurchaseEmailService } from "../notifications/purchase-email.service.js";
 import type { PaymentProviderRegistry } from "./payment-provider.registry.js";
 import {
   PaymentWebhookService,
@@ -123,6 +124,9 @@ function harness(options?: {
             id: "event-1",
             locationLabel: "Universidad",
           },
+          customer: {
+            email: "cliente@example.com",
+          },
         },
       }),
       update: vi.fn().mockResolvedValue(undefined),
@@ -145,6 +149,15 @@ function harness(options?: {
     },
     paymentWebhookEvent: {
       update: vi.fn().mockResolvedValue(undefined),
+    },
+    emailNotification: {
+      upsert: vi.fn().mockResolvedValue({
+        id: "email-1",
+        orderId: "order-1",
+        type: "PURCHASE_CONFIRMATION",
+        recipient: "cliente@example.com",
+        status: "PENDING",
+      }),
     },
   };
 
@@ -199,6 +212,12 @@ function harness(options?: {
     observeCompleted: vi.fn().mockResolvedValue(undefined),
   } as unknown as GroupTelegramNotificationService;
 
+  const purchaseEmail = {
+    trySendForOrder: vi.fn().mockResolvedValue({
+      sent: true,
+    }),
+  } as unknown as PurchaseEmailService;
+
   const service = new PaymentWebhookService(
     prisma,
     inventory,
@@ -206,6 +225,7 @@ function harness(options?: {
     security,
     telegram,
     groupTelegram,
+    purchaseEmail,
   );
 
   return {
@@ -218,6 +238,7 @@ function harness(options?: {
     inventory,
     telegram,
     groupTelegram,
+    purchaseEmail,
     createEvent,
   };
 }
@@ -383,6 +404,28 @@ describe("PaymentWebhookService", () => {
     expect(h.groupTelegram.observeCompleted).toHaveBeenCalledWith(
       "event-1",
     );
+    expect(
+      h.tx.emailNotification.upsert,
+    ).toHaveBeenCalledWith({
+      where: {
+        orderId_type: {
+          orderId: "order-1",
+          type: "PURCHASE_CONFIRMATION",
+        },
+      },
+      update: {
+        recipient: "cliente@example.com",
+      },
+      create: {
+        orderId: "order-1",
+        type: "PURCHASE_CONFIRMATION",
+        recipient: "cliente@example.com",
+        status: "PENDING",
+      },
+    });
+    expect(
+      h.purchaseEmail.trySendForOrder,
+    ).toHaveBeenCalledWith("order-1");
     expect(result).toMatchObject({
       accepted: true,
       duplicate: false,
@@ -459,6 +502,12 @@ describe("PaymentWebhookService", () => {
     ).not.toHaveBeenCalled();
     expect(
       h.groupTelegram.observeCompleted,
+    ).not.toHaveBeenCalled();
+    expect(
+      h.tx.emailNotification.upsert,
+    ).not.toHaveBeenCalled();
+    expect(
+      h.purchaseEmail.trySendForOrder,
     ).not.toHaveBeenCalled();
     expect(result).toMatchObject({
       accepted: true,

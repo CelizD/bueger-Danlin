@@ -62,6 +62,18 @@ enum PaymentWebhookEventStatus {
   FAILED
 }
 
+enum EmailNotificationType {
+  PURCHASE_CONFIRMATION
+}
+
+enum EmailNotificationStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+  SKIPPED
+}
+
 enum PickupEventStatus {
   DRAFT
   OPEN
@@ -284,6 +296,7 @@ model Order {
   payments      Payment[]
   statusHistory       OrderStatusHistory[]
   inventoryAllocations InventoryAllocation[]
+  emailNotifications EmailNotification[]
 
   @@index([pickupEventId, status])
   @@index([pickupEventId, reservationExpiresAt])
@@ -428,6 +441,26 @@ model InventoryAllocation {
   @@unique([orderId, inventoryItemId])
   @@index([inventoryItemId, status])
   @@index([status, createdAt])
+}
+
+model EmailNotification {
+  id           String                  @id @default(cuid())
+  orderId      String
+  type         EmailNotificationType
+  recipient    String
+  status       EmailNotificationStatus @default(PENDING)
+  attemptCount Int                     @default(0)
+  claimedAt    DateTime?
+  sentAt       DateTime?
+  lastError    String?
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, type])
+  @@index([status, createdAt])
+  @@index([claimedAt])
 }
 
 model AuditLog {

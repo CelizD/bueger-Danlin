@@ -39,6 +39,15 @@ BUSINESS_RFC="$(get_env BUSINESS_RFC)"
 BUSINESS_ADDRESS="$(get_env BUSINESS_ADDRESS)"
 SUPPORT_PHONE="$(get_env SUPPORT_PHONE)"
 SUPPORT_EMAIL="$(get_env SUPPORT_EMAIL)"
+EMAIL_NOTIFICATIONS_ENABLED="$(get_env EMAIL_NOTIFICATIONS_ENABLED)"
+MAIL_HOST="$(get_env MAIL_HOST)"
+MAIL_PORT="$(get_env MAIL_PORT)"
+MAIL_SECURITY="$(get_env MAIL_SECURITY)"
+MAIL_USERNAME="$(get_env MAIL_USERNAME)"
+MAIL_PASSWORD="$(get_env MAIL_PASSWORD)"
+MAIL_FROM="$(get_env MAIL_FROM)"
+MAIL_REPLY_TO="$(get_env MAIL_REPLY_TO)"
+MAIL_REJECT_UNAUTHORIZED="$(get_env MAIL_REJECT_UNAUTHORIZED)"
 
 case "${APP_ORIGIN}" in
   https://*example.com*|"") fail "APP_ORIGIN must be a real HTTPS production origin" ;;
@@ -96,6 +105,38 @@ case "${SUPPORT_EMAIL}" in
   *@*.*) pass "seller identity, RFC, address and support channels are configured" ;;
   *) fail "SUPPORT_EMAIL must be a valid support email" ;;
 esac
+
+case "${EMAIL_NOTIFICATIONS_ENABLED}" in
+  true|TRUE|1|yes|YES) pass "purchase confirmation emails enabled" ;;
+  *) fail "EMAIL_NOTIFICATIONS_ENABLED must be true before go-live" ;;
+esac
+
+[ -n "${MAIL_HOST}" ] || fail "MAIL_HOST is required"
+case "${MAIL_PORT}" in
+  ''|*[!0-9]*) fail "MAIL_PORT must be numeric" ;;
+  *) [ "${MAIL_PORT}" -ge 1 ] && [ "${MAIL_PORT}" -le 65535 ] || fail "MAIL_PORT must be between 1 and 65535" ;;
+esac
+
+case "${MAIL_SECURITY}" in
+  starttls|tls) pass "SMTP transport uses encrypted delivery" ;;
+  *) fail "MAIL_SECURITY must be starttls or tls in production" ;;
+esac
+
+[ -n "${MAIL_USERNAME}" ] || fail "MAIL_USERNAME is required"
+[ -n "${MAIL_PASSWORD}" ] || fail "MAIL_PASSWORD is required"
+case "${MAIL_FROM}" in
+  *@*.*) ;;
+  *) fail "MAIL_FROM must contain a valid sender email" ;;
+esac
+case "${MAIL_REPLY_TO:-${SUPPORT_EMAIL}}" in
+  *@*.*) ;;
+  *) fail "MAIL_REPLY_TO must be a valid email when configured" ;;
+esac
+case "${MAIL_REJECT_UNAUTHORIZED}" in
+  true|TRUE|1|yes|YES) pass "SMTP certificate verification enabled" ;;
+  *) fail "MAIL_REJECT_UNAUTHORIZED must be true in production" ;;
+esac
+pass "SMTP purchase confirmation settings are present"
 
 for key in   POSTGRES_ADMIN_USER   POSTGRES_ADMIN_PASSWORD   POSTGRES_RUNTIME_USER   POSTGRES_RUNTIME_PASSWORD   REDIS_PASSWORD   BACKUP_AGE_RECIPIENT   S3_ENDPOINT_URL   S3_BUCKET   S3_ACCESS_KEY_ID   S3_SECRET_ACCESS_KEY
 do

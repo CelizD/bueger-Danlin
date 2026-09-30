@@ -5,7 +5,7 @@ type ReceiptLine = {
   gapAfter?: number;
 };
 
-type ReceiptOrder = {
+export type ReceiptOrder = {
   orderCode: string;
   status: string;
   paymentStatus: string;
@@ -46,7 +46,7 @@ type ReceiptOrder = {
   }>;
 };
 
-type ReceiptSeller = {
+export type ReceiptSeller = {
   legalName: string;
   tradeName: string;
   rfc: string;

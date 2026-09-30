@@ -14,6 +14,7 @@ import {
 import type { PrismaService } from "../database/prisma.service.js";
 import type { InventoryService } from "../inventory/inventory.service.js";
 import type { GroupTelegramNotificationService } from "../notifications/group-telegram-notification.service.js";
+import type { PurchaseEmailService } from "../notifications/purchase-email.service.js";
 import { PaymentProviderRegistry } from "./payment-provider.registry.js";
 import type { MercadoPagoApiClient } from "./providers/mercadopago/mercadopago-api.client.js";
 import { MercadoPagoProvider } from "./providers/mercadopago/mercadopago.provider.js";
@@ -78,6 +79,15 @@ function harness(
     auditLog: {
       create: vi.fn().mockResolvedValue(undefined),
     },
+    emailNotification: {
+      upsert: vi.fn().mockResolvedValue({
+        id: "email-1",
+        orderId: "order-1",
+        type: "PURCHASE_CONFIRMATION",
+        recipient: "cliente@example.com",
+        status: "PENDING",
+      }),
+    },
   };
 
   const prisma = {
@@ -110,6 +120,12 @@ function harness(
     observeCompleted: vi.fn().mockResolvedValue(undefined),
   } as unknown as GroupTelegramNotificationService;
 
+  const purchaseEmail = {
+    trySendForOrder: vi.fn().mockResolvedValue({
+      sent: true,
+    }),
+  } as unknown as PurchaseEmailService;
+
   return {
     service: new PaymentsService(
       prisma,
@@ -117,12 +133,14 @@ function harness(
       paymentProviderRegistry,
       undefined,
       groupTelegram,
+      purchaseEmail,
     ),
     prisma,
     inventory,
     mockPaymentProvider,
     createCheckoutSpy,
     groupTelegram,
+    purchaseEmail,
     tx,
   };
 }
@@ -262,6 +280,7 @@ describe("PaymentsService", () => {
       inventory,
       createCheckoutSpy,
       groupTelegram,
+      purchaseEmail,
     } = harness(pending, pending);
 
     const result = await service.confirmMockPayment(
@@ -324,6 +343,28 @@ describe("PaymentsService", () => {
     expect(groupTelegram.observeCompleted).toHaveBeenCalledWith(
       "event-1",
     );
+    expect(
+      tx.emailNotification.upsert,
+    ).toHaveBeenCalledWith({
+      where: {
+        orderId_type: {
+          orderId: "order-1",
+          type: "PURCHASE_CONFIRMATION",
+        },
+      },
+      update: {
+        recipient: "cliente@example.com",
+      },
+      create: {
+        orderId: "order-1",
+        type: "PURCHASE_CONFIRMATION",
+        recipient: "cliente@example.com",
+        status: "PENDING",
+      },
+    });
+    expect(
+      purchaseEmail.trySendForOrder,
+    ).toHaveBeenCalledWith("order-1");
     expect(result).toMatchObject({
       status: "PAID",
       paymentStatus: "PAID",
