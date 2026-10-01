@@ -14,11 +14,11 @@ export type StatusBadgeProps =
   };
 
 const TONE_CLASS: Record<StatusTone, string> = {
-  neutral: styles.badgeNeutral,
-  info: styles.badgeInfo,
-  success: styles.badgeSuccess,
-  warning: styles.badgeWarning,
-  danger: styles.badgeDanger,
+  neutral: styles.badgeNeutral!,
+  info: styles.badgeInfo!,
+  success: styles.badgeSuccess!,
+  warning: styles.badgeWarning!,
+  danger: styles.badgeDanger!,
 };
 
 export function StatusBadge({
