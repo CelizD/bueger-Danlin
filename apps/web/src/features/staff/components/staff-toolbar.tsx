@@ -33,6 +33,7 @@ export function StaffToolbar({
       </div>
 
       <select
+        aria-label="Filtrar personal por rol"
         value={roleFilter}
         onChange={(event) =>
           onRoleChange(
