@@ -65,6 +65,23 @@ La suite integrada verifica dos recorridos principales.
 - se prueban tanto lecturas como operaciones POST/PATCH prohibidas;
 - las páginas de otro rol redirigen al panel autorizado del usuario.
 
+### Accesibilidad integrada
+
+Axe se ejecuta en CI sobre estados reales de:
+
+- Home;
+- Login y verificación MFA;
+- Dashboard;
+- Pedidos;
+- Inventario;
+- Sábados;
+- Personal;
+- ARCO;
+- Cocina;
+- Entrega.
+
+La suite falla ante violaciones WCAG con impacto `serious` o `critical`. El usuario ADMIN de accesibilidad usa MFA real sembrado exclusivamente en la base E2E.
+
 GitHub Actions ejecuta esta suite en cada PR/push a `main`.
 
 ### Seguridad del seed

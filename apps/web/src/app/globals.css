@@ -528,7 +528,7 @@ h2 {
 
 .admin-kicker {
   margin: 0;
-  color: #7d7569;
+  color: #6f675e;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -782,7 +782,7 @@ h2 {
 }
 
 .admin-sidebar-brand span {
-  color: #888176;
+  color: #6f675e;
   font-size: 11px;
 }
 
@@ -842,7 +842,7 @@ h2 {
 }
 
 .admin-sidebar-user span {
-  color: #8c857a;
+  color: #6f675e;
   font-size: 10px;
 }
 
@@ -890,7 +890,7 @@ h2 {
 
 .admin-content-header > div > p:last-child {
   margin: 13px 0 0;
-  color: #777066;
+  color: #6f675e;
   font-size: 14px;
 }
 
@@ -946,7 +946,7 @@ h2 {
 }
 
 .admin-metrics span {
-  color: #837c71;
+  color: #6f675e;
   font-size: 11px;
   font-weight: 700;
 }
@@ -1333,7 +1333,7 @@ h2 {
   padding: 44px 20px;
   border: 1px dashed #d7d1c6;
   border-radius: 14px;
-  color: #837c72;
+  color: #6f675e;
   font-size: 13px;
   text-align: center;
 }
@@ -1506,7 +1506,7 @@ h2 {
 }
 
 .kitchen-stats span {
-  color: #777066;
+  color: #6f675e;
   font-size: 12px;
   font-weight: 700;
 }
@@ -1592,7 +1592,7 @@ h2 {
 
 .kitchen-card-head > div:first-child span {
   overflow: hidden;
-  color: #777066;
+  color: #6f675e;
   font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1632,7 +1632,7 @@ h2 {
 
 .kitchen-item-name span,
 .kitchen-item small {
-  color: #817a70;
+  color: #6f675e;
   font-size: 10px;
 }
 
@@ -1670,7 +1670,7 @@ h2 {
 }
 
 .kitchen-card-footer > span:first-child {
-  color: #8a8378;
+  color: #6f675e;
   font-size: 9px;
   font-weight: 800;
   text-transform: uppercase;
@@ -1705,7 +1705,7 @@ h2 {
   padding: 30px 12px;
   border: 1px dashed #d7d1c6;
   border-radius: 12px;
-  color: #8b8479;
+  color: #6f675e;
   font-size: 11px;
   text-align: center;
   background: rgba(255, 255, 255, 0.4);
@@ -1762,7 +1762,7 @@ h2 {
 }
 
 .delivery-search-count span {
-  color: #7b7469;
+  color: #6f675e;
   font-size: 10px;
 }
 
@@ -1829,7 +1829,7 @@ h2 {
 
 .delivery-card-top span,
 .delivery-meta span {
-  color: #898176;
+  color: #6f675e;
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -1863,7 +1863,7 @@ h2 {
 }
 
 .delivery-customer span {
-  color: #777066;
+  color: #6f675e;
   font-size: 11px;
 }
 
@@ -1921,7 +1921,7 @@ h2 {
   padding: 44px 18px;
   border: 1px dashed #d7d1c6;
   border-radius: 14px;
-  color: #827b70;
+  color: #6f675e;
   font-size: 12px;
   text-align: center;
 }
@@ -1961,7 +1961,7 @@ h2 {
 }
 
 .delivery-history-row span {
-  color: #766f65;
+  color: #6f675e;
 }
 
 .delivery-history-row b {
@@ -2150,7 +2150,7 @@ h2 {
 }
 
 .delivery-scan-card span {
-  color: #7d756b;
+  color: #6f675e;
   font-size: 11px;
 }
 
@@ -2373,7 +2373,7 @@ h2 {
 }
 
 .saturday-overview span {
-  color: #837c71;
+  color: #6f675e;
   font-size: 10px;
   font-weight: 750;
 }
@@ -2477,7 +2477,7 @@ h2 {
   border: 1px solid #d8d2c7;
   border-radius: 11px;
   background: #fbfaf7;
-  color: #7b7469;
+  color: #6f675e;
 }
 
 .saturday-input-icon:focus-within {
@@ -2497,7 +2497,7 @@ h2 {
   padding: 11px 12px;
   border-radius: 10px;
   background: #f4f1ea;
-  color: #777066;
+  color: #6f675e;
   font-size: 10px;
   line-height: 1.5;
 }
@@ -2568,7 +2568,7 @@ h2 {
 }
 
 .saturday-card-date span {
-  color: #7f776d;
+  color: #6f675e;
   font-size: 10px;
   font-weight: 900;
   letter-spacing: 0.11em;
@@ -2606,7 +2606,7 @@ h2 {
 }
 
 .saturday-card-title > div span {
-  color: #91897e;
+  color: #6f675e;
   font-size: 9px;
   font-weight: 750;
 }
@@ -2683,7 +2683,7 @@ h2 {
 }
 
 .saturday-capacity-head span {
-  color: #777066;
+  color: #6f675e;
 }
 
 .saturday-progress {
@@ -2710,7 +2710,7 @@ h2 {
 }
 
 .saturday-breakdown span {
-  color: #827b71;
+  color: #6f675e;
   font-size: 9px;
 }
 
@@ -3297,7 +3297,7 @@ h2 {
 }
 
 .staff-metrics span {
-  color: #837c71;
+  color: #6f675e;
   font-size: 10px;
   font-weight: 750;
 }
@@ -3332,7 +3332,7 @@ h2 {
 
 .staff-form-head > div > p:last-child {
   margin-top: 7px;
-  color: #777066;
+  color: #6f675e;
   font-size: 11px;
 }
 
@@ -3402,7 +3402,7 @@ h2 {
   border: 1px solid #d8d2c7;
   border-radius: 11px;
   background: #fbfaf7;
-  color: #7b7469;
+  color: #6f675e;
 }
 
 .staff-input-icon:focus-within {
@@ -3422,7 +3422,7 @@ h2 {
   padding: 11px 12px;
   border-radius: 10px;
   background: #f4f1ea;
-  color: #777066;
+  color: #6f675e;
   font-size: 10px;
   line-height: 1.5;
 }
@@ -3541,7 +3541,7 @@ h2 {
   padding: 3px 6px;
   border-radius: 999px;
   background: #e9e4dc;
-  color: #6d665d;
+  color: #5f574d;
   font-size: 8px;
   font-style: normal;
   text-transform: uppercase;
@@ -3550,7 +3550,7 @@ h2 {
 
 .staff-identity > div > span {
   overflow: hidden;
-  color: #827b70;
+  color: #6f675e;
   font-size: 10px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -3582,7 +3582,7 @@ h2 {
 }
 
 .staff-role-control > span {
-  color: #8a8378;
+  color: #6f675e;
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -3700,7 +3700,7 @@ h2 {
 }
 
 .staff-permission-head span {
-  color: #7b746a;
+  color: #6f675e;
   font-size: 10px;
   line-height: 1.4;
 }
@@ -3864,7 +3864,7 @@ h2 {
   padding: 8px 10px;
   border-radius: 9px;
   background: #ece8e0;
-  color: #6f685f;
+  color: #6f675e;
   font-size: 10px;
   font-weight: 750;
 }
@@ -3903,7 +3903,7 @@ h2 {
 
 .dashboard-metric > span {
   display: block;
-  color: #81796f;
+  color: #6f675e;
   font-size: 10px;
   font-weight: 800;
 }
@@ -3922,7 +3922,7 @@ h2 {
 .dashboard-metric > small {
   display: block;
   margin-top: 7px;
-  color: #91897e;
+  color: #6f675e;
   font-size: 9px;
   line-height: 1.4;
 }
@@ -4002,7 +4002,7 @@ h2 {
   padding: 6px 8px;
   border-radius: 999px;
   background: #efebe4;
-  color: #766f65;
+  color: #6f675e;
   font-size: 8px;
   font-weight: 850;
 }
@@ -4118,14 +4118,14 @@ h2 {
   display: grid;
   min-height: 180px;
   place-items: center;
-  color: #8a8378;
+  color: #6f675e;
   font-size: 11px;
   text-align: center;
 }
 
 .dashboard-footnote {
   margin: 14px 3px 0;
-  color: #8a8378;
+  color: #6f675e;
   font-size: 9px;
   line-height: 1.5;
 }
@@ -4209,7 +4209,7 @@ h2 {
 }
 
 .inventory-summary span {
-  color: #837c71;
+  color: #6f675e;
   font-size: 10px;
   font-weight: 750;
 }
@@ -4225,7 +4225,7 @@ h2 {
   padding: 11px 12px;
   border-radius: 10px;
   background: #eeeae2;
-  color: #746d63;
+  color: #6f675e;
   font-size: 10px;
   line-height: 1.5;
 }
@@ -4275,7 +4275,7 @@ h2 {
 }
 
 .inventory-card-head > div > span {
-  color: #888176;
+  color: #6f675e;
   font-size: 10px;
 }
 
@@ -5208,7 +5208,7 @@ textarea:focus-visible,
 .group-delivery-consent-copy small {
   display: block;
   margin-top: 9px;
-  color: #857a6d;
+  color: #5f574d;
   font-size: 10px;
   line-height: 1.5;
 }
@@ -5405,7 +5405,7 @@ textarea:focus-visible,
 
 .admin-delivery-groups-head p:last-child {
   margin: 0;
-  color: #7d766c;
+  color: #6f675e;
   font-size: 11px;
 }
 
@@ -5505,7 +5505,7 @@ textarea:focus-visible,
 
 .admin-group-date,
 .admin-group-address {
-  color: #80786e;
+  color: #6f675e;
   font-size: 10px;
   line-height: 1.4;
 }
@@ -5597,7 +5597,7 @@ textarea:focus-visible,
 }
 
 .admin-delivery-charge span {
-  color: #81786d;
+  color: #6f675e;
   font-size: 9px;
   font-weight: 850;
   letter-spacing: 0.07em;
@@ -5610,7 +5610,7 @@ textarea:focus-visible,
 
 .admin-delivery-charge small {
   max-width: 340px;
-  color: #746b61;
+  color: #6f675e;
   font-size: 10px;
   line-height: 1.45;
   text-align: right;
@@ -5675,14 +5675,14 @@ textarea:focus-visible,
 
 .admin-day-panel-head p:last-child {
   margin: 0;
-  color: #7e776d;
+  color: #6f675e;
   font-size: 11px;
   text-transform: capitalize;
 }
 
 .admin-day-panel-head > span,
 .dashboard-history-heading > span {
-  color: #81796f;
+  color: #6f675e;
   font-size: 10px;
   font-weight: 800;
 }
@@ -5714,7 +5714,7 @@ textarea:focus-visible,
 }
 
 .admin-day-metrics span {
-  color: #817a70;
+  color: #6f675e;
   font-size: 10px;
   font-weight: 800;
 }
@@ -5729,7 +5729,7 @@ textarea:focus-visible,
 
 .admin-day-metrics small {
   margin-top: 3px;
-  color: #8b8378;
+  color: #6f675e;
   font-size: 9px;
   line-height: 1.4;
 }
@@ -5799,7 +5799,7 @@ textarea:focus-visible,
 
 .admin-day-group-copy span,
 .admin-day-group-copy small {
-  color: #827a70;
+  color: #6f675e;
   font-size: 9px;
   line-height: 1.35;
 }
@@ -5834,7 +5834,7 @@ textarea:focus-visible,
 }
 
 .admin-day-group-delivery small {
-  color: #80776d;
+  color: #6f675e;
   font-size: 9px;
 }
 
@@ -6150,7 +6150,7 @@ textarea:focus-visible,
 }
 
 .seller-disclosure dt {
-  color: #81796e;
+  color: #5f574d;
   font-size: 10px;
   font-weight: 850;
   text-transform: uppercase;

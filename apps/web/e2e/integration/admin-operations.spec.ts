@@ -1,5 +1,6 @@
 import { createHmac } from "node:crypto";
 import { expect, test } from "@playwright/test";
+import { assertNoBlockingA11y } from "./accessibility-assertions";
 
 const API_URL = "http://localhost:4000/api/v1";
 const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
@@ -109,7 +110,7 @@ test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
   page,
   request,
 }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(180_000);
 
   const suffix = Date.now().toString(36);
   const inventoryName = `Insumo E2E ${suffix}`;
@@ -141,10 +142,28 @@ test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
 
   await loginAdminWithMfa(page);
 
+  await expect(
+    page.getByRole("heading", {
+      name: "Panel del día",
+      level: 1,
+    }),
+  ).toBeVisible();
+  await assertNoBlockingA11y(page, "Dashboard");
+
+  await page.goto("/admin/pedidos");
+  await expect(
+    page.getByRole("heading", {
+      name: "Pedidos",
+      level: 1,
+    }),
+  ).toBeVisible();
+  await assertNoBlockingA11y(page, "Pedidos");
+
   await page.goto("/admin/inventario");
   await expect(
     page.getByRole("heading", { name: "Inventario" }),
   ).toBeVisible();
+  await assertNoBlockingA11y(page, "Inventario");
 
   await page
     .getByRole("button", { name: "Nuevo artículo" })
@@ -200,6 +219,7 @@ test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
   await expect(
     page.getByRole("heading", { name: "Sábados" }),
   ).toBeVisible();
+  await assertNoBlockingA11y(page, "Sábados");
 
   await page
     .getByRole("button", { name: "Nueva fecha" })
@@ -247,6 +267,7 @@ test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
   await expect(
     page.getByRole("heading", { name: "Personal" }),
   ).toBeVisible();
+  await assertNoBlockingA11y(page, "Personal");
 
   await page
     .getByRole("button", { name: "Nueva cuenta" })
@@ -292,6 +313,7 @@ test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
   await expect(
     page.getByRole("heading", { name: "Solicitudes ARCO" }),
   ).toBeVisible();
+  await assertNoBlockingA11y(page, "ARCO");
 
   const arcoCard = page
     .locator(".arco-admin-card")
@@ -325,4 +347,22 @@ test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
       .locator(".arco-admin-card")
       .filter({ hasText: arco.folio }),
   ).toContainText("Resuelta");
+
+  await page.goto("/admin/cocina");
+  await expect(
+    page.getByRole("heading", {
+      name: "Cocina",
+      level: 1,
+    }),
+  ).toBeVisible();
+  await assertNoBlockingA11y(page, "Cocina");
+
+  await page.goto("/admin/entrega");
+  await expect(
+    page.getByRole("heading", {
+      name: "Entrega",
+      level: 1,
+    }),
+  ).toBeVisible();
+  await assertNoBlockingA11y(page, "Entrega");
 });
