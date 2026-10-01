@@ -52,6 +52,9 @@ export default defineConfig({
         AUTH_JWT_SECRET:
           process.env.AUTH_JWT_SECRET ??
           "integrated-e2e-auth-secret-not-for-production-123456789",
+        MFA_ENCRYPTION_KEY:
+          process.env.MFA_ENCRYPTION_KEY ??
+          "MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE",
         PAYMENT_PROVIDER: "mock",
         ENABLE_REAL_PAYMENTS: "false",
         APP_TIMEZONE: "America/Tijuana",
