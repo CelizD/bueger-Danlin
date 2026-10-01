@@ -49,7 +49,9 @@ describe("CustomerFields", () => {
     render(<CustomerFieldsHarness />);
 
     const name = screen.getByLabelText("Nombre *");
-    const phone = screen.getByLabelText("Teléfono *");
+    const phone = screen.getByRole("textbox", {
+      name: /Teléfono/,
+    });
     const email = screen.getByLabelText("Correo (opcional)");
 
     await user.type(name, "Daniel Celiz");
