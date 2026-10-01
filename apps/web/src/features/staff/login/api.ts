@@ -110,3 +110,25 @@ export async function verifyStaffMfa(code: string) {
     recoveryCodes?: string[];
   }>;
 }
+
+
+export async function logoutStaff() {
+  const response = await apiFetch(
+    API_URL + "/auth/logout",
+    {
+      method: "POST",
+      credentials: "include",
+    },
+  );
+
+  if (response.status === 401) {
+    return;
+  }
+
+  if (!response.ok) {
+    await throwApiHttpError(
+      response,
+      "No se pudo cerrar la sesión.",
+    );
+  }
+}
