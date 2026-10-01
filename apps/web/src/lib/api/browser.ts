@@ -69,3 +69,56 @@ export function apiErrorRequestId(
 ) {
   return payload?.error?.requestId;
 }
+
+
+export class ApiHttpError extends Error {
+  readonly status: number;
+  readonly requestId?: string;
+
+  constructor(
+    message: string,
+    status: number,
+    requestId?: string,
+  ) {
+    super(message);
+    this.name = "ApiHttpError";
+    this.status = status;
+    this.requestId = requestId;
+  }
+}
+
+export function apiHttpErrorFromPayload(
+  response: Response,
+  payload: ApiErrorPayload | null | undefined,
+  fallback: string,
+) {
+  return new ApiHttpError(
+    apiErrorMessage(payload, fallback),
+    response.status,
+    apiErrorRequestId(payload) ??
+      responseRequestId(response),
+  );
+}
+
+export async function apiHttpError(
+  response: Response,
+  fallback: string,
+) {
+  const payload = (await response
+    .clone()
+    .json()
+    .catch(() => null)) as ApiErrorPayload | null;
+
+  return apiHttpErrorFromPayload(
+    response,
+    payload,
+    fallback,
+  );
+}
+
+export async function throwApiHttpError(
+  response: Response,
+  fallback: string,
+): Promise<never> {
+  throw await apiHttpError(response, fallback);
+}
