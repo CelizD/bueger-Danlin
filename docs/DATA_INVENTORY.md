@@ -42,7 +42,7 @@ No sustituye un aviso de privacidad legal.
 | AuditLog | userId, acción, entidad, before/after | Interno; puede contener personal | auditoría | PostgreSQL |
 | HTTP logs | requestId, método, path, status, duración, IP, UA | Personal/técnico | operación y seguridad | stdout/Docker/journald |
 | Frontend telemetry | ruta, Web Vitals, tipo de error, digest | Técnico | calidad/diagnóstico | logs |
-| QR cliente | orderCode + verification token | Secreto temporal | entrega | presentado por cliente; token en claro no se persiste |
+| QR cliente | orderCode + token de entrega | Secreto temporal | entrega | presentado por cliente; capability separada del acceso administrativo |
 | JWT staff | identidad/rol/version de credencial | Secreto temporal | sesión | cookie HttpOnly del navegador |
 | Variables de entorno | DB, Redis, JWT, MFA, QR, pagos | Secreto | operación | archivo/entorno del host |
 | Backup DB | copia de tablas | Personal + secreto derivado + financiero | recuperación | archivo cifrado age/offsite |
@@ -59,7 +59,7 @@ Salvo un cambio explícito de alcance, Burger Danlin no debe guardar:
 - contraseñas en texto plano;
 - códigos TOTP usados;
 - tokens de sesión en logs;
-- X-Order-Token en logs;
+- cookies HttpOnly de acceso de pedido en logs;
 - verificationToken en logs;
 - secretos de proveedor en base de datos;
 - cuerpos completos de requests en logs;
@@ -90,7 +90,7 @@ Datos principales:
 
 Cliente
 → Web
-→ API con X-Order-Token
+→ API con cookie HttpOnly de acceso por pedido
 → PostgreSQL
 
 El token funciona como capability y debe tratarse como secreto.
@@ -212,7 +212,7 @@ Prohibido:
 - Authorization;
 - cookies;
 - JWT;
-- X-Order-Token;
+- cookie HttpOnly de acceso del pedido;
 - QR token;
 - contraseñas;
 - TOTP;
