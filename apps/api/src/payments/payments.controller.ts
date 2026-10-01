@@ -1,18 +1,25 @@
 import { Throttle } from "@nestjs/throttler";
 import {
-  BadRequestException,
   Controller,
   Header,
-  Headers,
   Param,
   Post,
+  Req,
 } from "@nestjs/common";
+import {
+  CustomerOrderAccessService,
+  type OrderAccessRequest,
+  readOrderAccessCookie,
+} from "../orders/customer-order-access.service.js";
 import { OrderCodePipe } from "../orders/order-code.pipe.js";
 import { PaymentsService } from "./payments.service.js";
 
 @Controller("payments")
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(
+    private readonly paymentsService: PaymentsService,
+    private readonly customerOrderAccess: CustomerOrderAccessService,
+  ) {}
 
   @Post(":orderCode/checkout")
   @Header("Cache-Control", "no-store")
@@ -22,13 +29,19 @@ export class PaymentsController {
       ttl: 60_000,
     },
   })
-  createCheckout(
-    @Param("orderCode", OrderCodePipe) orderCode: string,
-    @Headers("x-order-token") verificationToken?: string,
+  async createCheckout(
+    @Param("orderCode", OrderCodePipe)
+    orderCode: string,
+    @Req() request: OrderAccessRequest,
   ) {
-    if (!verificationToken) {
-      throw new BadRequestException("Falta el encabezado X-Order-Token.");
-    }
+    const verificationToken =
+      await this.customerOrderAccess.verificationToken(
+        orderCode,
+        readOrderAccessCookie(
+          request,
+          orderCode,
+        ),
+      );
 
     return this.paymentsService.createCheckout(
       orderCode,
@@ -44,13 +57,19 @@ export class PaymentsController {
       ttl: 60_000,
     },
   })
-  confirmMock(
-    @Param("orderCode", OrderCodePipe) orderCode: string,
-    @Headers("x-order-token") verificationToken?: string,
+  async confirmMock(
+    @Param("orderCode", OrderCodePipe)
+    orderCode: string,
+    @Req() request: OrderAccessRequest,
   ) {
-    if (!verificationToken) {
-      throw new BadRequestException("Falta el encabezado X-Order-Token.");
-    }
+    const verificationToken =
+      await this.customerOrderAccess.verificationToken(
+        orderCode,
+        readOrderAccessCookie(
+          request,
+          orderCode,
+        ),
+      );
 
     return this.paymentsService.confirmMockPayment(
       orderCode,
