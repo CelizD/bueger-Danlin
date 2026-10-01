@@ -55,6 +55,7 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 
 - [ ] Configurar dominio real de Web.
 - [ ] Configurar dominio real de API.
+- [ ] Configurar sitemap + canonical usando el dominio real de producción.
 - [ ] Crear DNS A/AAAA hacia el VPS.
 - [ ] Sustituir dominios example.com en Nginx.
 - [ ] Emitir certificados TLS.
