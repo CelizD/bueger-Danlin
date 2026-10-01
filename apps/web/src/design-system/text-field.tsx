@@ -25,8 +25,10 @@ export function TextField({
     .join(" ") || undefined;
 
   return (
-    <label className={styles.field} htmlFor={id}>
-      <span className={styles.label}>{label}</span>
+    <div className={styles.field}>
+      <label className={styles.label} htmlFor={id}>
+        {label}
+      </label>
       <input
         {...props}
         id={id}
@@ -48,6 +50,6 @@ export function TextField({
           {error}
         </p>
       )}
-    </label>
+    </div>
   );
 }
