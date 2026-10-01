@@ -18,7 +18,7 @@ Evolucionar el frontend actual sin sobrearquitectura. Burger Danlin sigue siendo
 | Modularidad por dominio | 🟡 | varias rutas están separadas, pero páginas cliente grandes concentran datos + estado + UI |
 | Frontera server/client | 🟡 | muchas rutas admin son Client Components completos |
 | API browser boundary | ✅ inicial | URL base centralizada en `src/lib/api/browser.ts` |
-| Design tokens | 🟡 | tokens semánticos base agregados; todavía existe CSS histórico con valores físicos |
+| Design tokens | ✅ base | tokens semánticos centralizados en `src/design-system/tokens.css`; CSS histórico migra de forma incremental |
 | Estados loading/error/404 | ✅ base | estados globales accesibles agregados |
 | Responsive | ✅ parcial | reglas mobile/tablet ya existen |
 | WCAG 2.2 AA | 🟡 | focus-visible, skip link y reduced-motion agregados; falta auditoría completa |
@@ -36,7 +36,7 @@ Evolucionar el frontend actual sin sobrearquitectura. Burger Danlin sigue siendo
 | Testing frontend real | 🟡 | Vitest cubre reglas y render de componentes críticos; faltan Testing Library/E2E/axe |
 | E2E | ✅ base | Playwright validado localmente: pedido/pago/QR, login/MFA, error de credenciales y teclado |
 | Accessibility automation | ✅ base | axe + Playwright validado localmente sin violaciones serious/critical en home |
-| Storybook | 🔴 | pendiente cuando se formalice design system |
+| Storybook | ✅ base | Storybook Next.js/Vite con Docs + a11y; build obligatorio en CI |
 | Observabilidad frontend | 🟡 | Web Vitals, client errors y request correlation implementados; falta operación/alertas reales |
 | CI de tipos/build | ✅ | GitHub Actions ejecuta typecheck/test/build |
 | Security scanning | ✅ | audit, Gitleaks, Semgrep y SBOM existentes |
@@ -201,9 +201,11 @@ Trabajo:
 
 ## Fase 5 — Design system
 
+Estado: ✅ base implementada.
+
 No migrar todo a Tailwind solo por usar Tailwind.
 
-Primero formalizar:
+Arquitectura formalizada:
 
 ```text
 tokens
@@ -228,20 +230,27 @@ Tokens semánticos:
 - border-muted
 - focus-ring
 
-Después:
+Implementado:
 
+- tokens semánticos centralizados;
 - Button;
-- Input;
-- Select;
-- Dialog;
+- TextField;
 - Alert;
 - StatusBadge;
 - EmptyState;
 - LoadingState;
-- ConfirmDialog;
-- DataTable responsive.
+- Storybook con Docs y addon a11y;
+- stories de foundations y variantes;
+- pruebas Testing Library para primitives;
+- build de Storybook dentro de CI.
 
-Storybook entra cuando esos componentes ya sean reutilizables y exista valor en documentarlos/probarlos aislados.
+Siguiente evolución, solo cuando exista duplicación real:
+
+- Select;
+- Dialog;
+- ConfirmDialog;
+- DataTable responsive;
+- migrar componentes históricos hacia los primitives compartidos sin reescritura masiva.
 
 ## Fase 6 — Seguridad avanzada del frontend
 

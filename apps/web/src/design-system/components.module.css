@@ -1,0 +1,238 @@
+.button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease;
+}
+
+.button:focus-visible,
+.input:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.buttonPrimary {
+  background: var(--color-action-primary);
+  color: var(--color-surface);
+}
+
+.buttonPrimary:hover:not(:disabled) {
+  background: #2d2b25;
+}
+
+.buttonSecondary {
+  border-color: var(--color-border-muted);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.buttonSecondary:hover:not(:disabled),
+.buttonGhost:hover:not(:disabled) {
+  background: var(--color-surface-muted);
+}
+
+.buttonDanger {
+  background: var(--color-danger);
+  color: var(--color-surface);
+}
+
+.buttonGhost {
+  background: transparent;
+  color: var(--color-text-primary);
+}
+
+.buttonSmall {
+  min-height: 36px;
+  padding-inline: var(--space-3);
+  font-size: 13px;
+}
+
+.buttonMedium {
+  min-height: 44px;
+}
+
+.field {
+  display: grid;
+  gap: var(--space-2);
+  width: min(100%, 420px);
+}
+
+.label {
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-md);
+  outline: none;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font: inherit;
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+
+.hint,
+.errorText {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.hint {
+  color: var(--color-text-secondary);
+}
+
+.errorText {
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+.alert {
+  width: min(100%, 560px);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  line-height: 1.45;
+}
+
+.alertInfo {
+  border-color: #a9bdc8;
+  background: #f1f7fa;
+  color: #28495d;
+}
+
+.alertSuccess {
+  border-color: #a9c0a4;
+  background: #f1f7ef;
+  color: #294b26;
+}
+
+.alertWarning {
+  border-color: #d6bd82;
+  background: #fff8e7;
+  color: #674713;
+}
+
+.alertDanger {
+  border-color: #d1a49a;
+  background: #fff3f0;
+  color: #7c2d1f;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.badgeNeutral {
+  background: #ece8df;
+  color: #4d4841;
+}
+
+.badgeInfo {
+  background: #e9f1f5;
+  color: #31546a;
+}
+
+.badgeSuccess {
+  background: #e8f3e4;
+  color: #31502d;
+}
+
+.badgeWarning {
+  background: #fff2cf;
+  color: #6c4b13;
+}
+
+.badgeDanger {
+  background: #f7e7e4;
+  color: #842f20;
+}
+
+.state {
+  width: min(100%, 520px);
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.stateTitle,
+.stateBody {
+  margin: 0;
+}
+
+.stateTitle {
+  font-size: 20px;
+  letter-spacing: -0.025em;
+}
+
+.stateBody {
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.loadingRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-border-muted);
+  border-top-color: var(--color-action-primary);
+  border-radius: 50%;
+  animation: ds-spin 700ms linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
+
+@keyframes ds-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
