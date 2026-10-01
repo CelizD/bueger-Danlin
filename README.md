@@ -74,7 +74,7 @@ PostgreSQL es la fuente de verdad. Redis está preparado para infraestructura fu
 - reserva de 15 minutos;
 - pago local `MOCK`;
 - QR de entrega;
-- consulta segura del pedido mediante `X-Order-Token`;
+- consulta segura del pedido mediante cookie HttpOnly aislada por pedido;
 - cancelación y reembolso local simulado.
 
 ### Cocina
@@ -302,7 +302,7 @@ Endpoints públicos principales:
 
 El endpoint de creación requiere el header `Idempotency-Key` con un valor único de 16 a 128 caracteres, normalmente generado por el cliente.
 
-Las operaciones privadas del cliente requieren el header `X-Order-Token` con el token opaco devuelto al crear el pedido.
+Las operaciones privadas del cliente usan una cookie HttpOnly + SameSite=Strict emitida por el API. El token incluido en el QR queda limitado al flujo de entrega y no autoriza consulta, pago, cancelación ni comprobantes.
 
 ## Tests y CI
 
