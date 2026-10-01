@@ -57,6 +57,14 @@ La suite integrada verifica dos recorridos principales.
 5. crea una cuenta de Personal, cambia su rol y la desactiva;
 6. procesa una solicitud ARCO real desde recepción hasta resolución.
 
+### Matriz negativa de permisos
+
+- sin sesión: endpoints privados responden `401`;
+- KITCHEN: Cocina responde `200`, Entrega y Admin responden `403`;
+- DELIVERY: Entrega responde `200`, Cocina y Admin responden `403`;
+- se prueban tanto lecturas como operaciones POST/PATCH prohibidas;
+- las páginas de otro rol redirigen al panel autorizado del usuario.
+
 GitHub Actions ejecuta esta suite en cada PR/push a `main`.
 
 ### Seguridad del seed
