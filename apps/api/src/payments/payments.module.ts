@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { CustomerOrderAccessService } from "../orders/customer-order-access.service.js";
 import { PaymentsController } from "./payments.controller.js";
 import { PaymentWebhooksController } from "./payment-webhooks.controller.js";
 import { PaymentProviderRegistry } from "./payment-provider.registry.js";
@@ -13,6 +14,7 @@ import { WebhookSecurityService } from "./webhook-security.service.js";
   controllers: [PaymentsController, PaymentWebhooksController],
   providers: [
     PaymentsService,
+    CustomerOrderAccessService,
     PaymentWebhookService,
     MockPaymentProvider,
     MercadoPagoApiClient,
