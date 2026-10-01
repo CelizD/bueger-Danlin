@@ -1,6 +1,7 @@
 import {
   API_URL,
   apiFetch,
+  throwApiHttpError,
 } from "@/lib/api/browser";
 import type {
   DashboardData,
@@ -29,12 +30,16 @@ export async function fetchAdminDashboard(
     return { authorized: false };
   }
 
+  if (!me.ok) {
+    await throwApiHttpError(
+      me,
+      "No se pudo validar la sesión.",
+    );
+  }
+
   const meData = await me.json();
 
-  if (
-    !me.ok ||
-    meData.user.role !== "ADMIN"
-  ) {
+  if (meData.user.role !== "ADMIN") {
     return { authorized: false };
   }
 
@@ -56,8 +61,16 @@ export async function fetchAdminDashboard(
     },
   );
 
+  if (
+    response.status === 401 ||
+    response.status === 403
+  ) {
+    return { authorized: false };
+  }
+
   if (!response.ok) {
-    throw new Error(
+    await throwApiHttpError(
+      response,
       "No se pudieron cargar las métricas de ventas.",
     );
   }

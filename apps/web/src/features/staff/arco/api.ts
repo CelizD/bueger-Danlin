@@ -1,7 +1,7 @@
 import {
   API_URL,
-  apiErrorMessage,
   apiFetch,
+  throwApiHttpError,
 } from "@/lib/api/browser";
 import type {
   AdminArcoRequest,
@@ -29,7 +29,8 @@ export async function fetchAdminArco() {
   }
 
   if (!meResponse.ok) {
-    throw new Error(
+    await throwApiHttpError(
+      meResponse,
       "No se pudo validar la sesión.",
     );
   }
@@ -57,15 +58,10 @@ export async function fetchAdminArco() {
     };
   }
 
-  const payload =
-    await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      apiErrorMessage(
-        payload,
-        "No se pudieron cargar las solicitudes ARCO.",
-      ),
+    await throwApiHttpError(
+      response,
+      "No se pudieron cargar las solicitudes ARCO.",
     );
   }
 
@@ -75,7 +71,7 @@ export async function fetchAdminArco() {
     user:
       me.user as StaffSessionUser,
     requests:
-      payload as AdminArcoRequest[],
+      (await response.json()) as AdminArcoRequest[],
   };
 }
 
@@ -108,17 +104,12 @@ export async function updateAdminArco(
       },
     );
 
-  const payload =
-    await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      apiErrorMessage(
-        payload,
-        "No se pudo actualizar la solicitud ARCO.",
-      ),
+    await throwApiHttpError(
+      response,
+      "No se pudo actualizar la solicitud ARCO.",
     );
   }
 
-  return payload as AdminArcoRequest;
+  return response.json() as Promise<AdminArcoRequest>;
 }

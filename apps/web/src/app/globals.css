@@ -846,6 +846,11 @@ h2 {
   font-size: 10px;
 }
 
+.admin-sidebar-user .admin-sidebar-logout-error {
+  color: #a43d35;
+  white-space: normal;
+}
+
 .admin-sidebar-user button {
   flex: 0 0 auto;
   display: grid;

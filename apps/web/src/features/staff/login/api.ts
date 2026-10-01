@@ -1,16 +1,9 @@
-import { API_URL, apiFetch } from "@/lib/api/browser";
+import {
+  API_URL,
+  apiFetch,
+  throwApiHttpError,
+} from "@/lib/api/browser";
 import type { MfaSetup, StaffRole } from "./types";
-
-function responseMessage(
-  data: { message?: string | string[] },
-  fallback: string,
-) {
-  const message = Array.isArray(data.message)
-    ? data.message.join(" ")
-    : data.message;
-
-  return message || fallback;
-}
 
 export async function checkStaffSession(): Promise<StaffRole | null> {
   const response = await apiFetch(
@@ -20,8 +13,18 @@ export async function checkStaffSession(): Promise<StaffRole | null> {
     },
   );
 
-  if (!response.ok) {
+  if (
+    response.status === 401 ||
+    response.status === 403
+  ) {
     return null;
+  }
+
+  if (!response.ok) {
+    await throwApiHttpError(
+      response,
+      "No se pudo validar la sesión.",
+    );
   }
 
   const data = await response.json();
@@ -47,22 +50,18 @@ export async function submitStaffPassword(
     },
   );
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      responseMessage(
-        data,
-        "No fue posible iniciar sesión.",
-      ),
+    await throwApiHttpError(
+      response,
+      "No fue posible iniciar sesión.",
     );
   }
 
-  return data as {
+  return response.json() as Promise<{
     mfaRequired?: boolean;
     setupRequired?: boolean;
     user?: { role: StaffRole };
-  };
+  }>;
 }
 
 export async function fetchMfaSetup() {
@@ -74,18 +73,14 @@ export async function fetchMfaSetup() {
     },
   );
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      responseMessage(
-        data,
-        "No fue posible preparar el segundo factor.",
-      ),
+    await throwApiHttpError(
+      response,
+      "No fue posible preparar el segundo factor.",
     );
   }
 
-  return data as MfaSetup;
+  return response.json() as Promise<MfaSetup>;
 }
 
 export async function verifyStaffMfa(code: string) {
@@ -103,19 +98,37 @@ export async function verifyStaffMfa(code: string) {
     },
   );
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      responseMessage(
-        data,
-        "No fue posible verificar el código.",
-      ),
+    await throwApiHttpError(
+      response,
+      "No fue posible verificar el código.",
     );
   }
 
-  return data as {
+  return response.json() as Promise<{
     user: { role: StaffRole };
     recoveryCodes?: string[];
-  };
+  }>;
+}
+
+
+export async function logoutStaff() {
+  const response = await apiFetch(
+    API_URL + "/auth/logout",
+    {
+      method: "POST",
+      credentials: "include",
+    },
+  );
+
+  if (response.status === 401) {
+    return;
+  }
+
+  if (!response.ok) {
+    await throwApiHttpError(
+      response,
+      "No se pudo cerrar la sesión.",
+    );
+  }
 }

@@ -1,6 +1,7 @@
 import {
   API_URL,
   apiFetch,
+  throwApiHttpError,
 } from "@/lib/api/browser";
 import type {
   CreateInventoryForm,
@@ -9,14 +10,6 @@ import type {
   StaffUser,
 } from "./types";
 import { parseInventoryValues } from "./validation";
-
-function responseMessage(
-  data: { message?: string | string[] },
-) {
-  return Array.isArray(data.message)
-    ? data.message.join(" ")
-    : data.message;
-}
 
 export async function fetchAdminInventory(): Promise<
   | { authorized: false }
@@ -40,12 +33,16 @@ export async function fetchAdminInventory(): Promise<
     };
   }
 
+  if (!me.ok) {
+    await throwApiHttpError(
+      me,
+      "No se pudo validar la sesión.",
+    );
+  }
+
   const meData = await me.json();
 
-  if (
-    !me.ok ||
-    meData.user.role !== "ADMIN"
-  ) {
+  if (meData.user.role !== "ADMIN") {
     return {
       authorized: false,
     };
@@ -59,8 +56,18 @@ export async function fetchAdminInventory(): Promise<
     },
   );
 
+  if (
+    response.status === 401 ||
+    response.status === 403
+  ) {
+    return {
+      authorized: false,
+    };
+  }
+
   if (!response.ok) {
-    throw new Error(
+    await throwApiHttpError(
+      response,
       "No se pudo cargar el inventario.",
     );
   }
@@ -94,16 +101,14 @@ export async function createAdminInventoryItem(
     },
   );
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      responseMessage(data) ||
-        "No se pudo crear el artículo.",
+    await throwApiHttpError(
+      response,
+      "No se pudo crear el artículo.",
     );
   }
 
-  return data as InventoryItem;
+  return response.json() as Promise<InventoryItem>;
 }
 
 export async function updateAdminInventoryItem(
@@ -127,16 +132,14 @@ export async function updateAdminInventoryItem(
     },
   );
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      responseMessage(data) ||
-        "No se pudo guardar el inventario.",
+    await throwApiHttpError(
+      response,
+      "No se pudo guardar el inventario.",
     );
   }
 
-  return data as InventoryItem;
+  return response.json() as Promise<InventoryItem>;
 }
 
 export async function setAdminInventoryItemActive(
@@ -157,16 +160,14 @@ export async function setAdminInventoryItemActive(
     },
   );
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      responseMessage(data) ||
-        "No se pudo actualizar el artículo.",
+    await throwApiHttpError(
+      response,
+      "No se pudo actualizar el artículo.",
     );
   }
 
-  return data as InventoryItem;
+  return response.json() as Promise<InventoryItem>;
 }
 
 export async function deleteAdminInventoryItem(
@@ -182,14 +183,12 @@ export async function deleteAdminInventoryItem(
     },
   );
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      responseMessage(data) ||
-        "No se pudo eliminar el artículo.",
+    await throwApiHttpError(
+      response,
+      "No se pudo eliminar el artículo.",
     );
   }
 
-  return data;
+  return response.json();
 }
