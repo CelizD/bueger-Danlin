@@ -11,6 +11,7 @@ function requiredEnv(name: string) {
 }
 
 const databaseUrl = requiredEnv("DATABASE_URL");
+const mfaEncryptionKey = requiredEnv("MFA_ENCRYPTION_KEY");
 
 export default defineConfig({
   testDir: "./e2e/integration",
@@ -52,6 +53,7 @@ export default defineConfig({
         AUTH_JWT_SECRET:
           process.env.AUTH_JWT_SECRET ??
           "integrated-e2e-auth-secret-not-for-production-123456789",
+        MFA_ENCRYPTION_KEY: mfaEncryptionKey,
         PAYMENT_PROVIDER: "mock",
         ENABLE_REAL_PAYMENTS: "false",
         APP_TIMEZONE: "America/Tijuana",
