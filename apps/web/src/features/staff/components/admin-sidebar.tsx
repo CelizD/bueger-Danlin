@@ -4,8 +4,8 @@ import {
   canAccessAdminSection,
   type AdminSection,
 } from "@/features/staff/permissions";
+import { logoutStaff } from "@/features/staff/login/api";
 import type { StaffSessionUser } from "@/features/staff/types";
-import { API_URL, apiFetch } from "@/lib/api/browser";
 import {
   BarChart3,
   Boxes,
@@ -17,7 +17,7 @@ import {
   Truck,
   Users,
 } from "lucide-react";
-
+import { useState } from "react";
 
 type AdminSidebarProps = {
   user: StaffSessionUser | null;
@@ -81,13 +81,27 @@ export function AdminSidebar({
   active,
   subtitle = "Operaciones",
 }: AdminSidebarProps) {
-  async function logout() {
-    await apiFetch(`${API_URL}/auth/logout`, {
-      method: "POST",
-      credentials: "include",
-    });
+  const [loggingOut, setLoggingOut] =
+    useState(false);
+  const [logoutError, setLogoutError] =
+    useState("");
 
-    window.location.replace("/admin/login");
+  async function logout() {
+    setLoggingOut(true);
+    setLogoutError("");
+
+    try {
+      await logoutStaff();
+      window.location.replace("/admin/login");
+    } catch (error) {
+      setLogoutError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo cerrar la sesión.",
+      );
+    } finally {
+      setLoggingOut(false);
+    }
   }
 
   return (
@@ -135,8 +149,21 @@ export function AdminSidebar({
         <div>
           <strong>{user?.name}</strong>
           <span>{user?.email}</span>
+          {logoutError && (
+            <span
+              className="admin-sidebar-logout-error"
+              role="alert"
+            >
+              {logoutError}
+            </span>
+          )}
         </div>
-        <button type="button" onClick={logout} aria-label="Cerrar sesión">
+        <button
+          type="button"
+          onClick={logout}
+          aria-label="Cerrar sesión"
+          disabled={loggingOut}
+        >
           <LogOut size={18} aria-hidden="true" />
         </button>
       </div>
