@@ -5,7 +5,7 @@ const corsHeaders = {
   "access-control-allow-credentials": "true",
   "access-control-allow-methods": "GET,POST,PATCH,OPTIONS",
   "access-control-allow-headers":
-    "content-type,idempotency-key,x-order-token,x-request-id",
+    "content-type,idempotency-key,x-request-id",
 };
 
 async function json(
@@ -202,7 +202,6 @@ export async function mockOrderingApi(page: Page) {
         totalCents: 13000,
         comboQuantity: 1,
         reservationExpiresAt: "2026-09-20T05:30:00.000Z",
-        verificationToken: "opaque-e2e-token",
         pickup: {
           locationLabel: isCucapa ? "Cucapá" : "Universidad",
           startsAt: isCucapa
@@ -290,6 +289,18 @@ export async function mockOrderingApi(page: Page) {
           freeDeliveryUnlocked,
         },
         items: [],
+      });
+      return;
+    }
+
+    if (
+      path.endsWith("/orders/H-TEST01/delivery-qr") &&
+      method === "GET"
+    ) {
+      await json(route, {
+        orderCode: "H-TEST01",
+        qrPayload:
+          "BD1:H-TEST01:opaque-e2e-delivery-token",
       });
       return;
     }
