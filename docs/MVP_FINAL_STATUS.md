@@ -49,7 +49,7 @@ Implementado:
 - confirmación de mayoría de edad o autorización de madre/padre/tutor;
 - idempotencia al crear pedido;
 - reserva de inventario/capacidad;
-- administración segura del pedido mediante `X-Order-Token`;
+- administración segura del pedido mediante cookie HttpOnly aislada por pedido;
 - cancelación antes del corte según reglas vigentes;
 - comprobante PDF descargable;
 - correo de confirmación de compra cuando SMTP está habilitado.

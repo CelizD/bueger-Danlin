@@ -5,7 +5,6 @@ import { CustomerOrderItems } from "@/features/ordering/components/customer-orde
 import { CustomerOrderSummary } from "@/features/ordering/components/customer-order-summary";
 import { GroupDeliveryProgress } from "@/features/ordering/components/group-delivery-progress";
 import { CUSTOMER_ORDER_STATUS_LABELS } from "@/features/ordering/customer-order/config";
-import { pickupQrPayloadFromToken } from "@/features/ordering/formatters";
 import { useCustomerOrder } from "@/features/ordering/customer-order/use-customer-order";
 import {
   ArrowLeft,
@@ -28,7 +27,7 @@ export default function CustomerOrderPage() {
 
   const {
     order,
-    token,
+    qrPayload,
     loading,
     canceling,
     downloadingReceipt,
@@ -155,7 +154,7 @@ export default function CustomerOrderPage() {
               }
             />
 
-            {token &&
+            {qrPayload &&
               order.paymentStatus ===
                 "PAID" &&
               ![
@@ -184,10 +183,7 @@ export default function CustomerOrderPage() {
                     aria-label="QR de entrega"
                   >
                     <QRCodeSVG
-                      value={pickupQrPayloadFromToken(
-                        order.orderCode,
-                        token,
-                      )}
+                      value={qrPayload}
                       size={220}
                       level="H"
                       marginSize={2}

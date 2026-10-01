@@ -10,6 +10,7 @@ import { randomUUID } from "node:crypto";
 import { AppModule } from "./app.module.js";
 import { HttpExceptionFilter } from "./common/http-exception.filter.js";
 import { STAFF_SESSION_COOKIE } from "./auth/auth.constants.js";
+import { hasOrderAccessCookie } from "./orders/customer-order-access.service.js";
 import { validateProductionEnvironment } from "./config/validate-production-env.js";
 import { MetricsService } from "./metrics/metrics.service.js";
 
@@ -177,8 +178,15 @@ async function bootstrap() {
     const browserStaffMutation =
       hasStaffCookie ||
       /\/(auth\/(login|logout|mfa\/)|admin\/|staff\/)/.test(path);
+    const browserCustomerMutation =
+      hasOrderAccessCookie(request.cookies) &&
+      (/\/orders\/H-[A-F0-9]{8}\/cancel(?:\?|$)/.test(path) ||
+        /\/payments\/(?:mock\/)?H-[A-F0-9]{8}\/(?:checkout|confirm)(?:\?|$)/.test(path));
 
-    if (!browserStaffMutation) {
+    if (
+      !browserStaffMutation &&
+      !browserCustomerMutation
+    ) {
       next();
       return;
     }
@@ -209,7 +217,6 @@ async function bootstrap() {
     allowedHeaders: [
       "Content-Type",
       "Idempotency-Key",
-      "X-Order-Token",
       "X-Request-Id",
       "Stripe-Signature",
       "X-Signature",
@@ -237,16 +244,6 @@ async function bootstrap() {
         type: "apiKey",
         in: "cookie",
       })
-      .addApiKey(
-        {
-          type: "apiKey",
-          in: "header",
-          name: "X-Order-Token",
-          description:
-            "Token opaco del cliente para consultar o cancelar un pedido.",
-        },
-        "order-token",
-      )
       .addApiKey(
         {
           type: "apiKey",

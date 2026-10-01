@@ -219,7 +219,7 @@ No abrir tráfico público hasta que:
 - [ ] Confirmar que el PDF muestra identidad/RFC/domicilio/soporte del vendedor.
 - [ ] Confirmar que el total del pedido y el posible traslado en efectivo aparecen separados.
 - [ ] Confirmar que un pedido entregado o reembolsado todavía permite descargar el comprobante.
-- [ ] Confirmar que el endpoint de comprobante rechaza solicitudes sin `X-Order-Token` válido.
+- [ ] Confirmar que el endpoint de comprobante rechaza solicitudes sin la cookie HttpOnly del pedido y que el token QR por sí solo no autoriza el acceso.
 
 
 ## Menores de edad

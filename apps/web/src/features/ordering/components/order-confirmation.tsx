@@ -1,7 +1,4 @@
-import {
-  money,
-  pickupQrPayload,
-} from "@/features/ordering/formatters";
+import { money } from "@/features/ordering/formatters";
 import { GroupDeliveryProgress } from "@/features/ordering/components/group-delivery-progress";
 import type { CreatedOrder } from "@/features/ordering/types";
 import { QRCodeSVG } from "qrcode.react";
@@ -12,6 +9,7 @@ type OrderConfirmationProps = {
   cancelMessage: string;
   paying: boolean;
   canceling: boolean;
+  qrPayload: string;
   paymentProvider: string;
   onConfirmPayment: () => void;
   onCancel: () => void;
@@ -23,6 +21,7 @@ export function OrderConfirmation({
   cancelMessage,
   paying,
   canceling,
+  qrPayload,
   paymentProvider,
   onConfirmPayment,
   onCancel,
@@ -118,7 +117,7 @@ export function OrderConfirmation({
           </button>
         )}
 
-        {isPaid && !isCancelled && (
+        {isPaid && !isCancelled && qrPayload && (
           <>
             <div className="paid-badge">Pago aprobado</div>
 
@@ -134,7 +133,7 @@ export function OrderConfirmation({
 
               <div className="customer-qr-frame" aria-label="QR de entrega">
                 <QRCodeSVG
-                  value={pickupQrPayload(order)}
+                  value={qrPayload}
                   size={220}
                   level="H"
                   marginSize={2}
@@ -173,7 +172,7 @@ export function OrderConfirmation({
 
           <a
             className="customer-manage-link"
-            href={`/pedido/${encodeURIComponent(order.orderCode)}#token=${encodeURIComponent(order.verificationToken)}`}
+            href={`/pedido/${encodeURIComponent(order.orderCode)}`}
           >
             Administrar mi pedido
           </a>

@@ -33,7 +33,6 @@ async function staffLogin(
 test("pedido real recorre cliente, cocina, QR y entrega", async ({
   page,
   browser,
-  request,
 }) => {
   const kitchenPassword = requiredEnv("E2E_KITCHEN_PASSWORD");
   const deliveryPassword = requiredEnv("E2E_DELIVERY_PASSWORD");
@@ -91,13 +90,32 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await expect(orderHeading).toBeVisible();
 
   const orderCode = (await orderHeading.textContent())!.trim();
-  const token = await page.evaluate((code) => {
-    return window.sessionStorage.getItem(
-      `burger-danlin:order-token:${code}`,
-    );
-  }, orderCode);
 
-  expect(token).toBeTruthy();
+  const storedOrderTokens =
+    await page.evaluate(() =>
+      Object.keys(window.sessionStorage).filter(
+        (key) =>
+          key.startsWith(
+            "burger-danlin:order-token:",
+          ),
+      ),
+    );
+
+  expect(storedOrderTokens).toEqual([]);
+
+  const customerCookies =
+    await page.context().cookies(API_URL);
+  const orderAccessCookie =
+    customerCookies.find((cookie) =>
+      cookie.name.startsWith(
+        "burger_order_access_",
+      ),
+    );
+
+  expect(orderAccessCookie).toMatchObject({
+    httpOnly: true,
+    sameSite: "Strict",
+  });
 
   await page
     .getByRole("button", { name: "Simular pago local" })
@@ -115,21 +133,60 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   ).toBeVisible();
   await expect(page.getByLabel("QR de entrega")).toBeVisible();
 
-  const paidOrder = await request.get(
-    `${API_URL}/orders/${encodeURIComponent(orderCode)}`,
+  const customerState = await page.evaluate(
+    async ({ apiUrl, code }) => {
+      const [orderResponse, qrResponse] =
+        await Promise.all([
+          fetch(
+            `${apiUrl}/orders/${encodeURIComponent(code)}`,
+            {
+              credentials: "include",
+              cache: "no-store",
+            },
+          ),
+          fetch(
+            `${apiUrl}/orders/${encodeURIComponent(code)}/delivery-qr`,
+            {
+              credentials: "include",
+              cache: "no-store",
+            },
+          ),
+        ]);
+
+      return {
+        orderStatus: orderResponse.status,
+        order: await orderResponse.json(),
+        qrStatus: qrResponse.status,
+        qr: await qrResponse.json(),
+      };
+    },
     {
-      headers: {
-        "x-order-token": token!,
-      },
+      apiUrl: API_URL,
+      code: orderCode,
     },
   );
 
-  expect(paidOrder.ok()).toBe(true);
-  expect(await paidOrder.json()).toMatchObject({
+  expect(customerState.orderStatus).toBe(200);
+  expect(customerState.order).toMatchObject({
     orderCode,
     status: "PAID",
     paymentStatus: "PAID",
   });
+  expect(customerState.qrStatus).toBe(200);
+  expect(customerState.qr).toMatchObject({
+    orderCode,
+  });
+
+  const qrPayload =
+    customerState.qr.qrPayload as string;
+  const qrParts = qrPayload.split(":");
+
+  expect(qrParts).toHaveLength(3);
+  expect(qrParts[0]).toBe("BD1");
+  expect(qrParts[1]).toBe(orderCode);
+  expect(qrParts[2]).toMatch(
+    /^[A-Za-z0-9_-]{32,}$/,
+  );
 
   const kitchenContext = await browser.newContext();
   const kitchenPage = await kitchenContext.newPage();
@@ -203,7 +260,7 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     },
     {
       apiUrl: API_URL,
-      qrPayload: `BD1:${orderCode}:${token}`,
+      qrPayload,
     },
   );
 
@@ -223,17 +280,29 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
       .filter({ hasText: orderCode }),
   ).toBeVisible();
 
-  const finalOrder = await request.get(
-    `${API_URL}/orders/${encodeURIComponent(orderCode)}`,
+  const finalOrder = await page.evaluate(
+    async ({ apiUrl, code }) => {
+      const response = await fetch(
+        `${apiUrl}/orders/${encodeURIComponent(code)}`,
+        {
+          credentials: "include",
+          cache: "no-store",
+        },
+      );
+
+      return {
+        status: response.status,
+        body: await response.json(),
+      };
+    },
     {
-      headers: {
-        "x-order-token": token!,
-      },
+      apiUrl: API_URL,
+      code: orderCode,
     },
   );
 
-  expect(finalOrder.ok()).toBe(true);
-  expect(await finalOrder.json()).toMatchObject({
+  expect(finalOrder.status).toBe(200);
+  expect(finalOrder.body).toMatchObject({
     orderCode,
     status: "DELIVERED",
     paymentStatus: "PAID",

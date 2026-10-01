@@ -42,6 +42,7 @@ export async function loadOrderingData() {
 export async function createOrder(input: CreateOrderInput) {
   const response = await apiFetch("/orders", {
     method: "POST",
+    credentials: "include",
     headers: {
       "content-type": "application/json",
       "idempotency-key": crypto.randomUUID(),
@@ -62,15 +63,12 @@ export async function createOrder(input: CreateOrderInput) {
 
 export async function cancelOrder(
   orderCode: string,
-  verificationToken: string,
 ) {
   const response = await apiFetch(
     `/orders/${encodeURIComponent(orderCode)}/cancel`,
     {
       method: "POST",
-      headers: {
-        "x-order-token": verificationToken,
-      },
+      credentials: "include",
     },
   );
 
@@ -87,15 +85,12 @@ export async function cancelOrder(
 
 export async function createPaymentCheckout(
   orderCode: string,
-  verificationToken: string,
 ) {
   const response = await apiFetch(
     `/payments/${encodeURIComponent(orderCode)}/checkout`,
     {
       method: "POST",
-      headers: {
-        "x-order-token": verificationToken,
-      },
+      credentials: "include",
     },
   );
 
@@ -115,15 +110,12 @@ export async function createPaymentCheckout(
 
 export async function confirmMockOrderPayment(
   orderCode: string,
-  verificationToken: string,
 ) {
   const response = await apiFetch(
     `/payments/mock/${encodeURIComponent(orderCode)}/confirm`,
     {
       method: "POST",
-      headers: {
-        "x-order-token": verificationToken,
-      },
+      credentials: "include",
     },
   );
 
@@ -138,17 +130,13 @@ export async function confirmMockOrderPayment(
   return data as PaymentResult;
 }
 
-
 export async function loadCustomerOrder(
   orderCode: string,
-  verificationToken: string,
 ) {
   const response = await apiFetch(
     `/orders/${encodeURIComponent(orderCode)}`,
     {
-      headers: {
-        "x-order-token": verificationToken,
-      },
+      credentials: "include",
       cache: "no-store",
     },
   );
@@ -162,4 +150,29 @@ export async function loadCustomerOrder(
   }
 
   return data as CustomerOrderRefresh;
+}
+
+export async function loadDeliveryQr(
+  orderCode: string,
+) {
+  const response = await apiFetch(
+    `/orders/${encodeURIComponent(orderCode)}/delivery-qr`,
+    {
+      credentials: "include",
+      cache: "no-store",
+    },
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      apiErrorMessage(data, "No se pudo generar el QR de entrega."),
+    );
+  }
+
+  return data as {
+    orderCode: string;
+    qrPayload: string;
+  };
 }

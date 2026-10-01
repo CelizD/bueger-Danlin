@@ -6,8 +6,8 @@ import {
   createOrder,
   createPaymentCheckout,
   loadCustomerOrder,
+  loadDeliveryQr,
 } from "./api";
-import { orderTokenStorageKey } from "./formatters";
 import type {
   BurgerSelection,
   CatalogProduct,
@@ -73,6 +73,10 @@ export function useOrderCheckout({
   ] = useState<CreatedOrder | null>(
     null,
   );
+  const [
+    deliveryQrPayload,
+    setDeliveryQrPayload,
+  ] = useState("");
 
   async function submitOrder(
     eventSubmit:
@@ -162,12 +166,7 @@ export function useOrderCheckout({
         });
 
       setCreatedOrder(orderData);
-      window.sessionStorage.setItem(
-        orderTokenStorageKey(
-          orderData.orderCode,
-        ),
-        orderData.verificationToken,
-      );
+      setDeliveryQrPayload("");
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -203,7 +202,6 @@ export function useOrderCheckout({
     try {
       const data = await cancelOrder(
         createdOrder.orderCode,
-        createdOrder.verificationToken,
       );
 
       setCreatedOrder((current) =>
@@ -216,6 +214,7 @@ export function useOrderCheckout({
             }
           : current,
       );
+      setDeliveryQrPayload("");
 
       setCancelMessage(
         data.refundStatus ===
@@ -254,7 +253,6 @@ export function useOrderCheckout({
         const checkout =
           await createPaymentCheckout(
             createdOrder.orderCode,
-            createdOrder.verificationToken,
           );
 
         const checkoutUrl =
@@ -281,7 +279,6 @@ export function useOrderCheckout({
       const data =
         await confirmMockOrderPayment(
           createdOrder.orderCode,
-          createdOrder.verificationToken,
         );
 
       setCreatedOrder((current) =>
@@ -296,11 +293,15 @@ export function useOrderCheckout({
       );
 
       try {
-        const refreshed =
-          await loadCustomerOrder(
-            createdOrder.orderCode,
-            createdOrder.verificationToken,
-          );
+        const [refreshed, deliveryQr] =
+          await Promise.all([
+            loadCustomerOrder(
+              createdOrder.orderCode,
+            ),
+            loadDeliveryQr(
+              createdOrder.orderCode,
+            ),
+          ]);
 
         setCreatedOrder((current) =>
           current
@@ -315,9 +316,12 @@ export function useOrderCheckout({
               }
             : current,
         );
+        setDeliveryQrPayload(
+          deliveryQr.qrPayload,
+        );
       } catch {
-        // El pago ya quedó confirmado. Si la actualización del progreso
-        // falla, "Administrar mi pedido" lo recalculará al abrirse.
+        // El pago quedó confirmado. La vista "Administrar mi pedido"
+        // puede volver a consultar el estado y generar el QR con la cookie.
       }
     } catch (paymentError) {
       setError(
@@ -341,6 +345,7 @@ export function useOrderCheckout({
     canceling,
     cancelMessage,
     createdOrder,
+    deliveryQrPayload,
     paymentProvider:
       CLIENT_PAYMENT_PROVIDER,
     setName,

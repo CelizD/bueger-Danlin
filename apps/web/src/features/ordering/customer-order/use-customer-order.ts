@@ -6,24 +6,31 @@ import {
 } from "react";
 import {
   cancelCustomerOrder,
+  fetchCustomerDeliveryQr,
   fetchCustomerOrder,
   fetchCustomerOrderReceipt,
 } from "./api";
 import {
   cancellationNotice,
-  resolveOrderAccessToken,
 } from "./access";
 import type { CustomerOrder } from "./types";
+
+const TERMINAL_ORDER_STATUSES = new Set([
+  "DELIVERED",
+  "CANCELLED",
+  "REFUNDED",
+  "NO_SHOW",
+]);
 
 export function useCustomerOrder(
   orderCode: string,
 ) {
-  const [token, setToken] =
-    useState("");
   const [order, setOrder] =
     useState<CustomerOrder | null>(
       null,
     );
+  const [qrPayload, setQrPayload] =
+    useState("");
   const [loading, setLoading] =
     useState(true);
   const [canceling, setCanceling] =
@@ -38,13 +45,8 @@ export function useCustomerOrder(
     useState("");
 
   async function loadOrder(
-    orderToken = token,
     silent = false,
   ) {
-    if (!orderToken) {
-      return;
-    }
-
     if (!silent) {
       setLoading(true);
       setError("");
@@ -54,10 +56,24 @@ export function useCustomerOrder(
       const data =
         await fetchCustomerOrder(
           orderCode,
-          orderToken,
         );
 
       setOrder(data);
+
+      if (
+        data.paymentStatus === "PAID" &&
+        !TERMINAL_ORDER_STATUSES.has(
+          data.status,
+        )
+      ) {
+        const qr =
+          await fetchCustomerDeliveryQr(
+            orderCode,
+          );
+        setQrPayload(qr.qrPayload);
+      } else {
+        setQrPayload("");
+      }
     } catch (loadError) {
       if (!silent) {
         setError(
@@ -74,27 +90,11 @@ export function useCustomerOrder(
   }
 
   useEffect(() => {
-    const resolvedToken =
-      resolveOrderAccessToken(
-        orderCode,
-      );
-
-    setToken(resolvedToken);
-
-    if (!resolvedToken) {
-      setLoading(false);
-      setError(
-        "Este navegador no tiene el acceso seguro de este pedido. Abre el enlace original que recibiste al comprar.",
-      );
-      return;
-    }
-
-    void loadOrder(resolvedToken);
+    void loadOrder();
   }, [orderCode]);
 
   useEffect(() => {
     if (
-      !token ||
       !order ||
       order.status !== "PENDING_PAYMENT" ||
       !["PENDING", "PROCESSING"].includes(
@@ -106,21 +106,20 @@ export function useCustomerOrder(
 
     const intervalId =
       window.setInterval(() => {
-        void loadOrder(token, true);
+        void loadOrder(true);
       }, 5_000);
 
     return () => {
       window.clearInterval(intervalId);
     };
   }, [
-    token,
     orderCode,
     order?.status,
     order?.paymentStatus,
   ]);
 
   async function downloadReceipt() {
-    if (!order || !token) {
+    if (!order) {
       return;
     }
 
@@ -131,7 +130,6 @@ export function useCustomerOrder(
       const blob =
         await fetchCustomerOrderReceipt(
           order.orderCode,
-          token,
         );
       const url =
         window.URL.createObjectURL(
@@ -173,7 +171,6 @@ export function useCustomerOrder(
 
     if (
       !order ||
-      !token ||
       (!order.canCancel &&
         !retryingRefund)
     ) {
@@ -201,7 +198,6 @@ export function useCustomerOrder(
       const data =
         await cancelCustomerOrder(
           order.orderCode,
-          token,
         );
 
       setNotice(
@@ -210,7 +206,7 @@ export function useCustomerOrder(
         ),
       );
 
-      await loadOrder(token);
+      await loadOrder();
     } catch (cancelError) {
       setError(
         cancelError instanceof Error
@@ -224,7 +220,7 @@ export function useCustomerOrder(
 
   return {
     order,
-    token,
+    qrPayload,
     loading,
     canceling,
     downloadingReceipt,

@@ -1,56 +1,65 @@
 import {
   API_URL,
   apiFetch,
+  throwApiHttpError,
 } from "@/lib/api/browser";
 import type {
   CancelOrderResult,
   CustomerOrder,
 } from "./types";
 
-function responseMessage(
-  data: { message?: string | string[] },
-  fallback: string,
-) {
-  const message = Array.isArray(data.message)
-    ? data.message.join(" ")
-    : data.message;
-
-  return message || fallback;
-}
-
 export async function fetchCustomerOrder(
   orderCode: string,
-  orderToken: string,
 ) {
   const response = await apiFetch(
     API_URL +
       "/orders/" +
       encodeURIComponent(orderCode),
     {
-      headers: {
-        "x-order-token": orderToken,
-      },
+      credentials: "include",
       cache: "no-store",
     },
   );
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      responseMessage(
-        data,
-        "No se pudo consultar el pedido.",
-      ),
+    await throwApiHttpError(
+      response,
+      "No se pudo consultar el pedido.",
     );
   }
 
-  return data as CustomerOrder;
+  return response.json() as Promise<CustomerOrder>;
+}
+
+export async function fetchCustomerDeliveryQr(
+  orderCode: string,
+) {
+  const response = await apiFetch(
+    API_URL +
+      "/orders/" +
+      encodeURIComponent(orderCode) +
+      "/delivery-qr",
+    {
+      credentials: "include",
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    await throwApiHttpError(
+      response,
+      "No se pudo generar el QR de entrega.",
+    );
+  }
+
+  return response.json() as Promise<{
+    orderCode: string;
+    qrPayload: string;
+  }>;
 }
 
 export async function cancelCustomerOrder(
   orderCode: string,
-  orderToken: string,
 ) {
   const response = await apiFetch(
     API_URL +
@@ -59,30 +68,22 @@ export async function cancelCustomerOrder(
       "/cancel",
     {
       method: "POST",
-      headers: {
-        "x-order-token": orderToken,
-      },
+      credentials: "include",
     },
   );
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      responseMessage(
-        data,
-        "No se pudo cancelar el pedido.",
-      ),
+    await throwApiHttpError(
+      response,
+      "No se pudo cancelar el pedido.",
     );
   }
 
-  return data as CancelOrderResult;
+  return response.json() as Promise<CancelOrderResult>;
 }
-
 
 export async function fetchCustomerOrderReceipt(
   orderCode: string,
-  orderToken: string,
 ) {
   const response = await apiFetch(
     API_URL +
@@ -90,23 +91,15 @@ export async function fetchCustomerOrderReceipt(
       encodeURIComponent(orderCode) +
       "/receipt",
     {
-      headers: {
-        "x-order-token": orderToken,
-      },
+      credentials: "include",
       cache: "no-store",
     },
   );
 
   if (!response.ok) {
-    const data = await response
-      .json()
-      .catch(() => ({}));
-
-    throw new Error(
-      responseMessage(
-        data,
-        "No se pudo descargar el comprobante.",
-      ),
+    await throwApiHttpError(
+      response,
+      "No se pudo descargar el comprobante.",
     );
   }
 
