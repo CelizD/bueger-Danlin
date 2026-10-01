@@ -1,7 +1,7 @@
 import {
   API_URL,
-  apiErrorMessage,
   apiFetch,
+  throwApiHttpError,
 } from "@/lib/api/browser";
 import type {
   OrdersResponse,
@@ -29,7 +29,8 @@ export async function fetchAdminOrders(): Promise<
   }
 
   if (!meResponse.ok) {
-    throw new Error(
+    await throwApiHttpError(
+      meResponse,
       "No se pudo validar la sesión.",
     );
   }
@@ -52,7 +53,8 @@ export async function fetchAdminOrders(): Promise<
   }
 
   if (!ordersResponse.ok) {
-    throw new Error(
+    await throwApiHttpError(
+      ordersResponse,
       "No se pudieron cargar los pedidos.",
     );
   }
@@ -88,15 +90,9 @@ export async function refundAdminLatePayment(
   );
 
   if (!response.ok) {
-    const payload = await response
-      .json()
-      .catch(() => null);
-
-    throw new Error(
-      apiErrorMessage(
-        payload,
-        "No se pudo completar el reembolso.",
-      ),
+    await throwApiHttpError(
+      response,
+      "No se pudo completar el reembolso.",
     );
   }
 
