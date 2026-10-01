@@ -12,10 +12,10 @@ export type AlertProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 const TONE_CLASS: Record<AlertTone, string> = {
-  info: styles.alertInfo,
-  success: styles.alertSuccess,
-  warning: styles.alertWarning,
-  danger: styles.alertDanger,
+  info: styles.alertInfo!,
+  success: styles.alertSuccess!,
+  warning: styles.alertWarning!,
+  danger: styles.alertDanger!,
 };
 
 export function Alert({
