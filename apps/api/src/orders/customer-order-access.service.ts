@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import type { PrismaService } from "../database/prisma.service.js";
+import { PrismaService } from "../database/prisma.service.js";
 import { createOrderVerificationToken } from "./order-create-security.js";
 
 const COOKIE_PREFIX = "burger_order_access_";
