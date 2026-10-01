@@ -1,11 +1,6 @@
 import type { AdminDayPanelData } from "../components/admin-day-panel";
 
-export type StaffUser = {
-  sub: string;
-  name: string;
-  email: string;
-  role: "ADMIN" | "KITCHEN" | "DELIVERY";
-};
+export type { StaffSessionUser as StaffUser } from "../types";
 
 export type DashboardEvent = {
   id: string;
