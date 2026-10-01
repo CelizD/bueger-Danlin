@@ -1,9 +1,4 @@
-export type StaffUser = {
-  sub: string;
-  name: string;
-  email: string;
-  role: "ADMIN" | "KITCHEN" | "DELIVERY";
-};
+export type { StaffSessionUser as StaffUser } from "../types";
 
 export type KitchenModifier = {
   id: string;
