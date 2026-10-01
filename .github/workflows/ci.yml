@@ -47,7 +47,6 @@ jobs:
       E2E_ADMIN_PASSWORD: ci-only-admin-e2e-passphrase-2026
       E2E_KITCHEN_PASSWORD: ci-only-kitchen-e2e-passphrase-2026
       E2E_DELIVERY_PASSWORD: ci-only-delivery-e2e-passphrase-2026
-      MFA_ENCRYPTION_KEY: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE
 
     steps:
       - name: Checkout
@@ -67,6 +66,10 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate E2E MFA key
+        run: |
+          node -e "process.stdout.write('MFA_ENCRYPTION_KEY=' + require('node:crypto').randomBytes(32).toString('base64url') + '\n')" >> "$GITHUB_ENV"
 
       - name: Generate Prisma client
         run: pnpm db:generate
