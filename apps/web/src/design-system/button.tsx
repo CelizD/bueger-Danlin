@@ -16,15 +16,15 @@ export type ButtonProps =
   };
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
-  primary: styles.buttonPrimary,
-  secondary: styles.buttonSecondary,
-  danger: styles.buttonDanger,
-  ghost: styles.buttonGhost,
+  primary: styles.buttonPrimary!,
+  secondary: styles.buttonSecondary!,
+  danger: styles.buttonDanger!,
+  ghost: styles.buttonGhost!,
 };
 
 const SIZE_CLASS: Record<ButtonSize, string> = {
-  sm: styles.buttonSmall,
-  md: styles.buttonMedium,
+  sm: styles.buttonSmall!,
+  md: styles.buttonMedium!,
 };
 
 export function Button({
