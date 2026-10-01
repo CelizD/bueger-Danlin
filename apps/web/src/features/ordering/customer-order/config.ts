@@ -18,9 +18,3 @@ export const CUSTOMER_ORDER_STATUS_LABELS: Record<
   REFUNDED: "Cancelado y reembolsado",
   NO_SHOW: "No recogido",
 };
-
-export function orderTokenStorageKey(
-  orderCode: string,
-) {
-  return `burger-danlin:order-token:${orderCode}`;
-}
