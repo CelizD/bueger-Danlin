@@ -136,11 +136,11 @@ Implementado:
 - login -> MFA;
 - error de credenciales accesible;
 - skip-link/teclado;
-- axe WCAG A/AA bloqueando impactos serious/critical.
+- axe WCAG A/AA bloqueando impactos serious/critical;
+- Testing Library cubre interacciones reales en datos de cliente, Inventario, Sábados y Personal.
 
 Siguiente subfase:
 
-- Testing Library para interacción DOM más granular;
 - E2E integrado contra API/PostgreSQL reales;
 - ampliar axe a login, admin, cocina y entrega;
 - decidir si ejecutar Playwright en CI según costo/tiempo de pipeline.
