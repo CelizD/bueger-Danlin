@@ -5,9 +5,12 @@ import {
   hashStaffPassword,
   staffPasswordPolicyIssue,
 } from "../../apps/api/src/auth/password-security.js";
+import { encryptMfaSecret } from "../../apps/api/src/auth/mfa-secret-crypto.js";
 
 const connectionString = process.env.DATABASE_URL;
 const adminPassword = process.env.E2E_ADMIN_PASSWORD;
+const a11yAdminPassword = process.env.E2E_A11Y_ADMIN_PASSWORD;
+const a11yAdminMfaSecret = process.env.E2E_A11Y_ADMIN_MFA_SECRET;
 const kitchenPassword = process.env.E2E_KITCHEN_PASSWORD;
 const deliveryPassword = process.env.E2E_DELIVERY_PASSWORD;
 
@@ -29,6 +32,14 @@ if (!databaseName.toLowerCase().includes("test")) {
 
 if (!adminPassword || adminPassword.length < 12) {
   throw new Error("E2E_ADMIN_PASSWORD must contain at least 12 characters");
+}
+
+if (!a11yAdminPassword || a11yAdminPassword.length < 12) {
+  throw new Error("E2E_A11Y_ADMIN_PASSWORD must contain at least 12 characters");
+}
+
+if (!a11yAdminMfaSecret || a11yAdminMfaSecret.length < 16) {
+  throw new Error("E2E_A11Y_ADMIN_MFA_SECRET is required");
 }
 
 if (!kitchenPassword || kitchenPassword.length < 12) {
@@ -78,6 +89,22 @@ async function upsertStaff(
       role,
       active: true,
       passwordHash,
+    },
+  });
+}
+
+async function enableStaffMfa(
+  email: string,
+  secret: string,
+) {
+  await prisma.user.update({
+    where: { email },
+    data: {
+      mfaEnabled: true,
+      mfaSecretEncrypted: encryptMfaSecret(secret),
+      mfaRecoveryCodeHashes: [],
+      mfaLastUsedStep: null,
+      mfaEnrolledAt: new Date(),
     },
   });
 }
@@ -140,6 +167,18 @@ async function main() {
     adminPassword,
     "Admin E2E",
     "ADMIN",
+  );
+
+  await upsertStaff(
+    "a11y-admin.e2e@example.test",
+    a11yAdminPassword,
+    "Admin Accesibilidad E2E",
+    "ADMIN",
+  );
+
+  await enableStaffMfa(
+    "a11y-admin.e2e@example.test",
+    a11yAdminMfaSecret,
   );
 
   await upsertStaff(
