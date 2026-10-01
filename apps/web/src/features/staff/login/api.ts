@@ -13,8 +13,18 @@ export async function checkStaffSession(): Promise<StaffRole | null> {
     },
   );
 
-  if (!response.ok) {
+  if (
+    response.status === 401 ||
+    response.status === 403
+  ) {
     return null;
+  }
+
+  if (!response.ok) {
+    await throwApiHttpError(
+      response,
+      "No se pudo validar la sesión.",
+    );
   }
 
   const data = await response.json();
