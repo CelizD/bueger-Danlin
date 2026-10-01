@@ -127,13 +127,17 @@ test("cliente crea pedido, paga y obtiene QR", async ({
     page.getByText("Faltan 2 combos para envío gratis"),
   ).toBeVisible();
 
-  const storedToken = await page.evaluate(() =>
-    window.sessionStorage.getItem(
-      "burger-danlin:order-token:H-TEST01",
-    ),
-  );
+  const storedOrderTokens =
+    await page.evaluate(() =>
+      Object.keys(window.sessionStorage).filter(
+        (key) =>
+          key.startsWith(
+            "burger-danlin:order-token:",
+          ),
+      ),
+    );
 
-  expect(storedToken).toBe("opaque-e2e-token");
+  expect(storedOrderTokens).toEqual([]);
 
   await page
     .getByRole("button", {
