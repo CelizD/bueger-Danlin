@@ -1,6 +1,7 @@
 import {
   API_URL,
   apiFetch,
+  throwApiHttpError,
 } from "@/lib/api/browser";
 import type {
   CreateStaffForm,
@@ -8,12 +9,6 @@ import type {
   StaffRole,
   StaffUser,
 } from "./types";
-
-function message(data: { message?: string | string[] }) {
-  return Array.isArray(data.message)
-    ? data.message.join(" ")
-    : data.message;
-}
 
 export async function fetchAdminStaff(): Promise<
   | { authorized: false }
@@ -32,9 +27,16 @@ export async function fetchAdminStaff(): Promise<
     return { authorized: false };
   }
 
+  if (!me.ok) {
+    await throwApiHttpError(
+      me,
+      "No se pudo validar la sesión.",
+    );
+  }
+
   const meData = await me.json();
 
-  if (!me.ok || meData.user.role !== "ADMIN") {
+  if (meData.user.role !== "ADMIN") {
     return { authorized: false };
   }
 
@@ -46,8 +48,16 @@ export async function fetchAdminStaff(): Promise<
     },
   );
 
+  if (
+    response.status === 401 ||
+    response.status === 403
+  ) {
+    return { authorized: false };
+  }
+
   if (!response.ok) {
-    throw new Error(
+    await throwApiHttpError(
+      response,
       "No se pudieron cargar las cuentas del personal.",
     );
   }
@@ -79,15 +89,14 @@ export async function createAdminStaff(
     },
   );
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      message(data) || "No se pudo crear la cuenta.",
+    await throwApiHttpError(
+      response,
+      "No se pudo crear la cuenta.",
     );
   }
 
-  return data as StaffUser;
+  return response.json() as Promise<StaffUser>;
 }
 
 export async function updateAdminStaff(
@@ -111,16 +120,14 @@ export async function updateAdminStaff(
     },
   );
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      message(data) ||
-        "No se pudo actualizar la cuenta.",
+    await throwApiHttpError(
+      response,
+      "No se pudo actualizar la cuenta.",
     );
   }
 
-  return data as StaffUser;
+  return response.json() as Promise<StaffUser>;
 }
 
 export async function resetAdminStaffMfa(id: string) {
@@ -135,16 +142,14 @@ export async function resetAdminStaffMfa(id: string) {
     },
   );
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      message(data) ||
-        "No se pudo restablecer el MFA.",
+    await throwApiHttpError(
+      response,
+      "No se pudo restablecer el MFA.",
     );
   }
 
-  return data;
+  return response.json();
 }
 
 export async function resetAdminStaffPassword(
@@ -166,14 +171,12 @@ export async function resetAdminStaffPassword(
     },
   );
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      message(data) ||
-        "No se pudo cambiar la contraseña.",
+    await throwApiHttpError(
+      response,
+      "No se pudo cambiar la contraseña.",
     );
   }
 
-  return data;
+  return response.json();
 }
