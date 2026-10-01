@@ -292,4 +292,5 @@ Frontend no se considera listo hasta que:
 7. no existan secretos cliente;
 8. rutas privadas permanezcan noindex;
 9. Core Web Vitals tengan medición RUM;
-10. exista observabilidad de errores sin PII sensible.
+10. exista observabilidad de errores sin PII sensible;
+11. sitemap + canonical estén configurados con el dominio real de producción.
