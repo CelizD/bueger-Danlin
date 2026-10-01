@@ -24,7 +24,7 @@ Evolucionar el frontend actual sin sobrearquitectura. Burger Danlin sigue siendo
 | WCAG 2.2 AA | 🟡 | focus-visible, skip link y reduced-motion agregados; falta auditoría completa |
 | Formularios | 🟡 | labels nativos y autocomplete principales; falta validación de campo más específica |
 | Sesión de personal | ✅ | cookie HttpOnly administrada por API |
-| Token cliente | 🟡 | reducido de localStorage a sessionStorage; sigue siendo una capability accesible a JS |
+| Acceso pedido cliente | ✅ | cookie HttpOnly + SameSite=Strict por pedido; el QR usa una capability separada solo para entrega |
 | CSP | ✅ baseline | CSP de producción agregada; requiere endurecimiento con nonce/hash más adelante |
 | Clickjacking | ✅ | X-Frame-Options + CSP frame-ancestors none |
 | HTTPS/HSTS | ✅ config | configuración preparada para producción |
@@ -58,7 +58,7 @@ Implementado:
 - robots policy para rutas privadas;
 - metadata/Open Graph base;
 - API_URL centralizado;
-- customer order token limitado a sessionStorage;
+- acceso de administración del pedido movido a cookie HttpOnly; no se persiste capability en sessionStorage;
 - autocomplete en datos principales del cliente;
 - anuncios ARIA para errores/estados críticos.
 
@@ -123,7 +123,7 @@ Implementado:
 - tests de capacidad evento/inventario;
 - tests de ingredientes agotados;
 - tests de payload QR sin PII;
-- tests de almacenamiento session-scoped por pedido;
+- tests que verifican ausencia del token del pedido en sessionStorage y cookie HttpOnly;
 - tests de normalización de errores API;
 - tests de matriz de navegación ADMIN/KITCHEN/DELIVERY;
 - render tests reales de campos del cliente;
