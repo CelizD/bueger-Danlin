@@ -1,6 +1,7 @@
 import {
   API_URL,
   apiFetch,
+  throwApiHttpError,
 } from "@/lib/api/browser";
 import { tijuanaIso } from "./date-utils";
 import type {
@@ -8,14 +9,6 @@ import type {
   SaturdayFormState,
   StaffUser,
 } from "./types";
-
-function responseMessage(
-  data: { message?: string | string[] },
-) {
-  return Array.isArray(data.message)
-    ? data.message.join(" ")
-    : data.message;
-}
 
 export async function fetchAdminSaturdays(): Promise<
   | {
@@ -41,12 +34,16 @@ export async function fetchAdminSaturdays(): Promise<
     };
   }
 
+  if (!me.ok) {
+    await throwApiHttpError(
+      me,
+      "No se pudo validar la sesión.",
+    );
+  }
+
   const meData = await me.json();
 
-  if (
-    !me.ok ||
-    meData.user.role !== "ADMIN"
-  ) {
+  if (meData.user.role !== "ADMIN") {
     return {
       authorized: false,
     };
@@ -61,8 +58,18 @@ export async function fetchAdminSaturdays(): Promise<
     },
   );
 
+  if (
+    response.status === 401 ||
+    response.status === 403
+  ) {
+    return {
+      authorized: false,
+    };
+  }
+
   if (!response.ok) {
-    throw new Error(
+    await throwApiHttpError(
+      response,
       "No se pudieron cargar las fechas de entrega.",
     );
   }
@@ -184,13 +191,10 @@ export async function saveAdminPickupEvent(
     },
   );
 
-  const data =
-    await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      responseMessage(data) ||
-        "No se pudo guardar la entrega.",
+    await throwApiHttpError(
+      response,
+      "No se pudo guardar la entrega.",
     );
   }
 
@@ -219,15 +223,12 @@ export async function toggleAdminPickupEvent(
     },
   );
 
-  const data =
-    await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      responseMessage(data) ||
-        (shouldClose
-          ? "No se pudieron cerrar los pedidos."
-          : "No se pudieron abrir los pedidos."),
+    await throwApiHttpError(
+      response,
+      shouldClose
+        ? "No se pudieron cerrar los pedidos."
+        : "No se pudieron abrir los pedidos.",
     );
   }
 
