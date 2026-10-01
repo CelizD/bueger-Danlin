@@ -235,11 +235,12 @@ test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
   await saturdayCard
     .getByRole("button", { name: "QR del punto" })
     .click();
+  const qrDialog = page.getByRole("dialog");
   await expect(
-    page.getByText(pickupName, { exact: true }),
+    qrDialog.getByRole("heading", { name: pickupName }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Cerrar" })
+  await qrDialog
+    .getByRole("button", { name: "Cerrar QR" })
     .click();
 
   await page.goto("/admin/personal");
@@ -270,7 +271,9 @@ test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
     .filter({ hasText: staffEmail });
   await expect(staffCard).toBeVisible();
 
-  await staffCard.getByLabel("Rol").selectOption("DELIVERY");
+  await staffCard
+    .locator(".staff-role-control select")
+    .selectOption("DELIVERY");
   await expect(
     page.getByText(`Rol de ${staffName} actualizado.`),
   ).toBeVisible();
