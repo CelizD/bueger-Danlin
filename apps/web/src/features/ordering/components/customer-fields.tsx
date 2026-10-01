@@ -46,11 +46,12 @@ export function CustomerFields({
           />
         </label>
 
-        <label>
+        <label htmlFor="customer-phone">
           <span>Teléfono *</span>
           <div className="phone-input">
             <b>+52</b>
             <input
+              id="customer-phone"
               required
               inputMode="numeric"
               autoComplete="tel-national"
