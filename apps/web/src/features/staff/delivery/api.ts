@@ -1,20 +1,13 @@
-import { API_URL, apiFetch } from "@/lib/api/browser";
+import {
+  API_URL,
+  apiFetch,
+  throwApiHttpError,
+} from "@/lib/api/browser";
 import type {
   DeliveryOrder,
   ScanResult,
   StaffUser,
 } from "./types";
-
-function responseMessage(
-  data: { message?: string | string[] },
-  fallback: string,
-) {
-  const message = Array.isArray(data.message)
-    ? data.message.join(" ")
-    : data.message;
-
-  return message || fallback;
-}
 
 export async function fetchDeliveryOrders(): Promise<
   | { authorized: false }
@@ -36,10 +29,16 @@ export async function fetchDeliveryOrders(): Promise<
     return { authorized: false };
   }
 
+  if (!me.ok) {
+    await throwApiHttpError(
+      me,
+      "No se pudo validar la sesión.",
+    );
+  }
+
   const meData = await me.json();
 
   if (
-    !me.ok ||
     !["ADMIN", "DELIVERY"].includes(
       meData.user.role,
     )
@@ -63,7 +62,8 @@ export async function fetchDeliveryOrders(): Promise<
   }
 
   if (!response.ok) {
-    throw new Error(
+    await throwApiHttpError(
+      response,
       "No se pudieron cargar los pedidos de entrega.",
     );
   }
@@ -95,21 +95,14 @@ export async function scanDeliveryQr(
     },
   );
 
-  const data =
-    (await response.json()) as ScanResult & {
-      message?: string | string[];
-    };
-
   if (!response.ok) {
-    throw new Error(
-      responseMessage(
-        data,
-        "No se pudo validar el QR.",
-      ),
+    await throwApiHttpError(
+      response,
+      "No se pudo validar el QR.",
     );
   }
 
-  return data;
+  return response.json() as Promise<ScanResult>;
 }
 
 export async function markDeliveryOrderDelivered(
@@ -133,16 +126,12 @@ export async function markDeliveryOrderDelivered(
     },
   );
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      responseMessage(
-        data,
-        "No se pudo marcar como entregado.",
-      ),
+    await throwApiHttpError(
+      response,
+      "No se pudo marcar como entregado.",
     );
   }
 
-  return data;
+  return response.json();
 }
