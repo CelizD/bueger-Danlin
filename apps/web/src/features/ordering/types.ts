@@ -85,7 +85,6 @@ export type CreatedOrder = {
   totalCents: number;
   comboQuantity: number;
   reservationExpiresAt: string;
-  verificationToken: string;
   pickup: {
     locationLabel: string;
     startsAt: string;
