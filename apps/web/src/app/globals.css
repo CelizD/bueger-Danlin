@@ -946,7 +946,7 @@ h2 {
 }
 
 .admin-metrics span {
-  color: #837c71;
+  color: #6f675e;
   font-size: 11px;
   font-weight: 700;
 }
@@ -1333,7 +1333,7 @@ h2 {
   padding: 44px 20px;
   border: 1px dashed #d7d1c6;
   border-radius: 14px;
-  color: #837c72;
+  color: #6f675e;
   font-size: 13px;
   text-align: center;
 }
@@ -5405,7 +5405,7 @@ textarea:focus-visible,
 
 .admin-delivery-groups-head p:last-child {
   margin: 0;
-  color: #7d766c;
+  color: #6f675e;
   font-size: 11px;
 }
 
@@ -5505,7 +5505,7 @@ textarea:focus-visible,
 
 .admin-group-date,
 .admin-group-address {
-  color: #80786e;
+  color: #6f675e;
   font-size: 10px;
   line-height: 1.4;
 }
