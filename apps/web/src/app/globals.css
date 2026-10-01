@@ -4209,7 +4209,7 @@ h2 {
 }
 
 .inventory-summary span {
-  color: #837c71;
+  color: #6f675e;
   font-size: 10px;
   font-weight: 750;
 }
@@ -4225,7 +4225,7 @@ h2 {
   padding: 11px 12px;
   border-radius: 10px;
   background: #eeeae2;
-  color: #746d63;
+  color: #6f675e;
   font-size: 10px;
   line-height: 1.5;
 }
@@ -4275,7 +4275,7 @@ h2 {
 }
 
 .inventory-card-head > div > span {
-  color: #888176;
+  color: #6f675e;
   font-size: 10px;
 }
 
