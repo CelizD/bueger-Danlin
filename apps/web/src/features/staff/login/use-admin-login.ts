@@ -58,6 +58,14 @@ export function useAdminLogin() {
           );
           return;
         }
+      } catch (checkError) {
+        if (!cancelled) {
+          setError(
+            checkError instanceof Error
+              ? checkError.message
+              : "No se pudo validar la sesión.",
+          );
+        }
       } finally {
         if (!cancelled) {
           setChecking(false);
