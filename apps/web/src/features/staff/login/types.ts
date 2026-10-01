@@ -1,4 +1,4 @@
-export type StaffRole = "ADMIN" | "KITCHEN" | "DELIVERY";
+export type { StaffRole } from "../types";
 
 export type LoginStage =
   | "password"
