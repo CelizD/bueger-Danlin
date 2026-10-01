@@ -45,6 +45,7 @@ jobs:
       ENABLE_REAL_PAYMENTS: "false"
       APP_TIMEZONE: America/Tijuana
       E2E_ADMIN_PASSWORD: ci-only-admin-e2e-passphrase-2026
+      E2E_A11Y_ADMIN_PASSWORD: ci-only-a11y-admin-passphrase-2026
       E2E_KITCHEN_PASSWORD: ci-only-kitchen-e2e-passphrase-2026
       E2E_DELIVERY_PASSWORD: ci-only-delivery-e2e-passphrase-2026
 
@@ -67,9 +68,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate E2E MFA key
+      - name: Generate E2E MFA keys
         run: |
-          node -e "process.stdout.write('MFA_ENCRYPTION_KEY=' + require('node:crypto').randomBytes(32).toString('base64url') + '\n')" >> "$GITHUB_ENV"
+          node - <<'NODE' >> "$GITHUB_ENV"
+          const { randomBytes } = require("node:crypto");
+          const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+          const bytes = randomBytes(20);
+          let secret = "";
+          for (const byte of bytes) secret += alphabet[byte % alphabet.length];
+          process.stdout.write("MFA_ENCRYPTION_KEY=" + randomBytes(32).toString("base64url") + "\n");
+          process.stdout.write("E2E_A11Y_ADMIN_MFA_SECRET=" + secret + "\n");
+          NODE
 
       - name: Generate Prisma client
         run: pnpm db:generate
