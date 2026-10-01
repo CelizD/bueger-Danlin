@@ -29,7 +29,7 @@ jobs:
 
       - name: Update lockfile
         run: |
-          printf "\ntrustPolicyExclude:\n  - 'prisma@7.10.0'\n" >> pnpm-workspace.yaml
+          printf "\ntrustPolicyExclude:\n  - 'prisma@7.10.0'\n  - 'semver@6.3.1'\n" >> pnpm-workspace.yaml
           pnpm install --lockfile-only --no-frozen-lockfile
           git checkout -- pnpm-workspace.yaml
 
