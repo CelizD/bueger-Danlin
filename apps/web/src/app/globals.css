@@ -5208,7 +5208,7 @@ textarea:focus-visible,
 .group-delivery-consent-copy small {
   display: block;
   margin-top: 9px;
-  color: #746c62;
+  color: #5f574d;
   font-size: 10px;
   line-height: 1.5;
 }
@@ -6150,7 +6150,7 @@ textarea:focus-visible,
 }
 
 .seller-disclosure dt {
-  color: #746c62;
+  color: #5f574d;
   font-size: 10px;
   font-weight: 850;
   text-transform: uppercase;
