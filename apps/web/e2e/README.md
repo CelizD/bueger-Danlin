@@ -84,7 +84,9 @@ $env:ENABLE_REAL_PAYMENTS="false"
 $env:E2E_ADMIN_PASSWORD="local-admin-e2e-passphrase-2026"
 $env:E2E_KITCHEN_PASSWORD="local-kitchen-e2e-passphrase-2026"
 $env:E2E_DELIVERY_PASSWORD="local-delivery-e2e-passphrase-2026"
-$env:MFA_ENCRYPTION_KEY="MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE"
+$mfaBytes = New-Object byte[] 32
+[Security.Cryptography.RandomNumberGenerator]::Fill($mfaBytes)
+$env:MFA_ENCRYPTION_KEY = [Convert]::ToBase64String($mfaBytes).TrimEnd("=").Replace("+", "-").Replace("/", "_")
 
 pnpm db:migrate:deploy
 pnpm db:seed
