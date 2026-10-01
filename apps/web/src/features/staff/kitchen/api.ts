@@ -1,22 +1,12 @@
 import {
   API_URL,
   apiFetch,
+  throwApiHttpError,
 } from "@/lib/api/browser";
 import type {
   KitchenOrder,
   StaffUser,
 } from "./types";
-
-function responseMessage(
-  data: { message?: string | string[] },
-  fallback: string,
-) {
-  const message = Array.isArray(data.message)
-    ? data.message.join(" ")
-    : data.message;
-
-  return message || fallback;
-}
 
 export async function fetchKitchenOrders(): Promise<
   | { authorized: false }
@@ -38,10 +28,16 @@ export async function fetchKitchenOrders(): Promise<
     return { authorized: false };
   }
 
+  if (!me.ok) {
+    await throwApiHttpError(
+      me,
+      "No se pudo validar la sesión.",
+    );
+  }
+
   const meData = await me.json();
 
   if (
-    !me.ok ||
     !["ADMIN", "KITCHEN"].includes(
       meData.user.role,
     )
@@ -65,7 +61,8 @@ export async function fetchKitchenOrders(): Promise<
   }
 
   if (!response.ok) {
-    throw new Error(
+    await throwApiHttpError(
+      response,
       "No se pudieron cargar los pedidos de cocina.",
     );
   }
@@ -94,16 +91,12 @@ export async function transitionKitchenOrder(
     },
   );
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(
-      responseMessage(
-        data,
-        "No se pudo actualizar el pedido.",
-      ),
+    await throwApiHttpError(
+      response,
+      "No se pudo actualizar el pedido.",
     );
   }
 
-  return data;
+  return response.json();
 }
