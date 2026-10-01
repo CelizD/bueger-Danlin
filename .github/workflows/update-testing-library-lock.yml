@@ -28,7 +28,10 @@ jobs:
           corepack prepare pnpm@10.34.5 --activate
 
       - name: Update lockfile
-        run: pnpm install --lockfile-only --no-frozen-lockfile
+        run: |
+          printf "\ntrustPolicyExclude:\n  - 'prisma@7.10.0'\n" >> pnpm-workspace.yaml
+          pnpm install --lockfile-only --no-frozen-lockfile
+          git checkout -- pnpm-workspace.yaml
 
       - name: Commit lockfile
         run: |
