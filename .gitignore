@@ -26,6 +26,7 @@ deploy/backup/*.key
 apps/web/playwright-report/
 apps/web/test-results/
 apps/web/blob-report/
+apps/web/storybook-static/
 
 gitleaks-report.json
 gitleaks-current.json
