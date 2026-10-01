@@ -79,6 +79,7 @@ export function OrderApp({
         }
         paying={checkout.paying}
         canceling={checkout.canceling}
+        qrPayload={checkout.deliveryQrPayload}
         paymentProvider={
           checkout.paymentProvider
         }
