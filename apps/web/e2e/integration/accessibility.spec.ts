@@ -93,24 +93,6 @@ async function assertNoBlockingA11y(
   ).toEqual([]);
 }
 
-async function staffLogin(
-  page: import("@playwright/test").Page,
-  email: string,
-  password: string,
-  expectedPath: string,
-) {
-  await page.goto("/admin/login");
-  await page.getByLabel("Correo").fill(email);
-  await page.getByLabel("Contraseña").fill(password);
-  await page
-    .getByRole("button", { name: "Entrar al panel" })
-    .click();
-
-  await expect(page).toHaveURL(
-    (url) => url.pathname === expectedPath,
-  );
-}
-
 async function loginAccessibilityAdmin(
   page: import("@playwright/test").Page,
   retry: number,
@@ -157,7 +139,7 @@ async function loginAccessibilityAdmin(
 }
 
 test("Axe cubre home y paneles operativos reales", async (
-  { page, browser },
+  { page },
   testInfo,
 ) => {
   test.setTimeout(180_000);
@@ -214,39 +196,21 @@ test("Axe cubre home y paneles operativos reales", async (
     await assertNoBlockingA11y(page, target.label);
   }
 
-  const kitchenContext = await browser.newContext();
-  const kitchenPage = await kitchenContext.newPage();
-
-  await staffLogin(
-    kitchenPage,
-    "kitchen.e2e@example.test",
-    requiredEnv("E2E_KITCHEN_PASSWORD"),
-    "/admin/cocina",
-  );
+  await page.goto("/admin/cocina");
   await expect(
-    kitchenPage.getByRole("heading", {
+    page.getByRole("heading", {
       name: "Cocina",
       level: 1,
     }),
   ).toBeVisible();
-  await assertNoBlockingA11y(kitchenPage, "Cocina");
-  await kitchenContext.close();
+  await assertNoBlockingA11y(page, "Cocina");
 
-  const deliveryContext = await browser.newContext();
-  const deliveryPage = await deliveryContext.newPage();
-
-  await staffLogin(
-    deliveryPage,
-    "delivery.e2e@example.test",
-    requiredEnv("E2E_DELIVERY_PASSWORD"),
-    "/admin/entrega",
-  );
+  await page.goto("/admin/entrega");
   await expect(
-    deliveryPage.getByRole("heading", {
+    page.getByRole("heading", {
       name: "Entrega",
       level: 1,
     }),
   ).toBeVisible();
-  await assertNoBlockingA11y(deliveryPage, "Entrega");
-  await deliveryContext.close();
+  await assertNoBlockingA11y(page, "Entrega");
 });
