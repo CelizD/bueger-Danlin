@@ -1,4 +1,5 @@
 import {
+  Injectable,
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
@@ -105,6 +106,7 @@ function safeTokenEqual(
   );
 }
 
+@Injectable()
 export class CustomerOrderAccessService {
   private readonly secret: string;
 
