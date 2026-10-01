@@ -175,15 +175,18 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   expect(customerState.qrStatus).toBe(200);
   expect(customerState.qr).toMatchObject({
     orderCode,
-    qrPayload: expect.stringMatching(
-      new RegExp(
-        `^BD1:${orderCode}:[A-Za-z0-9_-]{32,}$`,
-      ),
-    ),
   });
 
   const qrPayload =
     customerState.qr.qrPayload as string;
+  const qrParts = qrPayload.split(":");
+
+  expect(qrParts).toHaveLength(3);
+  expect(qrParts[0]).toBe("BD1");
+  expect(qrParts[1]).toBe(orderCode);
+  expect(qrParts[2]).toMatch(
+    /^[A-Za-z0-9_-]{32,}$/,
+  );
 
   const kitchenContext = await browser.newContext();
   const kitchenPage = await kitchenContext.newPage();
