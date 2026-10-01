@@ -9,7 +9,7 @@ import type {
   AdminArcoRequest,
   ArcoRequestStatus,
 } from "@/features/staff/arco/types";
-import type { StaffSessionUser } from "@/features/staff/components/admin-sidebar";
+import type { StaffSessionUser } from "@/features/staff/types";
 import {
   CheckCircle2,
   Clock3,

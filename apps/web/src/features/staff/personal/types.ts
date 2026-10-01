@@ -1,30 +1,20 @@
-export type StaffRole = "ADMIN" | "KITCHEN" | "DELIVERY";
+import type {
+  ManagedStaffUser,
+  StaffRole as SharedStaffRole,
+  StaffSessionUser,
+} from "../types";
 
-export type SessionUser = {
-  sub: string;
-  name: string;
-  email: string;
-  role: StaffRole;
-};
+export type { StaffRole } from "../types";
 
-export type StaffUser = {
-  id: string;
-  name: string;
-  email: string;
-  role: StaffRole;
-  active: boolean;
-  mfaEnabled: boolean;
-  mfaEnrolledAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
+export type SessionUser = StaffSessionUser;
+export type StaffUser = ManagedStaffUser;
 
-export type StaffRoleFilter = "ALL" | StaffRole;
+export type StaffRoleFilter = "ALL" | SharedStaffRole;
 
 export type CreateStaffForm = {
   name: string;
   email: string;
-  role: StaffRole;
+  role: SharedStaffRole;
   password: string;
 };
 

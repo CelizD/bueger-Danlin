@@ -3,8 +3,8 @@
 import {
   canAccessAdminSection,
   type AdminSection,
-  type StaffRole,
 } from "@/features/staff/permissions";
+import type { StaffSessionUser } from "@/features/staff/types";
 import { API_URL, apiFetch } from "@/lib/api/browser";
 import {
   BarChart3,
@@ -18,11 +18,6 @@ import {
   Users,
 } from "lucide-react";
 
-export type StaffSessionUser = {
-  name: string;
-  email: string;
-  role: StaffRole;
-};
 
 type AdminSidebarProps = {
   user: StaffSessionUser | null;

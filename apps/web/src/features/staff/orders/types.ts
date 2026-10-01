@@ -1,12 +1,6 @@
 import type { AdminDeliveryGroup } from "../components/admin-delivery-groups";
 
-export type StaffUser = {
-  id?: string;
-  sub?: string;
-  name: string;
-  email: string;
-  role: "ADMIN" | "KITCHEN" | "DELIVERY";
-};
+export type { StaffSessionUser as StaffUser } from "../types";
 
 export type OrderModifier = {
   id: string;
