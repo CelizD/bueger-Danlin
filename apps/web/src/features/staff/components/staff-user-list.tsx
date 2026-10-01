@@ -116,6 +116,7 @@ export function StaffUserList({
               <div className="staff-role-control">
                 <span>Rol</span>
                 <select
+                  aria-label={`Rol de ${staff.name}`}
                   value={staff.role}
                   disabled={
                     isSelf ||
