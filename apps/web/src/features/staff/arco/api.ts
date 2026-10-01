@@ -7,7 +7,7 @@ import type {
   AdminArcoRequest,
   ArcoRequestStatus,
 } from "./types";
-import type { StaffSessionUser } from "../components/admin-sidebar";
+import type { StaffSessionUser } from "../types";
 
 export async function fetchAdminArco() {
   const meResponse =
