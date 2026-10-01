@@ -9,7 +9,7 @@ La suite original valida el navegador de forma rápida y determinista sin depend
 Cobertura:
 
 - menú -> datos -> pedido -> pago mock -> QR;
-- sessionStorage del capability token;
+- ausencia de capability del pedido en sessionStorage y uso de cookie HttpOnly;
 - navegación por teclado;
 - login de personal;
 - transición a MFA;
@@ -43,7 +43,7 @@ La suite integrada verifica dos recorridos principales.
 3. pago `MOCK` real cambia el pedido a `PAID`;
 4. Cocina inicia preparación;
 5. Cocina marca el pedido `READY`;
-6. se construye el mismo payload que contiene el QR del cliente;
+6. el cliente obtiene el QR de entrega mediante un endpoint autenticado por cookie HttpOnly;
 7. Entrega envía el payload al endpoint real `/staff/delivery/scan`;
 8. el API valida token/hash y cambia el pedido a `DELIVERED`;
 9. el estado final se vuelve a consultar desde el API real.
