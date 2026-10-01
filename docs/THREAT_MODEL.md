@@ -78,7 +78,7 @@ El frontend no es una autoridad de seguridad.
 Controles:
 - precio recalculado en backend;
 - RBAC en servidor;
-- X-Order-Token para operaciones privadas del cliente;
+- cookie HttpOnly + SameSite=Strict por pedido para operaciones privadas del cliente;
 - Idempotency-Key;
 - validación server-side.
 
@@ -160,7 +160,7 @@ Pendiente:
 | T01 | Credential stuffing contra staff | Acceso administrativo | Argon2id, rate limit, lockout persistente, MFA ADMIN | Medio |
 | T02 | Robo de sesión | Operaciones con identidad de staff | HttpOnly, Secure, SameSite=Strict, HTTPS/HSTS prod, invalidación por credencial | Medio |
 | T03 | CSRF en panel | Mutaciones no autorizadas | SameSite + Origin + Sec-Fetch-Site | Bajo |
-| T04 | IDOR de pedidos | Exposición/modificación de pedido ajeno | X-Order-Token opaco + token hasheado | Bajo |
+| T04 | IDOR de pedidos | Exposición/modificación de pedido ajeno | capability HttpOnly aislada por pedido + QR separado solo para entrega | Bajo |
 | T05 | Manipulación de precios | Fraude | Backend recalcula precio | Bajo |
 | T06 | Repetición de requests | Pedidos/pagos duplicados | Idempotency-Key y claves únicas | Bajo |
 | T07 | Sobreventa/concurrencia | Inventario/capacidad incorrectos | Transacciones y locks PostgreSQL | Bajo |
