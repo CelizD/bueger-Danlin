@@ -528,7 +528,7 @@ h2 {
 
 .admin-kicker {
   margin: 0;
-  color: #7d7569;
+  color: #6f675e;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -782,7 +782,7 @@ h2 {
 }
 
 .admin-sidebar-brand span {
-  color: #888176;
+  color: #6f675e;
   font-size: 11px;
 }
 
@@ -842,7 +842,7 @@ h2 {
 }
 
 .admin-sidebar-user span {
-  color: #8c857a;
+  color: #6f675e;
   font-size: 10px;
 }
 
@@ -890,7 +890,7 @@ h2 {
 
 .admin-content-header > div > p:last-child {
   margin: 13px 0 0;
-  color: #777066;
+  color: #6f675e;
   font-size: 14px;
 }
 
@@ -3864,7 +3864,7 @@ h2 {
   padding: 8px 10px;
   border-radius: 9px;
   background: #ece8e0;
-  color: #6f685f;
+  color: #6f675e;
   font-size: 10px;
   font-weight: 750;
 }
@@ -3903,7 +3903,7 @@ h2 {
 
 .dashboard-metric > span {
   display: block;
-  color: #81796f;
+  color: #6f675e;
   font-size: 10px;
   font-weight: 800;
 }
@@ -3922,7 +3922,7 @@ h2 {
 .dashboard-metric > small {
   display: block;
   margin-top: 7px;
-  color: #91897e;
+  color: #6f675e;
   font-size: 9px;
   line-height: 1.4;
 }
@@ -4002,7 +4002,7 @@ h2 {
   padding: 6px 8px;
   border-radius: 999px;
   background: #efebe4;
-  color: #766f65;
+  color: #6f675e;
   font-size: 8px;
   font-weight: 850;
 }
@@ -4118,14 +4118,14 @@ h2 {
   display: grid;
   min-height: 180px;
   place-items: center;
-  color: #8a8378;
+  color: #6f675e;
   font-size: 11px;
   text-align: center;
 }
 
 .dashboard-footnote {
   margin: 14px 3px 0;
-  color: #8a8378;
+  color: #6f675e;
   font-size: 9px;
   line-height: 1.5;
 }
@@ -5675,14 +5675,14 @@ textarea:focus-visible,
 
 .admin-day-panel-head p:last-child {
   margin: 0;
-  color: #7e776d;
+  color: #6f675e;
   font-size: 11px;
   text-transform: capitalize;
 }
 
 .admin-day-panel-head > span,
 .dashboard-history-heading > span {
-  color: #81796f;
+  color: #6f675e;
   font-size: 10px;
   font-weight: 800;
 }
@@ -5714,7 +5714,7 @@ textarea:focus-visible,
 }
 
 .admin-day-metrics span {
-  color: #817a70;
+  color: #6f675e;
   font-size: 10px;
   font-weight: 800;
 }
@@ -5729,7 +5729,7 @@ textarea:focus-visible,
 
 .admin-day-metrics small {
   margin-top: 3px;
-  color: #8b8378;
+  color: #6f675e;
   font-size: 9px;
   line-height: 1.4;
 }
@@ -5799,7 +5799,7 @@ textarea:focus-visible,
 
 .admin-day-group-copy span,
 .admin-day-group-copy small {
-  color: #827a70;
+  color: #6f675e;
   font-size: 9px;
   line-height: 1.35;
 }
@@ -5834,7 +5834,7 @@ textarea:focus-visible,
 }
 
 .admin-day-group-delivery small {
-  color: #80776d;
+  color: #6f675e;
   font-size: 9px;
 }
 
