@@ -1,4 +1,6 @@
-export type StaffRole = "ADMIN" | "KITCHEN" | "DELIVERY";
+import type { StaffRole } from "./types";
+
+export type { StaffRole } from "./types";
 
 export type AdminSection =
   | "dashboard"
