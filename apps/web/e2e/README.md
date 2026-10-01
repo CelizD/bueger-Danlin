@@ -30,10 +30,13 @@ La suite `e2e/integration` no intercepta la API. Levanta:
 - NestJS real;
 - Next.js real;
 - catálogo e inventario reales;
-- usuarios KITCHEN y DELIVERY reales;
+- usuarios ADMIN, KITCHEN y DELIVERY reales;
+- configuración MFA real para ADMIN;
 - Playwright/Chromium.
 
-El flujo principal verifica:
+La suite integrada verifica dos recorridos principales.
+
+### Flujo cliente -> operación
 
 1. cliente crea un pedido real;
 2. PostgreSQL reserva inventario/capacidad;
@@ -44,6 +47,15 @@ El flujo principal verifica:
 7. Entrega envía el payload al endpoint real `/staff/delivery/scan`;
 8. el API valida token/hash y cambia el pedido a `DELIVERED`;
 9. el estado final se vuelve a consultar desde el API real.
+
+### Flujo administrativo
+
+1. ADMIN inicia sesión con contraseña real;
+2. configura MFA TOTP real y recibe recovery codes;
+3. crea, actualiza y elimina un artículo de Inventario;
+4. crea un punto/fecha de entrega en estado borrador y valida su QR;
+5. crea una cuenta de Personal, cambia su rol y la desactiva;
+6. procesa una solicitud ARCO real desde recepción hasta resolución.
 
 GitHub Actions ejecuta esta suite en cada PR/push a `main`.
 
@@ -69,8 +81,10 @@ $env:QR_TOKEN_SECRET="local-e2e-qr-secret-not-for-production-123456789"
 $env:AUTH_JWT_SECRET="local-e2e-auth-secret-not-for-production-123456789"
 $env:PAYMENT_PROVIDER="mock"
 $env:ENABLE_REAL_PAYMENTS="false"
+$env:E2E_ADMIN_PASSWORD="local-admin-e2e-passphrase-2026"
 $env:E2E_KITCHEN_PASSWORD="local-kitchen-e2e-passphrase-2026"
 $env:E2E_DELIVERY_PASSWORD="local-delivery-e2e-passphrase-2026"
+$env:MFA_ENCRYPTION_KEY="MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE"
 
 pnpm db:migrate:deploy
 pnpm db:seed
