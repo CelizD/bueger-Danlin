@@ -7,6 +7,7 @@ import {
 } from "../../apps/api/src/auth/password-security.js";
 
 const connectionString = process.env.DATABASE_URL;
+const adminPassword = process.env.E2E_ADMIN_PASSWORD;
 const kitchenPassword = process.env.E2E_KITCHEN_PASSWORD;
 const deliveryPassword = process.env.E2E_DELIVERY_PASSWORD;
 
@@ -26,6 +27,10 @@ if (!databaseName.toLowerCase().includes("test")) {
   );
 }
 
+if (!adminPassword || adminPassword.length < 12) {
+  throw new Error("E2E_ADMIN_PASSWORD must contain at least 12 characters");
+}
+
 if (!kitchenPassword || kitchenPassword.length < 12) {
   throw new Error("E2E_KITCHEN_PASSWORD must contain at least 12 characters");
 }
@@ -42,7 +47,7 @@ async function upsertStaff(
   email: string,
   password: string,
   name: string,
-  role: "KITCHEN" | "DELIVERY",
+  role: "ADMIN" | "KITCHEN" | "DELIVERY",
 ) {
   const passwordIssue = staffPasswordPolicyIssue(password);
 
@@ -80,6 +85,7 @@ async function upsertStaff(
 async function main() {
   await prisma.order.deleteMany();
   await prisma.customer.deleteMany();
+  await prisma.arcoRequest.deleteMany();
   await prisma.pickupEvent.deleteMany();
   await prisma.pickupPoint.deleteMany();
 
@@ -128,6 +134,13 @@ async function main() {
       status: "OPEN",
     },
   });
+
+  await upsertStaff(
+    "admin.e2e@example.test",
+    adminPassword,
+    "Admin E2E",
+    "ADMIN",
+  );
 
   await upsertStaff(
     "kitchen.e2e@example.test",
