@@ -1,0 +1,14 @@
+{
+  "baseline": {
+    "measuredAt": "2026-10-01",
+    "sourceCommit": "44e75500d11d5342ad33d1c353cdc6679e7464b1",
+    "sourceRunId": 36949226673,
+    "maxChunkGzipKb": 122.2,
+    "totalStaticJsGzipKb": 424.1,
+    "chunkCount": 25
+  },
+  "budget": {
+    "maxChunkGzipKb": 145,
+    "totalStaticJsGzipKb": 490
+  }
+}
