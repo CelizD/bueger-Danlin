@@ -261,7 +261,7 @@ Revisar cuando ocurra cualquiera de estos cambios:
 
 1. Política técnica de retención y borrado.
 2. Observabilidad y alertas.
-3. Runbooks de incidentes.
+3. Asignar contactos reales de incidentes y ejecutar un tabletop de los runbooks versionados.
 4. Load/stress test.
 5. Staging + DAST.
 6. WAF/CDN y TLS real.
