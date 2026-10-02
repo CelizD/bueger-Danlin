@@ -105,7 +105,7 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | Métricas | 🟡 | API instrumentada + Prometheus + Node Exporter + dashboard Grafana preparados; falta validar targets y consumo en el VPS real |
 | Distributed tracing | 🔴 | Falta OpenTelemetry o equivalente |
 | Alertas | 🟡 | Reglas Prometheus para API, DB, 5xx, p95, inventario, memoria y disco; falta canal de notificaciones/Alertmanager y validación real |
-| Runbooks de incidentes | 🔴 | Falta account takeover, secret leak, DB exposure, dependency compromise, DDoS |
+| Runbooks de incidentes | ✅ | `deploy/runbooks/` cubre account takeover, secret leak, DB exposure, dependency compromise y DDoS/caída operativa; falta ejercitarlos en producción |
 | Política de retención | 🟡 | Cleanup/anonimización y purga de AuditLog implementados con dry-run, kill switch, tests y timer preparado; faltan legal hold, logs centralizados, validación offsite y revisión legal/fiscal |
 | Privacy inventory/notice | 🟡 | Inventario técnico + aviso integral /privacidad + aviso simplificado en checkout implementados; producción exige identidad, domicilio y correo ARCO. Falta validación legal/fiscal final de plazos de retención |
 | Incident contacts | 🔴 | No definidos |
@@ -213,7 +213,7 @@ Pendiente antes de habilitar pagos reales:
 8. Validar Prometheus/Loki/Alloy/Grafana en el VPS.
 9. Añadir canal de notificaciones para alertas.
 10. Distributed tracing con OpenTelemetry/Tempo si se requiere.
-11. Runbooks e incident contacts.
+11. Asignar incident contacts reales y ejecutar un tabletop usando los runbooks versionados.
 
 ### Fase 5 — Preproducción
 
@@ -236,7 +236,7 @@ Pendiente antes de habilitar pagos reales:
 
 ## Próximo control
 
-La **password blocklist** y el **image scanning con Trivy** ya están implementados y validados. El benchmark Argon2id queda pendiente hasta disponer del VPS objetivo. Mientras tanto, el **threat model** y el **inventario de datos** ya están documentados. El cleanup de retención ya está implementado con dry-run, tests y timer preparado. La observabilidad base con **Grafana + Prometheus + Loki + Alloy** ya está implementada en configuración. Falta validarla en el VPS y conectar notificaciones; después siguen tracing y runbooks.
+La **password blocklist** y el **image scanning con Trivy** ya están implementados y validados. El benchmark Argon2id queda pendiente hasta disponer del VPS objetivo. Mientras tanto, el **threat model** y el **inventario de datos** ya están documentados. El cleanup de retención ya está implementado con dry-run, tests y timer preparado. La observabilidad base con **Grafana + Prometheus + Loki + Alloy** ya está implementada en configuración. Falta validarla en el VPS y conectar notificaciones. Los runbooks de incidentes ya están versionados; queda asignar contactos reales y ejercitarlos.
 
 ## Nota sobre branch protection
 
