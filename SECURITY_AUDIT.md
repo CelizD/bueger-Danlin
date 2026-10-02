@@ -103,7 +103,7 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | AuditLog | ✅ | Matriz formal en `docs/AUDIT_LOG_MATRIX.md`, eventos obligatorios protegidos por test de política y pruebas runtime en flujos críticos; sin PII/tokens en creación de pedido y pagos |
 | Logs centralizados/SIEM | 🟡 | Loki + Alloy configurados para logs Docker con retención de 30 días; falta validar ingestión y operación en el VPS real |
 | Métricas | 🟡 | API instrumentada + Prometheus + Node Exporter + dashboard Grafana preparados; falta validar targets y consumo en el VPS real |
-| Distributed tracing | 🔴 | Falta OpenTelemetry o equivalente |
+| Distributed tracing | 🟡 | OTLP/OpenTelemetry-compatible tracing + Alloy + Tempo configurados; falta validar ingestión/consulta y consumo en el VPS real |
 | Alertas | 🟡 | Reglas Prometheus para API, DB, 5xx, p95, inventario, memoria y disco; falta canal de notificaciones/Alertmanager y validación real |
 | Runbooks de incidentes | ✅ | `deploy/runbooks/` cubre account takeover, secret leak, DB exposure, dependency compromise y DDoS/caída operativa; falta ejercitarlos en producción |
 | Política de retención | 🟡 | Cleanup/anonimización y purga de AuditLog implementados con dry-run, kill switch, tests y timer preparado; faltan legal hold, logs centralizados, validación offsite y revisión legal/fiscal |
@@ -212,7 +212,7 @@ Pendiente antes de habilitar pagos reales:
 
 8. Validar Prometheus/Loki/Alloy/Grafana en el VPS.
 9. Añadir canal de notificaciones para alertas.
-10. Distributed tracing con OpenTelemetry/Tempo si se requiere.
+10. Validar OpenTelemetry/Tempo en el VPS y ajustar sampling según tráfico real.
 11. Asignar incident contacts reales y ejecutar un tabletop usando los runbooks versionados.
 
 ### Fase 5 — Preproducción
