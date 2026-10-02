@@ -108,7 +108,7 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | Runbooks de incidentes | ✅ | `deploy/runbooks/` cubre account takeover, secret leak, DB exposure, dependency compromise y DDoS/caída operativa; falta ejercitarlos en producción |
 | Política de retención | 🟡 | Cleanup/anonimización y purga de AuditLog implementados con dry-run, kill switch, tests y timer preparado; faltan legal hold, logs centralizados, validación offsite y revisión legal/fiscal |
 | Privacy inventory/notice | 🟡 | Inventario técnico + aviso integral /privacidad + aviso simplificado en checkout implementados; producción exige identidad, domicilio y correo ARCO. Falta validación legal/fiscal final de plazos de retención |
-| Incident contacts | 🔴 | No definidos |
+| Incident contacts | 🟡 | Roles mínimos definidos en `deploy/runbooks/README.md`; falta asignar personas y canales privados reales fuera de Git |
 | ASVS baseline | 🔴 | No existe matriz verificable |
 | SSRF controls | 🔵 | No existe fetch arbitrario de URLs |
 | API versionado | ✅ | `/api/v1` |
