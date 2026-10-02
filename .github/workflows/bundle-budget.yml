@@ -43,5 +43,5 @@ jobs:
       - name: Build Web
         run: pnpm --filter @burger/web build
 
-      - name: Measure Web bundle
+      - name: Enforce Web bundle budget
         run: pnpm --filter @burger/web bundle:report
