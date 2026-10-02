@@ -1,6 +1,9 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { randomBytes } from "node:crypto";
 
+type FetchInput = Parameters<typeof globalThis.fetch>[0];
+type FetchInit = Parameters<typeof globalThis.fetch>[1];
+
 type TraceContext = {
   traceId: string;
   spanId: string;
@@ -281,13 +284,13 @@ export function createServerHttpSpan(input: {
   };
 }
 
-function requestUrl(input: RequestInfo | URL) {
+function requestUrl(input: FetchInput) {
   if (typeof input === "string") return input;
   if (input instanceof URL) return input.toString();
   return input.url;
 }
 
-function requestMethod(input: RequestInfo | URL, init?: RequestInit) {
+function requestMethod(input: FetchInput, init?: FetchInit) {
   if (init?.method) return init.method.toUpperCase();
   if (typeof Request !== "undefined" && input instanceof Request) {
     return input.method.toUpperCase();
