@@ -114,24 +114,32 @@ El reporte muestra:
 - tamaño gzip;
 - total de JavaScript estático.
 
-No fijar budgets arbitrarios antes de obtener el primer baseline estable.
+El baseline estable se midió en GitHub Actions sobre el commit de aplicación `44e75500d11d5342ad33d1c353cdc6679e7464b1`:
 
-Cuando exista baseline, pueden activarse límites:
+| Medición | Baseline | Budget CI |
+| --- | ---: | ---: |
+| Chunk JS más grande (gzip) | 122.2 KB | 145 KB |
+| JS estático total (gzip) | 424.1 KB | 490 KB |
+| Cantidad de chunks | 25 | informativo |
+
+Los budgets están versionados en `apps/web/bundle-budget.json`. El workflow `Bundle Budget` ejecuta un build real y falla si el chunk más grande o el total gzip superan esos límites.
+
+Los límites dejan margen para cambios normales, pero obligan a revisar una regresión significativa en lugar de permitir crecimiento silencioso. Si un aumento es intencional, primero debe revisarse el reporte y actualizarse el baseline/budget con evidencia del nuevo build.
+
+Para una prueba temporal local todavía se pueden sobrescribir los límites sin modificar el archivo versionado:
 
 ```powershell
-$env:BUNDLE_MAX_CHUNK_GZIP_KB="150"
-$env:BUNDLE_MAX_TOTAL_GZIP_KB="600"
+$env:BUNDLE_MAX_CHUNK_GZIP_KB="145"
+$env:BUNDLE_MAX_TOTAL_GZIP_KB="490"
 & "$env:APPDATA\npm\pnpm.cmd" --filter @burger/web bundle:report
 ```
 
-Los números anteriores son únicamente ejemplo de sintaxis, no budgets aprobados.
-
 ## Checklist para producción
 
-- [ ] medir bundle baseline;
+- [x] medir bundle baseline;
 - [ ] registrar LCP/INP/CLS reales;
 - [ ] calcular p75 por dispositivo/ruta cuando exista volumen suficiente;
-- [ ] fijar budgets después del baseline;
+- [x] fijar budgets después del baseline;
 - [ ] revisar logs `FrontendTelemetry`;
 - [ ] configurar alertas cuando exista plataforma de observabilidad;
 - [ ] correlacionar incidentes mediante `X-Request-Id`;
