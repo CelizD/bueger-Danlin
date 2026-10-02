@@ -1,0 +1,126 @@
+name: DAST Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      scan_mode:
+        description: "Tipo de escaneo ZAP contra staging"
+        required: true
+        default: baseline
+        type: choice
+        options:
+          - baseline
+          - full
+      active_scan_confirmation:
+        description: "Para full escribe exactamente ACTIVE-STAGING"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dast-staging
+  cancel-in-progress: false
+
+jobs:
+  validate-target:
+    name: Validate staging target
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: staging
+    outputs:
+      target_url: ${{ steps.validate.outputs.target_url }}
+    env:
+      DAST_TARGET_URL: ${{ vars.DAST_TARGET_URL }}
+      DAST_ALLOWED_HOST: ${{ vars.DAST_ALLOWED_HOST }}
+      SCAN_MODE: ${{ inputs.scan_mode }}
+      ACTIVE_SCAN_CONFIRMATION: ${{ inputs.active_scan_confirmation }}
+    steps:
+      - name: Validate DAST allowlist and confirmation
+        id: validate
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const targetRaw = (process.env.DAST_TARGET_URL || '').trim();
+          const allowedHost = (process.env.DAST_ALLOWED_HOST || '').trim().toLowerCase();
+          const mode = (process.env.SCAN_MODE || '').trim();
+          const confirmation = (process.env.ACTIVE_SCAN_CONFIRMATION || '').trim();
+
+          if (!targetRaw || !allowedHost) {
+            console.error('Configure DAST_TARGET_URL and DAST_ALLOWED_HOST in the GitHub environment named staging.');
+            process.exit(1);
+          }
+
+          let target;
+          try {
+            target = new URL(targetRaw);
+          } catch {
+            console.error('DAST_TARGET_URL is not a valid absolute URL.');
+            process.exit(1);
+          }
+
+          if (target.protocol !== 'https:') {
+            console.error('DAST_TARGET_URL must use HTTPS.');
+            process.exit(1);
+          }
+
+          if (target.hostname.toLowerCase() !== allowedHost) {
+            console.error('DAST target hostname is not the allowlisted staging host.');
+            process.exit(1);
+          }
+
+          if (!['baseline', 'full'].includes(mode)) {
+            console.error('Unsupported DAST scan mode.');
+            process.exit(1);
+          }
+
+          if (mode === 'full' && confirmation !== 'ACTIVE-STAGING') {
+            console.error('Full active scan requires the exact confirmation ACTIVE-STAGING.');
+            process.exit(1);
+          }
+
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `target_url=${target.href}\n`);
+          console.log(`Validated staging target: ${target.origin}`);
+          NODE
+
+  baseline:
+    name: ZAP baseline (passive)
+    if: inputs.scan_mode == 'baseline'
+    needs: validate-target
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: OWASP ZAP baseline scan
+        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
+        with:
+          target: ${{ needs.validate-target.outputs.target_url }}
+          fail_action: true
+          allow_issue_writing: false
+          artifact_name: zap-baseline-${{ github.run_id }}
+          cmd_options: "-m 2 -s"
+
+  full:
+    name: ZAP full active scan
+    if: inputs.scan_mode == 'full'
+    needs: validate-target
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: OWASP ZAP full scan
+        uses: zaproxy/action-full-scan@3c58388149901b9a03b7718852c5ba889646c27c # v0.13.0
+        with:
+          target: ${{ needs.validate-target.outputs.target_url }}
+          fail_action: true
+          allow_issue_writing: false
+          artifact_name: zap-full-${{ github.run_id }}
+          cmd_options: "-m 3 -s"
