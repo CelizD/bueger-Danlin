@@ -236,7 +236,7 @@ Requisitos antes de activar:
 
 1. Secretos gestionados mediante variables/archivo protegido en lugar de Vault/KMS.
 2. Sin WAF/CDN hasta contar con infraestructura real.
-3. Sin DAST hasta contar con staging.
+3. DAST automatizado pero sin ejecución real hasta contar con staging HTTPS autorizado.
 4. Sin tracing/métricas centralizadas.
 5. Sin firma de imágenes.
 6. Branch protection no verificable desde la integración actual.
@@ -263,7 +263,7 @@ Revisar cuando ocurra cualquiera de estos cambios:
 2. Observabilidad y alertas.
 3. Asignar contactos reales de incidentes y ejecutar un tabletop de los runbooks versionados.
 4. Load/stress test.
-5. Staging + DAST.
+5. Desplegar staging y ejecutar baseline + full scan del workflow DAST preparado.
 6. WAF/CDN y TLS real.
 7. Secret Manager/KMS cuando la infraestructura lo justifique.
 8. Firma de artifacts/images.
