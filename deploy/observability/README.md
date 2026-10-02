@@ -9,7 +9,8 @@ Burger Danlin usa una pila autocontenida para el VPS:
 - Grafana 13.2.2: dashboards y exploración.
 - Prometheus 3.15.0: métricas y reglas de alerta.
 - Loki 3.7.8: almacenamiento de logs.
-- Grafana Alloy 1.20.0: recolección de logs de Docker.
+- Grafana Alloy 1.20.0: recolección de logs de Docker y collector OTLP.
+- Grafana Tempo 2.10.8: almacenamiento y consulta de trazas.
 - Node Exporter 1.12.1: métricas del host Linux.
 
 Promtail no se usa porque alcanzó End-of-Life en 2026. Alloy es el recolector soportado.
@@ -63,6 +64,31 @@ No se monta `/var/run/docker.sock`, reduciendo el privilegio del recolector.
 
 Loki conserva logs durante 30 días.
 
+### Distributed tracing
+
+El API puede emitir trazas OTLP compatibles con OpenTelemetry cuando:
+
+```text
+OTEL_TRACING_ENABLED=true
+```
+
+Flujo:
+
+```text
+API -> OTLP/HTTP -> Alloy -> OTLP/gRPC -> Tempo -> Grafana
+```
+
+Se generan spans de:
+
+- requests HTTP entrantes;
+- requests HTTP salientes iniciados dentro de una request trazada.
+
+Cada request trazada agrega `traceId` al log HTTP y devuelve `X-Trace-Id` para facilitar soporte/correlación.
+
+Por privacidad, los spans no incluyen bodies, cookies, nombres, teléfonos, correos ni query strings. Los `traceparent` solo se propagan a hosts declarados explícitamente en `OTEL_PROPAGATE_HOSTS`; proveedores externos no reciben ese header por defecto.
+
+Tempo usa almacenamiento local con retención inicial de 72 horas. Para el MVP pequeño sirve como baseline operativo; no sustituye el backup de PostgreSQL.
+
 ### Prometheus
 
 Prometheus conserva métricas durante 15 días y evalúa reglas cada 15 segundos.
@@ -100,7 +126,7 @@ docker compose \
   --env-file /etc/burger-danlin/production.env \
   -f docker-compose.prod.yml \
   --profile observability \
-  up -d prometheus loki alloy node-exporter grafana
+  up -d prometheus loki tempo alloy node-exporter grafana
 ```
 
 Verifica:
@@ -148,6 +174,7 @@ Grafana se aprovisiona automáticamente con:
 
 - Prometheus: `http://prometheus:9090`
 - Loki: `http://loki:3100`
+- Tempo: `http://tempo:3200`
 
 No es necesario crearlos manualmente.
 
@@ -177,7 +204,8 @@ Incluye:
 
 - Prometheus no publica puerto al host.
 - Loki no publica puerto al host.
-- Alloy no publica puerto al host.
+- Tempo no publica puertos al host.
+- Alloy no publica puertos al host; el receptor OTLP solo está disponible por la red Docker `app`.
 - Node Exporter no publica puerto al host.
 - Grafana publica únicamente en loopback.
 - Nginx bloquea `/api/v1/metrics` públicamente.
@@ -192,6 +220,7 @@ Volúmenes:
 
 - `burger_prometheus_data`
 - `burger_loki_data`
+- `burger_tempo_data`
 - `burger_alloy_data`
 - `burger_grafana_data`
 
@@ -202,15 +231,17 @@ Estos datos de observabilidad son operativos y no sustituyen los backups de Post
 1. Generar un password fuerte para Grafana.
 2. Levantar la pila.
 3. Confirmar que Prometheus muestra todos los targets como UP.
-4. Confirmar que Grafana ve Prometheus y Loki.
-5. Generar tráfico de prueba y revisar requests/latencia.
-6. Generar un log controlado y comprobar que aparece en Loki.
-7. Confirmar que `https://api.example.com/api/v1/metrics` devuelve 404.
-8. Revisar consumo real de RAM/CPU en el VPS.
-9. Definir canal de notificaciones y agregar Alertmanager si se requieren avisos externos.
+4. Confirmar que Grafana ve Prometheus, Loki y Tempo.
+5. Cambiar `OTEL_TRACING_ENABLED=true` y reiniciar API después de levantar observabilidad.
+6. Generar tráfico de prueba y confirmar trazas de `burger-danlin-api` en Tempo.
+7. Tomar un `X-Trace-Id` de una respuesta y correlacionarlo con el log HTTP y la traza.
+8. Generar un log controlado y comprobar que aparece en Loki.
+9. Confirmar que `https://api.example.com/api/v1/metrics` devuelve 404.
+10. Revisar consumo real de RAM/CPU/disco del stack, incluyendo Tempo.
+11. Definir canal de notificaciones y agregar Alertmanager si se requieren avisos externos.
 
-## Pendiente
+## Estado de tracing
 
-El stack actual cubre métricas, logs, dashboards y reglas de alerta.
+La ruta de tracing ya está implementada y es opt-in.
 
-Distributed tracing todavía no está implementado. Si se necesita después, la ruta natural es OpenTelemetry + Tempo usando Alloy como collector.
+Queda pendiente únicamente validarla sobre el VPS real, medir el consumo de Tempo y ajustar `OTEL_TRACE_SAMPLE_RATIO` si el volumen de tráfico crece.
