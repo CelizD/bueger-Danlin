@@ -307,7 +307,8 @@ Ya existe configuración para:
 - Node Exporter;
 - preflight;
 - go-live gate;
-- runbooks de incidentes versionados.
+- runbooks de incidentes versionados;
+- workflow DAST de staging preparado con OWASP ZAP.
 
 ## 14. Bloqueantes reales antes del lanzamiento
 
@@ -350,7 +351,7 @@ Son mejoras de madurez, no requisitos para abrir un MVP pequeño cuando los cont
 
 - OpenTelemetry/Tempo;
 - WAF/CDN;
-- DAST;
+- ejecución DAST contra staging real (workflow ya preparado);
 - pentest externo;
 - load/stress testing avanzado;
 - ADRs adicionales;

@@ -83,9 +83,9 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | Restore test aislado | ✅ | Restore drill contra PostgreSQL temporal |
 | RPO/RTO | 🟡 | Objetivos RPO <=1h / RTO <=4h; falta simulacro de pérdida total |
 | WAF / DDoS edge | 🔴 | No configurado |
-| DAST staging | 🔴 | No existe staging/DAST todavía |
+| DAST staging | 🟡 | workflow manual OWASP ZAP preparado y restringido al environment `staging`; falta desplegar staging HTTPS y ejecutar baseline + full scan |
 | Pentest prelaunch | 🔴 | No realizado |
-| Hallazgos críticos abiertos = 0 | 🟡 | CI security está verde; falta DAST/pentest prelaunch |
+| Hallazgos críticos abiertos = 0 | 🟡 | CI security está verde; DAST está automatizado pero aún no ejecutado contra staging real; pentest externo sigue pendiente/no bloqueante del MVP |
 
 ## P1 — Seguridad de aplicación y operación
 
@@ -133,7 +133,7 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | Docker app non-root | ✅ | API/Web como usuario no-root; hardening adicional en Compose |
 | Image scan | ✅ | Trivy v0.36.0 escanea las imágenes de API, Web y Backup; bloquea vulnerabilidades corregibles HIGH/CRITICAL y la corrida validada del 2026-09-27 quedó verde |
 | Imagen por digest | 🔴 | Imágenes de aplicación/release no fijadas por digest |
-| DAST | 🔴 | Pendiente staging |
+| DAST | 🟡 | `.github/workflows/dast.yml` preparado con baseline pasivo y full active scan protegido; falta target staging real |
 | Deploy con OIDC | 🔴 | No existe pipeline de producción |
 | Kubernetes Restricted | 🔵 | No usamos Kubernetes |
 | Integrated E2E en CI | ✅ | Seed protegido + PostgreSQL + API + Web + Chromium reales |
@@ -221,7 +221,7 @@ Pendiente antes de habilitar pagos reales:
 14. Load/stress test.
 15. Staging.
 16. Rollback probado.
-17. DAST.
+17. Ejecutar el workflow DAST preparado: baseline y después full scan autorizado.
 18. Infraestructura real: dominio/TLS/WAF.
 19. Backup offsite real.
 20. Simulacro completo de pérdida del VPS.

@@ -442,6 +442,7 @@ Documentación:
 - `deploy/DR.md`
 - `deploy/OFFSITE_BACKUP.md`
 - `deploy/GO_LIVE_CHECKLIST.md`
+- `deploy/DAST.md`
 
 ## Pendientes prioritarios
 
@@ -458,7 +459,7 @@ El **código funcional del MVP ya está completo**. Lo que falta antes de lanzar
 9. confirmar con contador régimen fiscal, calendario de declaraciones y CFDI antes de habilitar cleanup destructivo;
 10. simulacro de pérdida total del VPS y medición real de RPO/RTO.
 
-Mejoras como OpenTelemetry/Tempo, WAF/CDN, DAST, pentest externo, load testing avanzado, artifact signing o Kubernetes quedan como **madurez posterior**, no como bloqueo del MVP actual.
+El workflow DAST con OWASP ZAP ya está preparado, pero requiere staging HTTPS real para ejecutarse. OpenTelemetry/Tempo, WAF/CDN, pentest externo, load testing avanzado, artifact signing o Kubernetes siguen como **madurez posterior**, no como bloqueo del MVP actual.
 
 Consulta `docs/MVP_FINAL_STATUS.md` y `deploy/GO_LIVE_CHECKLIST.md`.
 
