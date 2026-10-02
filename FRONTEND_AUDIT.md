@@ -25,7 +25,7 @@ Evolucionar el frontend actual sin sobrearquitectura. Burger Danlin sigue siendo
 | Formularios | 🟡 | labels nativos y autocomplete principales; falta validación de campo más específica |
 | Sesión de personal | ✅ | cookie HttpOnly administrada por API |
 | Acceso pedido cliente | ✅ | cookie HttpOnly + SameSite=Strict por pedido; el QR usa una capability separada solo para entrega |
-| CSP | ✅ baseline | CSP de producción agregada; requiere endurecimiento con nonce/hash más adelante |
+| CSP | ✅ endurecida | nonce por request vía `proxy.ts`; `script-src` usa nonce + strict-dynamic y ya no permite `unsafe-inline`; estilos inline permanecen temporalmente permitidos |
 | Clickjacking | ✅ | X-Frame-Options + CSP frame-ancestors none |
 | HTTPS/HSTS | ✅ config | configuración preparada para producción |
 | Secretos frontend | ✅ diseño | secretos privados permanecen server-side |
@@ -45,7 +45,7 @@ Evolucionar el frontend actual sin sobrearquitectura. Burger Danlin sigue siendo
 
 Implementado:
 
-- CSP de producción.
+- CSP por request con nonce para scripts y `strict-dynamic`;
 - semántica global de colores/tokens base;
 - focus-visible;
 - prefers-reduced-motion;
@@ -257,7 +257,7 @@ Siguiente evolución, solo cuando exista duplicación real:
 Pendientes:
 
 - reemplazar el capability token de pedido accesible a JS por una sesión cliente HttpOnly/BFF o un diseño equivalente;
-- CSP con nonce/hash en lugar de depender de unsafe-inline;
+- migrar los estilos inline restantes para poder retirar `unsafe-inline` de `style-src`;
 - inventario de scripts de terceros;
 - política de sourcemaps;
 - revisión XSS/sinks;
