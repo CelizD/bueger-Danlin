@@ -306,7 +306,8 @@ Ya existe configuración para:
 - Alloy;
 - Node Exporter;
 - preflight;
-- go-live gate.
+- go-live gate;
+- runbooks de incidentes versionados.
 
 ## 14. Bloqueantes reales antes del lanzamiento
 
@@ -340,6 +341,7 @@ Estos son los pendientes de lanzamiento, no de funcionalidad del MVP:
 - ejecutar preflight y go-live check;
 - ejecutar benchmark Argon2id en hardware objetivo;
 - confirmar retención fiscal con contador;
+- asignar contactos reales de incidentes y ejecutar un tabletop;
 - simular pérdida total del VPS y medir RPO/RTO.
 
 ## 15. No bloqueantes para este MVP

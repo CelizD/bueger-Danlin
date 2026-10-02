@@ -35,6 +35,7 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [x] Dashboard Grafana y datasources provisionados.
 - [x] Reglas Prometheus para API, DB, latencia, errores, inventario, memoria y disco.
 - [x] Endpoint de métricas bloqueado desde Nginx público.
+- [x] Runbooks de incidentes versionados para cuenta comprometida, secretos, DB, supply chain y DDoS/caída.
 
 ## Pendiente hasta tener VPS/dominio/proveedores
 
@@ -133,7 +134,8 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [ ] Configurar alertas de fallo de backups/timers.
 - [ ] Configurar monitoreo externo de Web/API.
 - [ ] Verificar logs y rotación.
-- [ ] Definir responsable de incidentes.
+- [ ] Definir responsable y contactos privados de incidentes.
+- [ ] Ejecutar tabletop de los runbooks y registrar hallazgos.
 - [ ] Ejecutar simulacro de pérdida total del VPS.
 - [ ] Medir RPO observado.
 - [ ] Medir RTO observado.

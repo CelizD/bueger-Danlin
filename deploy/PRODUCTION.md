@@ -502,7 +502,19 @@ Objetivos técnicos iniciales:
 
 Son objetivos operativos y deben validarse con evidencia real.
 
-## 14. Logs
+## 14. Respuesta a incidentes
+
+Los procedimientos operativos de seguridad están versionados en:
+
+```text
+deploy/runbooks/README.md
+```
+
+Incluyen cuenta/Admin comprometida, filtración de secretos, exposición de PostgreSQL, supply chain comprometida y DDoS/caída operativa.
+
+Los nombres, teléfonos y canales privados de respuesta deben mantenerse fuera de Git. Antes del go-live se debe asignar Incident Lead, Technical Lead y Business/Privacy Contact, y ejecutar al menos un tabletop.
+
+## 15. Logs
 
 Logs de aplicación:
 
@@ -558,7 +570,7 @@ No deben imprimirse en logs:
 - claves MFA;
 - claves `age`.
 
-## 15. Backup offsite inmutable
+## 16. Backup offsite inmutable
 
 Configura un bucket IONOS Object Storage dedicado con:
 
@@ -592,7 +604,7 @@ docker compose \
 
 No consideres DR completo hasta hacer un restore drill con un archivo descargado desde la copia offsite.
 
-## 16. Preflight del VPS
+## 17. Preflight del VPS
 
 Antes de abrir tráfico:
 
@@ -625,7 +637,7 @@ UID 10001
 GID 10001
 ```
 
-## 17. TLS y DNS
+## 18. TLS y DNS
 
 Antes de solicitar certificados:
 
@@ -648,7 +660,7 @@ No expongas públicamente:
 
 Web/API permanecen en loopback y Nginx es el punto de entrada público.
 
-## 18. Verificación del usuario de backups
+## 19. Verificación del usuario de backups
 
 Después de construir la imagen puedes verificar que no corre como root:
 
