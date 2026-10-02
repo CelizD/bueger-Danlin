@@ -13,6 +13,10 @@ import { STAFF_SESSION_COOKIE } from "./auth/auth.constants.js";
 import { hasOrderAccessCookie } from "./orders/customer-order-access.service.js";
 import { validateProductionEnvironment } from "./config/validate-production-env.js";
 import { MetricsService } from "./metrics/metrics.service.js";
+import {
+  createServerHttpSpan,
+  installOutboundHttpTracing,
+} from "./observability/tracing.js";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -43,6 +47,7 @@ function allowedOrigins() {
 
 async function bootstrap() {
   validateProductionEnvironment();
+  installOutboundHttpTracing();
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
@@ -92,22 +97,42 @@ async function bootstrap() {
       typeof requestIdHeader === "string" && requestIdHeader.length <= 100
         ? requestIdHeader
         : randomUUID();
+    const incomingTraceparent =
+      typeof request.headers.traceparent === "string"
+        ? request.headers.traceparent
+        : undefined;
+    const serverSpan = createServerHttpSpan({
+      method: request.method,
+      incomingTraceparent,
+      requestId,
+    });
     const startedAt = process.hrtime.bigint();
 
     response.setHeader("x-request-id", requestId);
 
+    if (serverSpan) {
+      response.setHeader("x-trace-id", serverSpan.traceId);
+    }
+
     response.on("finish", () => {
+      const route = metricRoute(request);
       const durationMs =
         Number(process.hrtime.bigint() - startedAt) / 1_000_000;
       metrics.observeHttpRequest({
         method: request.method,
-        route: metricRoute(request),
+        route,
         statusCode: response.statusCode,
         durationSeconds: durationMs / 1000,
       });
 
+      serverSpan?.end({
+        route,
+        statusCode: response.statusCode,
+      });
+
       const entry = JSON.stringify({
         requestId,
+        traceId: serverSpan?.traceId,
         method: request.method,
         path: String(request.originalUrl ?? request.url ?? "").split("?")[0],
         statusCode: response.statusCode,
@@ -127,6 +152,11 @@ async function bootstrap() {
         httpLogger.log(entry);
       }
     });
+
+    if (serverSpan) {
+      serverSpan.run(next);
+      return;
+    }
 
     next();
   });
@@ -221,7 +251,7 @@ async function bootstrap() {
       "Stripe-Signature",
       "X-Signature",
     ],
-    exposedHeaders: ["X-Request-Id"],
+    exposedHeaders: ["X-Request-Id", "X-Trace-Id"],
     maxAge: 600,
   });
   app.useGlobalFilters(new HttpExceptionFilter());

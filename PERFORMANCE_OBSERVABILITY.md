@@ -88,6 +88,8 @@ El API:
 
 Esto permite rastrear navegador -> API -> log sin registrar cuerpos sensibles.
 
+Cuando tracing está habilitado, el API también devuelve `X-Trace-Id`, incluye ese identificador en el log HTTP y envía spans OTLP a Alloy/Tempo. Los spans no incluyen bodies, cookies, query strings ni PII libre.
+
 ## Lazy loading aplicado
 
 ### QR de confirmación
@@ -142,7 +144,7 @@ $env:BUNDLE_MAX_TOTAL_GZIP_KB="490"
 - [x] fijar budgets después del baseline;
 - [ ] revisar logs `FrontendTelemetry`;
 - [ ] configurar alertas cuando exista plataforma de observabilidad;
-- [ ] correlacionar incidentes mediante `X-Request-Id`;
+- [ ] correlacionar incidentes mediante `X-Request-Id` y `X-Trace-Id`;
 - [ ] revisar que telemetría no incluya PII;
 - [ ] evaluar error tracking externo solo cuando aporte valor operativo.
 

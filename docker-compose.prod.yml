@@ -121,6 +121,11 @@ services:
       MAIL_REJECT_UNAUTHORIZED: ${MAIL_REJECT_UNAUTHORIZED:-true}
       FORCE_HTTPS: "true"
       ENABLE_API_DOCS: "false"
+      OTEL_TRACING_ENABLED: ${OTEL_TRACING_ENABLED:-false}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-burger-danlin-api}
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-http://alloy:4318/v1/traces}
+      OTEL_TRACE_SAMPLE_RATIO: ${OTEL_TRACE_SAMPLE_RATIO:-1}
+      OTEL_PROPAGATE_HOSTS: ${OTEL_PROPAGATE_HOSTS:-}
       JSON_BODY_LIMIT: ${JSON_BODY_LIMIT:-256kb}
       URLENCODED_BODY_LIMIT: ${URLENCODED_BODY_LIMIT:-64kb}
       DATABASE_URL: postgresql://${POSTGRES_RUNTIME_USER:?POSTGRES_RUNTIME_USER is required}:${POSTGRES_RUNTIME_PASSWORD:?POSTGRES_RUNTIME_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}?schema=public
@@ -588,6 +593,32 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  tempo:
+    image: grafana/tempo:2.10.8
+    restart: unless-stopped
+    profiles:
+      - observability
+    command:
+      - -config.file=/etc/tempo/config.yml
+    volumes:
+      - ./deploy/observability/tempo/tempo.yml:/etc/tempo/config.yml:ro
+      - burger_tempo_data:/var/tempo
+    networks:
+      - observability
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    logging:
+      driver: json-file
+      options:
+        tag: "tempo"
+        max-size: "10m"
+        max-file: "3"
+
   alloy:
     image: grafana/alloy:v1.20.0
     restart: unless-stopped
@@ -595,6 +626,7 @@ services:
       - observability
     depends_on:
       - loki
+      - tempo
     command:
       - run
       - --server.http.listen-addr=0.0.0.0:12345
@@ -606,6 +638,7 @@ services:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - burger_alloy_data:/var/lib/alloy/data
     networks:
+      - app
       - observability
     security_opt:
       - no-new-privileges:true
@@ -657,6 +690,7 @@ services:
     depends_on:
       - prometheus
       - loki
+      - tempo
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required}
@@ -692,6 +726,7 @@ volumes:
   burger_prometheus_data:
   burger_alertmanager_data:
   burger_loki_data:
+  burger_tempo_data:
   burger_alloy_data:
   burger_grafana_data:
 

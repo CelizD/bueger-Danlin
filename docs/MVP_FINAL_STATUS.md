@@ -304,6 +304,8 @@ Ya existe configuración para:
 - Loki;
 - Grafana;
 - Alloy;
+- Tempo;
+- tracing OTLP/OpenTelemetry-compatible del API;
 - Node Exporter;
 - preflight;
 - go-live gate;
@@ -349,7 +351,6 @@ Estos son los pendientes de lanzamiento, no de funcionalidad del MVP:
 
 Son mejoras de madurez, no requisitos para abrir un MVP pequeño cuando los controles actuales están correctamente desplegados:
 
-- OpenTelemetry/Tempo;
 - WAF/CDN;
 - ejecución DAST contra staging real (workflow ya preparado);
 - pentest externo;
