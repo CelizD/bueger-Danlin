@@ -299,7 +299,7 @@ docker compose \
   --env-file /etc/burger-danlin/production.env \
   -f docker-compose.prod.yml \
   --profile observability \
-  up -d prometheus loki alloy node-exporter grafana
+  up -d prometheus loki tempo alloy node-exporter grafana
 ```
 
 Grafana escucha únicamente en:
@@ -316,7 +316,18 @@ ssh -L 3001:127.0.0.1:3001 deploy@TU_VPS
 
 Después abre `http://127.0.0.1:3001`.
 
-Prometheus y Loki no publican puertos al host. El endpoint `/api/v1/metrics` está bloqueado en el Nginx público y Prometheus lo consulta por la red privada de Docker.
+Prometheus, Loki y Tempo no publican puertos al host. El endpoint `/api/v1/metrics` está bloqueado en el Nginx público y Prometheus lo consulta por la red privada de Docker.
+
+Para tracing, una vez que el perfil de observabilidad esté arriba y Grafana muestre el datasource Tempo, habilita en `/etc/burger-danlin/production.env`:
+
+```text
+OTEL_TRACING_ENABLED=true
+OTEL_SERVICE_NAME=burger-danlin-api
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://alloy:4318/v1/traces
+OTEL_TRACE_SAMPLE_RATIO=1
+```
+
+Reinicia únicamente la API y genera tráfico. Las respuestas trazadas incluyen `X-Trace-Id`, que debe aparecer también en el log HTTP y en Tempo. Si el volumen aumenta, reduce `OTEL_TRACE_SAMPLE_RATIO` después de medir consumo real.
 
 Consulta:
 
