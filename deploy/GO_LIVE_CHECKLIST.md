@@ -36,6 +36,7 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [x] Reglas Prometheus para API, DB, latencia, errores, inventario, memoria y disco.
 - [x] Endpoint de métricas bloqueado desde Nginx público.
 - [x] Runbooks de incidentes versionados para cuenta comprometida, secretos, DB, supply chain y DDoS/caída.
+- [x] Workflow DAST manual con OWASP ZAP preparado y restringido a staging.
 
 ## Pendiente hasta tener VPS/dominio/proveedores
 
@@ -117,6 +118,13 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [ ] Confirmar que `/api/v1/metrics` no es público.
 - [ ] Definir canal de notificaciones y conectar Alertmanager o equivalente.
 - [ ] Medir consumo real de CPU/RAM/disco del stack.
+
+### DAST / preproducción
+
+- [ ] Crear/desplegar staging HTTPS para ejecutar DAST.
+- [ ] Configurar GitHub Environment `staging` con `DAST_TARGET_URL` y `DAST_ALLOWED_HOST`.
+- [ ] Ejecutar ZAP baseline y revisar hallazgos.
+- [ ] Ejecutar ZAP full active scan únicamente contra staging autorizado y revisar hallazgos.
 
 ### Operación
 
