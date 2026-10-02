@@ -32,7 +32,7 @@ Evolucionar el frontend actual sin sobrearquitectura. Burger Danlin sigue siendo
 | SEO público | 🟡 | metadata base + Open Graph; sitemap/canonical esperan dominio real |
 | Rutas privadas indexables | ✅ | admin y pedido tienen noindex/nofollow + robots disallow |
 | Core Web Vitals | 🟡 | RUM implementado; falta medir p75 con tráfico real |
-| Lighthouse/bundle budgets | 🟡 | reporte de bundle implementado; budgets estrictos pendientes de baseline |
+| Lighthouse/bundle budgets | ✅ bundle | baseline real medido en CI; budgets versionados de 145 KB por chunk y 490 KB totales gzip; Lighthouse sigue como señal de laboratorio |
 | Testing frontend real | 🟡 | Vitest cubre reglas y render de componentes críticos; faltan Testing Library/E2E/axe |
 | E2E | ✅ base | Playwright validado localmente: pedido/pago/QR, login/MFA, error de credenciales y teclado |
 | Accessibility automation | ✅ base | axe + Playwright validado localmente sin violaciones serious/critical en home |
@@ -167,12 +167,12 @@ Implementado:
 - lazy-load de `qrcode.react` hasta la confirmación;
 - lazy-load de `@zxing/browser` hasta abrir cámara;
 - reporte de chunks JS raw/gzip sin dependencias externas;
+- baseline real del bundle registrado: 122.2 KB gzip para el chunk mayor y 424.1 KB gzip total;
+- budgets de bundle versionados y obligatorios en CI: 145 KB por chunk y 490 KB total gzip;
 - tests de correlación de requests.
 
 Pendiente:
 
-- medir baseline real de bundle tras build;
-- fijar budgets de chunk/total a partir del baseline;
 - medir Core Web Vitals en tráfico real de producción;
 - dashboard/alertas sobre logs RUM;
 - ampliar correlación de errores mostrados al usuario;
