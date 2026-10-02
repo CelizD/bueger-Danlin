@@ -373,6 +373,8 @@ El repositorio incluye una pila preparada para producción con:
 - Prometheus;
 - Loki;
 - Grafana Alloy;
+- Tempo;
+- tracing OTLP/OpenTelemetry-compatible;
 - Node Exporter.
 
 El API expone métricas internas en `/api/v1/metrics`, pero Nginx bloquea ese endpoint desde Internet. Prometheus lo consulta directamente por la red privada de Docker.
@@ -459,7 +461,7 @@ El **código funcional del MVP ya está completo**. Lo que falta antes de lanzar
 9. confirmar con contador régimen fiscal, calendario de declaraciones y CFDI antes de habilitar cleanup destructivo;
 10. simulacro de pérdida total del VPS y medición real de RPO/RTO.
 
-El workflow DAST con OWASP ZAP ya está preparado, pero requiere staging HTTPS real para ejecutarse. OpenTelemetry/Tempo, WAF/CDN, pentest externo, load testing avanzado, artifact signing o Kubernetes siguen como **madurez posterior**, no como bloqueo del MVP actual.
+El workflow DAST con OWASP ZAP ya está preparado, pero requiere staging HTTPS real para ejecutarse. OpenTelemetry/Tempo también quedó preparado y solo requiere validación operativa en el VPS. WAF/CDN, pentest externo, load testing avanzado, artifact signing o Kubernetes siguen como **madurez posterior**, no como bloqueo del MVP actual.
 
 Consulta `docs/MVP_FINAL_STATUS.md` y `deploy/GO_LIVE_CHECKLIST.md`.
 
