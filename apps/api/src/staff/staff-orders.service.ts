@@ -41,13 +41,20 @@ const staffOrderSelect = {
     },
   },
   items: {
-    orderBy: { id: "asc" as const },
+    orderBy: { position: "asc" as const },
     select: {
       id: true,
       productName: true,
       unitPriceCents: true,
       quantity: true,
       lineTotalCents: true,
+      position: true,
+      preparationSnapshot: true,
+      product: {
+        select: {
+          type: true,
+        },
+      },
       modifiers: {
         orderBy: { id: "asc" as const },
         select: {

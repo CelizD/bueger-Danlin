@@ -7,6 +7,11 @@ export type PreparedOrderItem = {
   unitPriceCents: number;
   quantity: number;
   lineTotalCents: number;
+  preparationSnapshot: {
+    included: string[];
+    removed: string[];
+    extras: string[];
+  };
   modifiers: Array<{
     modifierOptionId: string;
     optionName: string;
@@ -106,6 +111,17 @@ export async function prepareOrderItems(
         option,
       ]),
     );
+    const removableOptions = availableOptions.filter(
+      (option: any) => option.kind === "REMOVABLE",
+    );
+    const removedIdSet = new Set(removedIds);
+    const preparationSnapshot: PreparedOrderItem["preparationSnapshot"] = {
+      included: removableOptions
+        .filter((option: any) => !removedIdSet.has(option.id))
+        .map((option: any) => option.name),
+      removed: [],
+      extras: [],
+    };
 
     const modifiers: PreparedOrderItem["modifiers"] = [];
 
@@ -120,6 +136,8 @@ export async function prepareOrderItems(
           "Uno de los ingredientes a quitar no pertenece a este producto.",
         );
       }
+
+      preparationSnapshot.removed.push(option.name);
 
       modifiers.push({
         modifierOptionId: option.id,
@@ -142,6 +160,7 @@ export async function prepareOrderItems(
       }
 
       extrasCents += option.priceDeltaCents;
+      preparationSnapshot.extras.push(option.name);
 
       modifiers.push({
         modifierOptionId: option.id,
@@ -168,6 +187,7 @@ export async function prepareOrderItems(
       unitPriceCents: product.priceCents,
       quantity: item.quantity,
       lineTotalCents,
+      preparationSnapshot,
       modifiers,
     });
   }

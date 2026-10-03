@@ -44,6 +44,31 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   ).toBeVisible();
 
   await expect(page.getByText("Combo 1")).toBeVisible();
+
+  await page
+    .getByRole("button", { name: /Agregar combo/ })
+    .click();
+
+  const burgerCards = page.locator(".burger-card");
+  await expect(burgerCards).toHaveCount(2);
+
+  const firstBurger = burgerCards.nth(0);
+  const secondBurger = burgerCards.nth(1);
+
+  await firstBurger
+    .getByRole("checkbox", { name: /^Lechuga/ })
+    .uncheck();
+  await firstBurger
+    .getByRole("checkbox", { name: /^Carne extra/ })
+    .check();
+
+  await secondBurger
+    .getByRole("checkbox", { name: /^Tomate/ })
+    .uncheck();
+  await secondBurger
+    .getByRole("checkbox", { name: /^Queso extra/ })
+    .check();
+
   await expect(
     page.getByRole("link", { name: "Abrir ubicación exacta" }),
   ).toBeVisible();
@@ -123,10 +148,10 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
 
   await expect(page.getByText("Pago aprobado")).toBeVisible();
   await expect(
-    page.getByText("1 de 5 combos pagados"),
+    page.getByText("2 de 5 combos pagados"),
   ).toBeVisible();
   await expect(
-    page.getByText("Faltan 4 combos para envío gratis"),
+    page.getByText("Faltan 3 combos para envío gratis"),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Presenta este QR" }),
@@ -203,6 +228,27 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     .filter({ hasText: orderCode });
 
   await expect(kitchenCard).toBeVisible();
+
+  const kitchenItems = kitchenCard.locator(".kitchen-item");
+  await expect(kitchenItems).toHaveCount(2);
+
+  const firstKitchenBurger = kitchenItems.nth(0);
+  const secondKitchenBurger = kitchenItems.nth(1);
+
+  await expect(firstKitchenBurger).toContainText("Hamburguesa 1");
+  await expect(firstKitchenBurger).toContainText("Incluye");
+  await expect(firstKitchenBurger).toContainText("NO PONER");
+  await expect(firstKitchenBurger).toContainText("Sin Lechuga");
+  await expect(firstKitchenBurger).toContainText("+ Carne extra");
+  await expect(firstKitchenBurger).not.toContainText("Sin Tomate");
+  await expect(firstKitchenBurger).not.toContainText("+ Queso extra");
+
+  await expect(secondKitchenBurger).toContainText("Hamburguesa 2");
+  await expect(secondKitchenBurger).toContainText("Sin Tomate");
+  await expect(secondKitchenBurger).toContainText("+ Queso extra");
+  await expect(secondKitchenBurger).not.toContainText("Sin Lechuga");
+  await expect(secondKitchenBurger).not.toContainText("+ Carne extra");
+
   await kitchenCard
     .getByRole("button", { name: "Preparar" })
     .click();

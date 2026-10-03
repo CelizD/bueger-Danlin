@@ -1637,6 +1637,63 @@ h2 {
   color: #486643;
 }
 
+.kitchen-item-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kitchen-preparation {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.kitchen-prep-group {
+  display: grid;
+  gap: 4px;
+}
+
+.kitchen-prep-label {
+  color: #6f675e;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kitchen-prep-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.kitchen-prep-values span {
+  padding: 5px 7px;
+  border-radius: 7px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.kitchen-prep-group.included .kitchen-prep-values span {
+  background: #f1efe9;
+  color: #4f4a43;
+}
+
+.kitchen-prep-group.removed .kitchen-prep-label {
+  color: #8f3025;
+}
+
+.kitchen-prep-group.removed .kitchen-prep-values span {
+  background: #f8dfda;
+  color: #7f2f25;
+}
+
+.kitchen-prep-group.extra .kitchen-prep-values span {
+  background: #e9f1e6;
+  color: #486643;
+}
+
 .kitchen-card-footer {
   min-height: 54px;
   display: flex;
