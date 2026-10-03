@@ -36,6 +36,12 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
+      mailpit:
+        image: axllent/mailpit:latest
+        ports:
+          - 1025:1025
+          - 8025:8025
+
     env:
       NODE_ENV: test
       DATABASE_URL: postgresql://burger_test:burger_test_password@localhost:5432/burger_danlin_test?schema=public
@@ -53,6 +59,13 @@ jobs:
       BUSINESS_ADDRESS: Avenida Pruebas 123, Tijuana, BC
       SUPPORT_PHONE: +52 664 555 0100
       SUPPORT_EMAIL: soporte.e2e@example.test
+      EMAIL_NOTIFICATIONS_ENABLED: "true"
+      MAIL_HOST: localhost
+      MAIL_PORT: "1025"
+      MAIL_SECURITY: none
+      MAIL_FROM: Burger Danlin <no-reply@burger-danlin.test>
+      MAIL_REPLY_TO: soporte.e2e@example.test
+      MAIL_REJECT_UNAUTHORIZED: "true"
 
     steps:
       - name: Checkout
