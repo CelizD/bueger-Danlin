@@ -59,6 +59,9 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     .getByRole("checkbox", { name: /^Lechuga/ })
     .uncheck();
   await firstBurger
+    .getByRole("checkbox", { name: /^Queso$/ })
+    .uncheck();
+  await firstBurger
     .getByRole("checkbox", { name: /^Carne extra/ })
     .check();
 
@@ -68,6 +71,30 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await secondBurger
     .getByRole("checkbox", { name: /^Queso extra/ })
     .check();
+
+  await page
+    .getByRole("button", { name: "Agregar Coca-Cola" })
+    .click();
+  await page
+    .getByRole("button", { name: "Agregar Coca-Cola" })
+    .click();
+
+  const inventoryBefore = await page.evaluate(
+    async (apiUrl) => {
+      const response = await fetch(`${apiUrl}/inventory/availability`, {
+        cache: "no-store",
+      });
+      const data = await response.json();
+
+      return Object.fromEntries(
+        data.items.map((item: { key: string; available: number }) => [
+          item.key,
+          item.available,
+        ]),
+      ) as Record<string, number>;
+    },
+    API_URL,
+  );
 
   await expect(
     page.getByRole("link", { name: "Abrir ubicación exacta" }),
@@ -115,6 +142,29 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await expect(orderHeading).toBeVisible();
 
   const orderCode = (await orderHeading.textContent())!.trim();
+
+  const inventoryAfter = await page.evaluate(
+    async (apiUrl) => {
+      const response = await fetch(`${apiUrl}/inventory/availability`, {
+        cache: "no-store",
+      });
+      const data = await response.json();
+
+      return Object.fromEntries(
+        data.items.map((item: { key: string; available: number }) => [
+          item.key,
+          item.available,
+        ]),
+      ) as Record<string, number>;
+    },
+    API_URL,
+  );
+
+  expect(inventoryBefore.meat - inventoryAfter.meat).toBe(3);
+  expect(inventoryBefore.fries - inventoryAfter.fries).toBe(2);
+  expect(inventoryBefore.cheese - inventoryAfter.cheese).toBe(2);
+  expect(inventoryBefore.bacon - inventoryAfter.bacon).toBe(2);
+  expect(inventoryBefore["coca-cola"] - inventoryAfter["coca-cola"]).toBe(2);
 
   const storedOrderTokens =
     await page.evaluate(() =>
@@ -239,6 +289,7 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await expect(firstKitchenBurger).toContainText("Incluye");
   await expect(firstKitchenBurger).toContainText("NO PONER");
   await expect(firstKitchenBurger).toContainText("Sin Lechuga");
+  await expect(firstKitchenBurger).toContainText("Sin Queso");
   await expect(firstKitchenBurger).toContainText("+ Carne extra");
   await expect(firstKitchenBurger).not.toContainText("Sin Tomate");
   await expect(firstKitchenBurger).not.toContainText("+ Queso extra");
