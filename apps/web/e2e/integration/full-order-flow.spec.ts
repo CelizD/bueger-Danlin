@@ -160,11 +160,21 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     API_URL,
   );
 
-  expect(inventoryBefore.meat - inventoryAfter.meat).toBe(3);
-  expect(inventoryBefore.fries - inventoryAfter.fries).toBe(2);
-  expect(inventoryBefore.cheese - inventoryAfter.cheese).toBe(2);
-  expect(inventoryBefore.bacon - inventoryAfter.bacon).toBe(2);
-  expect(inventoryBefore["coca-cola"] - inventoryAfter["coca-cola"]).toBe(2);
+  function stockDelta(key: string) {
+    const before = inventoryBefore[key];
+    const after = inventoryAfter[key];
+
+    expect(before, `Inventario inicial faltante: ${key}`).toBeDefined();
+    expect(after, `Inventario final faltante: ${key}`).toBeDefined();
+
+    return before! - after!;
+  }
+
+  expect(stockDelta("meat")).toBe(3);
+  expect(stockDelta("fries")).toBe(2);
+  expect(stockDelta("cheese")).toBe(2);
+  expect(stockDelta("bacon")).toBe(2);
+  expect(stockDelta("coca-cola")).toBe(2);
 
   const storedOrderTokens =
     await page.evaluate(() =>
