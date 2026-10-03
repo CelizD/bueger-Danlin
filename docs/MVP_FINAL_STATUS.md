@@ -1,6 +1,6 @@
 # Estado final del MVP — Burger Danlin
 
-Fecha de corte: **30 de septiembre de 2026**
+Fecha de corte: **3 de octubre de 2026**
 
 Este documento es la fuente resumida de verdad para el estado funcional del MVP. Los documentos de auditoría más antiguos deben leerse como snapshots históricos y no como lista vigente de pendientes.
 
