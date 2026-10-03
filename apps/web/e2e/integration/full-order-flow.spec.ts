@@ -470,7 +470,7 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   );
   expect(purchaseEmail.Text).toContain(orderCode);
   expect(purchaseEmail.Text).toContain(
-    "$360.00 MXN",
+    "Total pagado: $360.00",
   );
   expect(purchaseEmail.Text).toContain(
     "Combo Hamburguesa + Papas",
