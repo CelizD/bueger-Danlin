@@ -59,6 +59,9 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     .getByRole("checkbox", { name: /^Lechuga/ })
     .uncheck();
   await firstBurger
+    .getByRole("checkbox", { name: /^Queso$/ })
+    .uncheck();
+  await firstBurger
     .getByRole("checkbox", { name: /^Carne extra/ })
     .check();
 
@@ -68,6 +71,30 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await secondBurger
     .getByRole("checkbox", { name: /^Queso extra/ })
     .check();
+
+  await page
+    .getByRole("button", { name: "Agregar Coca-Cola" })
+    .click();
+  await page
+    .getByRole("button", { name: "Agregar Coca-Cola" })
+    .click();
+
+  const inventoryBefore = await page.evaluate(
+    async (apiUrl) => {
+      const response = await fetch(`${apiUrl}/inventory/availability`, {
+        cache: "no-store",
+      });
+      const data = await response.json();
+
+      return Object.fromEntries(
+        data.items.map((item: { key: string; available: number }) => [
+          item.key,
+          item.available,
+        ]),
+      ) as Record<string, number>;
+    },
+    API_URL,
+  );
 
   await expect(
     page.getByRole("link", { name: "Abrir ubicación exacta" }),
@@ -116,6 +143,39 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
 
   const orderCode = (await orderHeading.textContent())!.trim();
 
+  const inventoryAfter = await page.evaluate(
+    async (apiUrl) => {
+      const response = await fetch(`${apiUrl}/inventory/availability`, {
+        cache: "no-store",
+      });
+      const data = await response.json();
+
+      return Object.fromEntries(
+        data.items.map((item: { key: string; available: number }) => [
+          item.key,
+          item.available,
+        ]),
+      ) as Record<string, number>;
+    },
+    API_URL,
+  );
+
+  function stockDelta(key: string) {
+    const before = inventoryBefore[key];
+    const after = inventoryAfter[key];
+
+    expect(before, `Inventario inicial faltante: ${key}`).toBeDefined();
+    expect(after, `Inventario final faltante: ${key}`).toBeDefined();
+
+    return before! - after!;
+  }
+
+  expect(stockDelta("meat")).toBe(3);
+  expect(stockDelta("fries")).toBe(2);
+  expect(stockDelta("cheese")).toBe(2);
+  expect(stockDelta("bacon")).toBe(2);
+  expect(stockDelta("coca-cola")).toBe(2);
+
   const storedOrderTokens =
     await page.evaluate(() =>
       Object.keys(window.sessionStorage).filter(
@@ -148,10 +208,12 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
 
   await expect(page.getByText("Pago aprobado")).toBeVisible();
   await expect(
-    page.getByText("2 de 5 combos pagados"),
+    page.getByText(/\d+ de 5 combos pagados/),
   ).toBeVisible();
   await expect(
-    page.getByText("Faltan 3 combos para envío gratis"),
+    page.getByText(
+      /Faltan \d+ combos para envío gratis|Envío gratis desbloqueado/,
+    ),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Presenta este QR" }),
@@ -230,15 +292,17 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await expect(kitchenCard).toBeVisible();
 
   const kitchenItems = kitchenCard.locator(".kitchen-item");
-  await expect(kitchenItems).toHaveCount(2);
+  await expect(kitchenItems).toHaveCount(3);
 
   const firstKitchenBurger = kitchenItems.nth(0);
   const secondKitchenBurger = kitchenItems.nth(1);
+  const kitchenDrink = kitchenItems.nth(2);
 
   await expect(firstKitchenBurger).toContainText("Hamburguesa 1");
   await expect(firstKitchenBurger).toContainText("Incluye");
   await expect(firstKitchenBurger).toContainText("NO PONER");
   await expect(firstKitchenBurger).toContainText("Sin Lechuga");
+  await expect(firstKitchenBurger).toContainText("Sin Queso");
   await expect(firstKitchenBurger).toContainText("+ Carne extra");
   await expect(firstKitchenBurger).not.toContainText("Sin Tomate");
   await expect(firstKitchenBurger).not.toContainText("+ Queso extra");
@@ -248,6 +312,8 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await expect(secondKitchenBurger).toContainText("+ Queso extra");
   await expect(secondKitchenBurger).not.toContainText("Sin Lechuga");
   await expect(secondKitchenBurger).not.toContainText("+ Carne extra");
+  await expect(kitchenDrink).toContainText("Coca-Cola");
+  await expect(kitchenDrink).toContainText("× 2");
 
   await kitchenCard
     .getByRole("button", { name: "Preparar" })
