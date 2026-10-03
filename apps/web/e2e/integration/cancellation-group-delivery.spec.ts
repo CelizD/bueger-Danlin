@@ -2,6 +2,14 @@ import { expect, test } from "@playwright/test";
 
 const API_URL = "http://localhost:4000/api/v1";
 
+const CUSTOMER_NAMES = [
+  "Cliente Uno",
+  "Cliente Dos",
+  "Cliente Tres",
+  "Cliente Cuatro",
+  "Cliente Cinco",
+] as const;
+
 async function inventorySnapshot(
   page: import("@playwright/test").Page,
 ) {
@@ -23,33 +31,14 @@ async function inventorySnapshot(
   }, API_URL);
 }
 
-function stockDelta(
-  before: Record<string, number>,
-  after: Record<string, number>,
-  key: string,
+async function createAndPaySingleCombo(
+  browser: import("@playwright/test").Browser,
+  index: number,
 ) {
-  const initial = before[key];
-  const current = after[key];
+  const context = await browser.newContext();
+  const page = await context.newPage();
 
-  expect(
-    initial,
-    `Inventario inicial faltante: ${key}`,
-  ).toBeDefined();
-  expect(
-    current,
-    `Inventario final faltante: ${key}`,
-  ).toBeDefined();
-
-  return initial! - current!;
-}
-
-test("pago MOCK desbloquea entrega gratis y cancelación reembolsa/restaura inventario", async ({
-  page,
-}) => {
   await page.goto("/");
-
-  const inventoryBefore =
-    await inventorySnapshot(page);
 
   await expect(
     page.getByRole("heading", {
@@ -57,27 +46,19 @@ test("pago MOCK desbloquea entrega gratis y cancelación reembolsa/restaura inve
     }),
   ).toBeVisible();
 
-  for (let index = 0; index < 4; index += 1) {
-    await page
-      .getByRole("button", {
-        name: /Agregar combo/,
-      })
-      .click();
-  }
-
   await expect(
     page.locator(".burger-card"),
-  ).toHaveCount(5);
+  ).toHaveCount(1);
 
   await page
     .getByLabel("Nombre *")
-    .fill("Cliente Reembolso");
+    .fill(CUSTOMER_NAMES[index]!);
   await page
     .getByLabel("Teléfono *")
-    .fill("6645550123");
+    .fill(`66455501${String(index + 1).padStart(2, "0")}`);
   await page
     .getByLabel("Correo (opcional)")
-    .fill("refund.e2e@example.test");
+    .fill(`group-${index + 1}@example.test`);
 
   await page
     .getByLabel(/He leído y acepto los/)
@@ -104,150 +85,224 @@ test("pago MOCK desbloquea entrega gratis y cancelación reembolsa/restaura inve
     });
 
   await expect(orderHeading).toBeVisible();
+
   const orderCode =
     (await orderHeading.textContent())!.trim();
 
-  let cancelled = false;
+  await page
+    .getByRole("button", {
+      name: "Simular pago local",
+    })
+    .click();
+
+  await expect(
+    page.getByText("Pago aprobado"),
+  ).toBeVisible();
+
+  return {
+    context,
+    page,
+    orderCode,
+  };
+}
+
+async function customerOrderState(
+  page: import("@playwright/test").Page,
+  orderCode: string,
+) {
+  return page.evaluate(
+    async ({ apiUrl, code }) => {
+      const response = await fetch(
+        `${apiUrl}/orders/${encodeURIComponent(code)}`,
+        {
+          credentials: "include",
+          cache: "no-store",
+        },
+      );
+
+      return {
+        status: response.status,
+        body: await response.json(),
+      };
+    },
+    {
+      apiUrl: API_URL,
+      code: orderCode,
+    },
+  );
+}
+
+async function cancelOrder(
+  page: import("@playwright/test").Page,
+  orderCode: string,
+) {
+  return page.evaluate(
+    async ({ apiUrl, code }) => {
+      const response = await fetch(
+        `${apiUrl}/orders/${encodeURIComponent(code)}/cancel`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
+
+      return {
+        status: response.status,
+        body: await response.json(),
+      };
+    },
+    {
+      apiUrl: API_URL,
+      code: orderCode,
+    },
+  );
+}
+
+test("varios pedidos llegan de 4/5 a 5/5, desbloquean envío gratis y reembolsan al cancelar", async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(180_000);
+
+  const inventoryBefore =
+    await inventorySnapshot(page);
+
+  const customers: Array<{
+    context: import("@playwright/test").BrowserContext;
+    page: import("@playwright/test").Page;
+    orderCode: string;
+  }> = [];
 
   try {
-    const inventoryReserved =
-      await inventorySnapshot(page);
+    for (let index = 0; index < 4; index += 1) {
+      customers.push(
+        await createAndPaySingleCombo(
+          browser,
+          index,
+        ),
+      );
+    }
 
-    expect(
-      stockDelta(
-        inventoryBefore,
-        inventoryReserved,
-        "meat",
-      ),
-    ).toBe(5);
-    expect(
-      stockDelta(
-        inventoryBefore,
-        inventoryReserved,
-        "fries",
-      ),
-    ).toBe(5);
-    expect(
-      stockDelta(
-        inventoryBefore,
-        inventoryReserved,
-        "cheese",
-      ),
-    ).toBe(5);
-    expect(
-      stockDelta(
-        inventoryBefore,
-        inventoryReserved,
-        "bacon",
-      ),
-    ).toBe(5);
-
-    await page
-      .getByRole("button", {
-        name: "Simular pago local",
-      })
-      .click();
+    const fourth = customers[3]!;
 
     await expect(
-      page.getByText("Pago aprobado"),
+      fourth.page.getByText(
+        "4 de 5 combos pagados",
+      ),
+    ).toBeVisible();
+    await expect(
+      fourth.page.getByText(
+        "Falta 1 combo para envío gratis",
+      ),
     ).toBeVisible();
 
-    const paidState = await page.evaluate(
-      async ({ apiUrl, code }) => {
-        const response = await fetch(
-          `${apiUrl}/orders/${encodeURIComponent(code)}`,
-          {
-            credentials: "include",
-            cache: "no-store",
-          },
-        );
-
-        return {
-          status: response.status,
-          body: await response.json(),
-        };
-      },
-      { apiUrl: API_URL, code: orderCode },
+    const belowGoal = await customerOrderState(
+      fourth.page,
+      fourth.orderCode,
     );
 
-    expect(paidState.status).toBe(200);
-    expect(paidState.body).toMatchObject({
+    expect(belowGoal.status).toBe(200);
+    expect(belowGoal.body).toMatchObject({
       status: "PAID",
       paymentStatus: "PAID",
       groupDelivery: {
-        freeDeliveryUnlocked: true,
-        remainingPaidCombos: 0,
+        minPaidCombos: 5,
+        paidComboCount: 4,
+        remainingPaidCombos: 1,
+        transportCostCents: 10_000,
+        estimatedDeliveryFeeCents: 2_500,
+        freeDeliveryUnlocked: false,
       },
     });
-    expect(
-      paidState.body.groupDelivery.paidComboCount,
-    ).toBeGreaterThanOrEqual(5);
+
+    customers.push(
+      await createAndPaySingleCombo(
+        browser,
+        4,
+      ),
+    );
+
+    const fifth = customers[4]!;
 
     await expect(
-      page.getByText(
+      fifth.page.getByText(
+        "5 de 5 combos pagados",
+      ),
+    ).toBeVisible();
+    await expect(
+      fifth.page.getByText(
         "Envío gratis desbloqueado",
       ),
     ).toBeVisible();
 
-    const cancellation =
-      await page.evaluate(
-        async ({ apiUrl, code }) => {
-          const response = await fetch(
-            `${apiUrl}/orders/${encodeURIComponent(code)}/cancel`,
-            {
-              method: "POST",
-              credentials: "include",
-            },
-          );
+    const goalReached = await customerOrderState(
+      fifth.page,
+      fifth.orderCode,
+    );
 
-          return {
-            status: response.status,
-            body: await response.json(),
-          };
-        },
-        { apiUrl: API_URL, code: orderCode },
-      );
-
-    cancelled = true;
-
-    expect(cancellation.status).toBe(201);
-    expect(cancellation.body).toMatchObject({
-      orderCode,
-      status: "REFUNDED",
-      paymentStatus: "REFUNDED",
-      refundStatus: "REFUNDED",
-      alreadyCancelled: false,
+    expect(goalReached.status).toBe(200);
+    expect(goalReached.body).toMatchObject({
+      status: "PAID",
+      paymentStatus: "PAID",
+      groupDelivery: {
+        minPaidCombos: 5,
+        paidComboCount: 5,
+        remainingPaidCombos: 0,
+        transportCostCents: 10_000,
+        estimatedDeliveryFeeCents: 0,
+        freeDeliveryUnlocked: true,
+      },
     });
 
-    const refundedState =
-      await page.evaluate(
-        async ({ apiUrl, code }) => {
-          const response = await fetch(
-            `${apiUrl}/orders/${encodeURIComponent(code)}`,
-            {
-              credentials: "include",
-              cache: "no-store",
-            },
-          );
+    const inventoryWithFiveOrders =
+      await inventorySnapshot(fifth.page);
 
-          return {
-            status: response.status,
-            body: await response.json(),
-          };
-        },
-        { apiUrl: API_URL, code: orderCode },
+    for (const key of [
+      "meat",
+      "fries",
+      "cheese",
+      "bacon",
+    ]) {
+      expect(
+        inventoryBefore[key]! -
+          inventoryWithFiveOrders[key]!,
+        `Descuento incorrecto con 5 pedidos: ${key}`,
+      ).toBe(5);
+    }
+
+    for (const customer of customers) {
+      const cancellation = await cancelOrder(
+        customer.page,
+        customer.orderCode,
       );
 
-    expect(refundedState.status).toBe(200);
-    expect(refundedState.body).toMatchObject({
-      status: "REFUNDED",
-      paymentStatus: "REFUNDED",
-      refundStatus: "REFUNDED",
-      canCancel: false,
-    });
+      expect(cancellation.status).toBe(201);
+      expect(cancellation.body).toMatchObject({
+        orderCode: customer.orderCode,
+        status: "REFUNDED",
+        paymentStatus: "REFUNDED",
+        refundStatus: "REFUNDED",
+        alreadyCancelled: false,
+      });
+    }
+
+    for (const customer of customers) {
+      const refunded = await customerOrderState(
+        customer.page,
+        customer.orderCode,
+      );
+
+      expect(refunded.status).toBe(200);
+      expect(refunded.body).toMatchObject({
+        status: "REFUNDED",
+        paymentStatus: "REFUNDED",
+        refundStatus: "REFUNDED",
+        canCancel: false,
+      });
+    }
 
     const inventoryRestored =
-      await inventorySnapshot(page);
+      await inventorySnapshot(fifth.page);
 
     for (const key of [
       "meat",
@@ -262,19 +317,27 @@ test("pago MOCK desbloquea entrega gratis y cancelación reembolsa/restaura inve
       ).toBe(inventoryBefore[key]);
     }
   } finally {
-    if (!cancelled) {
-      await page.evaluate(
-        async ({ apiUrl, code }) => {
-          await fetch(
-            `${apiUrl}/orders/${encodeURIComponent(code)}/cancel`,
-            {
-              method: "POST",
-              credentials: "include",
-            },
+    for (const customer of customers) {
+      try {
+        const state = await customerOrderState(
+          customer.page,
+          customer.orderCode,
+        );
+
+        if (
+          state.body?.status !== "REFUNDED" &&
+          state.body?.status !== "CANCELLED"
+        ) {
+          await cancelOrder(
+            customer.page,
+            customer.orderCode,
           );
-        },
-        { apiUrl: API_URL, code: orderCode },
-      );
+        }
+      } catch {
+        // Limpieza best-effort; la aserción original conserva el error real.
+      }
+
+      await customer.context.close();
     }
   }
 });
