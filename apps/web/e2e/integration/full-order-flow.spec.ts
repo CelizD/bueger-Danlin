@@ -12,6 +12,65 @@ function requiredEnv(name: string) {
   return value;
 }
 
+async function customerOrderState(
+  page: import("@playwright/test").Page,
+  orderCode: string,
+) {
+  return page.evaluate(
+    async ({ apiUrl, code }) => {
+      const response = await fetch(
+        `${apiUrl}/orders/${encodeURIComponent(code)}`,
+        {
+          credentials: "include",
+          cache: "no-store",
+        },
+      );
+
+      return {
+        status: response.status,
+        body: await response.json(),
+      };
+    },
+    {
+      apiUrl: API_URL,
+      code: orderCode,
+    },
+  );
+}
+
+async function receiptState(
+  page: import("@playwright/test").Page,
+  orderCode: string,
+) {
+  return page.evaluate(
+    async ({ apiUrl, code }) => {
+      const response = await fetch(
+        `${apiUrl}/orders/${encodeURIComponent(code)}/receipt`,
+        {
+          credentials: "include",
+          cache: "no-store",
+        },
+      );
+      const buffer = await response.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      const text = new TextDecoder("windows-1252").decode(bytes);
+
+      return {
+        status: response.status,
+        contentType: response.headers.get("content-type"),
+        disposition: response.headers.get("content-disposition"),
+        length: bytes.length,
+        prefix: text.slice(0, 8),
+        text,
+      };
+    },
+    {
+      apiUrl: API_URL,
+      code: orderCode,
+    },
+  );
+}
+
 async function staffLogin(
   page: import("@playwright/test").Page,
   email: string,
@@ -212,7 +271,7 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   ).toBeVisible();
   await expect(
     page.getByText(
-      /Faltan \d+ combos para envío gratis|Envío gratis desbloqueado/,
+      /Falta 1 combo para envío gratis|Faltan \d+ combos para envío gratis|Envío gratis desbloqueado/,
     ),
   ).toBeVisible();
   await expect(
@@ -259,6 +318,25 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     status: "PAID",
     paymentStatus: "PAID",
   });
+
+  const paidReceipt =
+    await receiptState(page, orderCode);
+
+  expect(paidReceipt.status).toBe(200);
+  expect(paidReceipt.contentType).toContain("application/pdf");
+  expect(paidReceipt.length).toBeGreaterThan(500);
+  expect(paidReceipt.prefix).toBe("%PDF-1.4");
+  expect(paidReceipt.text).toContain("COMPROBANTE DE COMPRA");
+  expect(paidReceipt.text).toContain(orderCode);
+  expect(paidReceipt.text).toContain("Estado del pedido: Pagado");
+  expect(paidReceipt.text).toContain("Estado del pago: Pagado");
+  expect(paidReceipt.text).toContain("Combo Hamburguesa + Papas");
+  expect(paidReceipt.text).toContain("Coca-Cola");
+  expect(paidReceipt.text).toContain("$360.00 MXN");
+  expect(paidReceipt.text).toContain("Punto: Universidad");
+  expect(paidReceipt.text).toContain("Punto de entrega E2E");
+  expect(paidReceipt.text).toContain("%%EOF");
+
   expect(customerState.qrStatus).toBe(200);
   expect(customerState.qr).toMatchObject({
     orderCode,
@@ -326,6 +404,16 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
       .getByRole("button", { name: "Marcar listo" }),
   ).toBeVisible();
 
+  const preparingState =
+    await customerOrderState(page, orderCode);
+
+  expect(preparingState.status).toBe(200);
+  expect(preparingState.body).toMatchObject({
+    orderCode,
+    status: "PREPARING",
+    paymentStatus: "PAID",
+  });
+
   await kitchenPage
     .locator(".kitchen-card")
     .filter({ hasText: orderCode })
@@ -337,6 +425,16 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
       .locator(".kitchen-card")
       .filter({ hasText: orderCode }),
   ).toContainText("Esperando entrega");
+
+  const readyState =
+    await customerOrderState(page, orderCode);
+
+  expect(readyState.status).toBe(200);
+  expect(readyState.body).toMatchObject({
+    orderCode,
+    status: "READY",
+    paymentStatus: "PAID",
+  });
 
   await kitchenContext.close();
 
@@ -419,6 +517,85 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     status: "DELIVERED",
     paymentStatus: "PAID",
   });
+
+  await page
+    .getByRole("link", {
+      name: "Administrar mi pedido",
+    })
+    .click();
+
+  await expect(
+    page.getByRole("heading", {
+      name: orderCode,
+    }),
+  ).toBeVisible();
+
+  await expect(
+    page.getByText("Entregado", {
+      exact: true,
+    }),
+  ).toBeVisible();
+
+  const downloadPromise =
+    page.waitForEvent("download");
+
+  await page
+    .getByRole("button", {
+      name: "Descargar comprobante PDF",
+    })
+    .click();
+
+  const download =
+    await downloadPromise;
+
+  expect(
+    download.suggestedFilename(),
+  ).toBe(
+    `comprobante-${orderCode}.pdf`,
+  );
+
+  const stream =
+    await download.createReadStream();
+  const receiptChunks: Buffer[] = [];
+
+  for await (const chunk of stream) {
+    receiptChunks.push(
+      Buffer.isBuffer(chunk)
+        ? chunk
+        : Buffer.from(chunk),
+    );
+  }
+
+  const deliveredReceipt =
+    Buffer.concat(receiptChunks);
+  const deliveredReceiptText =
+    deliveredReceipt.toString("latin1");
+
+  expect(
+    deliveredReceipt
+      .subarray(0, 8)
+      .toString("latin1"),
+  ).toBe("%PDF-1.4");
+  expect(deliveredReceipt.length).toBeGreaterThan(500);
+  expect(deliveredReceiptText).toContain(
+    "COMPROBANTE DE COMPRA",
+  );
+  expect(deliveredReceiptText).toContain(orderCode);
+  expect(deliveredReceiptText).toContain(
+    "Estado del pedido: Entregado",
+  );
+  expect(deliveredReceiptText).toContain(
+    "Estado del pago: Pagado",
+  );
+  expect(deliveredReceiptText).toContain(
+    "$360.00 MXN",
+  );
+  expect(deliveredReceiptText).toContain(
+    "Punto: Universidad",
+  );
+  expect(deliveredReceiptText).toContain(
+    "%%EOF",
+  );
 
   await deliveryContext.close();
 });
