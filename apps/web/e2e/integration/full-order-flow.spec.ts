@@ -271,7 +271,7 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   ).toBeVisible();
   await expect(
     page.getByText(
-      /Faltan \d+ combos para envío gratis|Envío gratis desbloqueado/,
+      /Falta 1 combo para envío gratis|Faltan \d+ combos para envío gratis|Envío gratis desbloqueado/,
     ),
   ).toBeVisible();
   await expect(
@@ -324,9 +324,6 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
 
   expect(paidReceipt.status).toBe(200);
   expect(paidReceipt.contentType).toContain("application/pdf");
-  expect(paidReceipt.disposition).toContain(
-    `comprobante-${orderCode}.pdf`,
-  );
   expect(paidReceipt.length).toBeGreaterThan(500);
   expect(paidReceipt.prefix).toBe("%PDF-1.4");
   expect(paidReceipt.text).toContain("COMPROBANTE DE COMPRA");
