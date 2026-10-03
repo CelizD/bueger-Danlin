@@ -327,6 +327,15 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   expect(paidReceipt.length).toBeGreaterThan(500);
   expect(paidReceipt.prefix).toBe("%PDF-1.4");
   expect(paidReceipt.text).toContain("COMPROBANTE DE COMPRA");
+  expect(paidReceipt.text).toContain("Burger Danlin");
+  expect(paidReceipt.text).toContain("Vendedor: Burger Danlin E2E");
+  expect(paidReceipt.text).toContain("RFC: BDE260101AB1");
+  expect(paidReceipt.text).toContain(
+    "Domicilio: Avenida Pruebas 123, Tijuana, BC",
+  );
+  expect(paidReceipt.text).toContain(
+    "Soporte: +52 664 555 0100 | soporte.e2e@example.test",
+  );
   expect(paidReceipt.text).toContain(orderCode);
   expect(paidReceipt.text).toContain("Estado del pedido: Pagado");
   expect(paidReceipt.text).toContain("Estado del pago: Pagado");
@@ -579,6 +588,19 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   expect(deliveredReceipt.length).toBeGreaterThan(500);
   expect(deliveredReceiptText).toContain(
     "COMPROBANTE DE COMPRA",
+  );
+  expect(deliveredReceiptText).toContain("Burger Danlin");
+  expect(deliveredReceiptText).toContain(
+    "Vendedor: Burger Danlin E2E",
+  );
+  expect(deliveredReceiptText).toContain(
+    "RFC: BDE260101AB1",
+  );
+  expect(deliveredReceiptText).toContain(
+    "Domicilio: Avenida Pruebas 123, Tijuana, BC",
+  );
+  expect(deliveredReceiptText).toContain(
+    "Soporte: +52 664 555 0100 | soporte.e2e@example.test",
   );
   expect(deliveredReceiptText).toContain(orderCode);
   expect(deliveredReceiptText).toContain(

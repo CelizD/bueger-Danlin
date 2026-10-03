@@ -109,7 +109,19 @@ describe(
         "H-A1B2C3D4",
       );
       expect(text).toContain(
+        "Burger Danlin",
+      );
+      expect(text).toContain(
+        "Vendedor: Persona Vendedora",
+      );
+      expect(text).toContain(
         "ABCD010101ABC",
+      );
+      expect(text).toContain(
+        "Domicilio: Domicilio comercial 123",
+      );
+      expect(text).toContain(
+        "Soporte: +52 664 123 4567 | soporte@example.com",
       );
       expect(text).toContain(
         "$140.00 MXN",
