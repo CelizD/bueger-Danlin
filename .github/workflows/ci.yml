@@ -47,6 +47,12 @@ jobs:
       E2E_ADMIN_PASSWORD: ci-only-admin-e2e-passphrase-2026
       E2E_KITCHEN_PASSWORD: ci-only-kitchen-e2e-passphrase-2026
       E2E_DELIVERY_PASSWORD: ci-only-delivery-e2e-passphrase-2026
+      BUSINESS_LEGAL_NAME: Burger Danlin E2E
+      BUSINESS_TRADE_NAME: Burger Danlin
+      BUSINESS_RFC: BDE260101AB1
+      BUSINESS_ADDRESS: Avenida Pruebas 123, Tijuana, BC
+      SUPPORT_PHONE: +52 664 555 0100
+      SUPPORT_EMAIL: soporte.e2e@example.test
 
     steps:
       - name: Checkout
