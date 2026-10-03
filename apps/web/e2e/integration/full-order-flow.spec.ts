@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 const API_URL = "http://localhost:4000/api/v1";
+const MAILPIT_URL = "http://localhost:8025";
 
 function requiredEnv(name: string) {
   const value = process.env[name];
@@ -71,6 +72,101 @@ async function receiptState(
   );
 }
 
+async function waitForPurchaseEmail(
+  request: import("@playwright/test").APIRequestContext,
+  recipient: string,
+  orderCode: string,
+) {
+  let messageId = "";
+
+  await expect
+    .poll(
+      async () => {
+        const response = await request.get(
+          MAILPIT_URL + "/api/v1/search",
+          {
+            params: {
+              query: `to:${recipient}`,
+              limit: "20",
+            },
+          },
+        );
+
+        if (!response.ok()) {
+          return false;
+        }
+
+        const mailbox = (await response.json()) as {
+          messages?: Array<{
+            ID: string;
+            Subject: string;
+            Attachments: number;
+            To: Array<{
+              Address: string;
+              Name: string;
+            }>;
+          }>;
+        };
+
+        const message = mailbox.messages?.find(
+          (candidate) =>
+            candidate.Subject.includes(orderCode) &&
+            candidate.To.some(
+              (address) =>
+                address.Address === recipient,
+            ),
+        );
+
+        if (!message) {
+          return false;
+        }
+
+        messageId = message.ID;
+        return true;
+      },
+      {
+        message:
+          "Mailpit no recibió la confirmación de compra.",
+        timeout: 15_000,
+        intervals: [200, 500, 1_000],
+      },
+    )
+    .toBe(true);
+
+  const response = await request.get(
+    MAILPIT_URL +
+      "/api/v1/message/" +
+      encodeURIComponent(messageId),
+  );
+
+  expect(response.status()).toBe(200);
+
+  return (await response.json()) as {
+    ID: string;
+    Subject: string;
+    Text: string;
+    HTML: string;
+    From: {
+      Address: string;
+      Name: string;
+    };
+    To: Array<{
+      Address: string;
+      Name: string;
+    }>;
+    ReplyTo: Array<{
+      Address: string;
+      Name: string;
+    }>;
+    Attachments: Array<{
+      FileName: string;
+      ContentType: string;
+      PartID: string;
+      Size: number;
+    }>;
+  };
+}
+
 async function staffLogin(
   page: import("@playwright/test").Page,
   email: string,
@@ -92,6 +188,7 @@ async function staffLogin(
 test("pedido real recorre cliente, cocina, QR y entrega", async ({
   page,
   browser,
+  request,
 }) => {
   const kitchenPassword = requiredEnv("E2E_KITCHEN_PASSWORD");
   const deliveryPassword = requiredEnv("E2E_DELIVERY_PASSWORD");
@@ -345,6 +442,99 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   expect(paidReceipt.text).toContain("Punto: Universidad");
   expect(paidReceipt.text).toContain("Punto de entrega E2E");
   expect(paidReceipt.text).toContain("%%EOF");
+
+  const purchaseEmail =
+    await waitForPurchaseEmail(
+      request,
+      "cliente.e2e@example.test",
+      orderCode,
+    );
+
+  expect(purchaseEmail.Subject).toBe(
+    `Pago confirmado · ${orderCode} · Burger Danlin`,
+  );
+  expect(purchaseEmail.From).toMatchObject({
+    Address: "no-reply@burger-danlin.test",
+    Name: "Burger Danlin",
+  });
+  expect(purchaseEmail.To).toContainEqual({
+    Address: "cliente.e2e@example.test",
+    Name: "",
+  });
+  expect(purchaseEmail.ReplyTo).toContainEqual({
+    Address: "soporte.e2e@example.test",
+    Name: "",
+  });
+  expect(purchaseEmail.Text).toContain(
+    "Pago confirmado",
+  );
+  expect(purchaseEmail.Text).toContain(orderCode);
+  expect(purchaseEmail.Text).toContain(
+    "$360.00 MXN",
+  );
+  expect(purchaseEmail.Text).toContain(
+    "Combo Hamburguesa + Papas",
+  );
+  expect(purchaseEmail.Text).toContain(
+    "Coca-Cola",
+  );
+  expect(purchaseEmail.Text).toContain(
+    "Universidad",
+  );
+  expect(purchaseEmail.HTML).toContain(
+    "Adjuntamos tu comprobante de compra en PDF.",
+  );
+
+  expect(purchaseEmail.Attachments).toHaveLength(1);
+  const emailReceipt =
+    purchaseEmail.Attachments[0]!;
+
+  expect(emailReceipt).toMatchObject({
+    FileName: `comprobante-${orderCode}.pdf`,
+    ContentType: "application/pdf",
+  });
+  expect(emailReceipt.Size).toBeGreaterThan(500);
+
+  const emailReceiptResponse =
+    await request.get(
+      MAILPIT_URL +
+        "/api/v1/message/" +
+        encodeURIComponent(
+          purchaseEmail.ID,
+        ) +
+        "/part/" +
+        encodeURIComponent(
+          emailReceipt.PartID,
+        ),
+    );
+
+  expect(emailReceiptResponse.status()).toBe(200);
+  expect(
+    emailReceiptResponse.headers()[
+      "content-type"
+    ],
+  ).toContain("application/pdf");
+
+  const emailReceiptBuffer =
+    await emailReceiptResponse.body();
+  const emailReceiptText =
+    emailReceiptBuffer.toString("latin1");
+
+  expect(
+    emailReceiptBuffer
+      .subarray(0, 8)
+      .toString("latin1"),
+  ).toBe("%PDF-1.4");
+  expect(emailReceiptText).toContain(orderCode);
+  expect(emailReceiptText).toContain(
+    "$360.00 MXN",
+  );
+  expect(emailReceiptText).toContain(
+    "Vendedor: Burger Danlin E2E",
+  );
+  expect(emailReceiptText).toContain(
+    "%%EOF",
+  );
 
   expect(customerState.qrStatus).toBe(200);
   expect(customerState.qr).toMatchObject({
