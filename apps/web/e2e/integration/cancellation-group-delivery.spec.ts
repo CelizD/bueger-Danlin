@@ -164,6 +164,8 @@ test("varios pedidos llegan de 4/5 a 5/5, desbloquean envío gratis y reembolsan
 }) => {
   test.setTimeout(180_000);
 
+  await page.goto("/");
+
   const inventoryBefore =
     await inventorySnapshot(page);
 
