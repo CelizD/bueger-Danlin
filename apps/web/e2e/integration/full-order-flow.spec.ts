@@ -397,6 +397,13 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     .getByRole("button", { name: "Preparar" })
     .click();
 
+  await expect(
+    kitchenPage
+      .locator(".kitchen-card")
+      .filter({ hasText: orderCode })
+      .getByRole("button", { name: "Marcar listo" }),
+  ).toBeVisible();
+
   const preparingState =
     await customerOrderState(page, orderCode);
 
@@ -407,18 +414,17 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     paymentStatus: "PAID",
   });
 
-  await expect(
-    kitchenPage
-      .locator(".kitchen-card")
-      .filter({ hasText: orderCode })
-      .getByRole("button", { name: "Marcar listo" }),
-  ).toBeVisible();
-
   await kitchenPage
     .locator(".kitchen-card")
     .filter({ hasText: orderCode })
     .getByRole("button", { name: "Marcar listo" })
     .click();
+
+  await expect(
+    kitchenPage
+      .locator(".kitchen-card")
+      .filter({ hasText: orderCode }),
+  ).toContainText("Esperando entrega");
 
   const readyState =
     await customerOrderState(page, orderCode);
@@ -429,12 +435,6 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     status: "READY",
     paymentStatus: "PAID",
   });
-
-  await expect(
-    kitchenPage
-      .locator(".kitchen-card")
-      .filter({ hasText: orderCode }),
-  ).toContainText("Esperando entrega");
 
   await kitchenContext.close();
 
