@@ -71,7 +71,7 @@ test("pago MOCK desbloquea entrega gratis y cancelación reembolsa/restaura inve
 
   await page
     .getByLabel("Nombre *")
-    .fill("Cliente Reembolso E2E");
+    .fill("Cliente Reembolso");
   await page
     .getByLabel("Teléfono *")
     .fill("6645550123");
