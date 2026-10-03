@@ -6,6 +6,12 @@ export type KitchenModifier = {
   removed: boolean;
 };
 
+export type KitchenPreparationSnapshot = {
+  included: string[];
+  removed: string[];
+  extras: string[];
+};
+
 export type KitchenOrder = {
   id: string;
   orderCode: string;
@@ -21,6 +27,11 @@ export type KitchenOrder = {
     id: string;
     productName: string;
     quantity: number;
+    position: number;
+    product: {
+      type: "COMBO" | "BEVERAGE" | "ADD_ON";
+    };
+    preparationSnapshot: KitchenPreparationSnapshot | null;
     modifiers: KitchenModifier[];
   }>;
 };
