@@ -257,7 +257,7 @@ export async function createOrderTransaction(
       preparedItems,
     );
 
-    for (const item of preparedItems) {
+    for (const [itemIndex, item] of preparedItems.entries()) {
       const orderItem =
         await tx.orderItem.create({
           data: {
@@ -269,6 +269,9 @@ export async function createOrderTransaction(
             quantity: item.quantity,
             lineTotalCents:
               item.lineTotalCents,
+            position: itemIndex,
+            preparationSnapshot:
+              item.preparationSnapshot,
           },
         });
 
