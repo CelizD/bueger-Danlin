@@ -6,6 +6,7 @@ import { calculateBurgerStackLayout } from "./burger-preview-layout";
 import { meatVisualProfile } from "./burger-preview-meat";
 import { cheeseVisualProfile } from "./burger-preview-cheese";
 import { baconVisualProfile } from "./burger-preview-bacon";
+import { lettuceVisualProfile } from "./burger-preview-lettuce";
 import type {
   BurgerSelection,
   ModifierOption,
@@ -469,14 +470,19 @@ export function BurgerPreview({
     );
   }
 
+  const lettuceProfile =
+    lettuceVisualProfile(lettuceCount);
+
   const lettuceLayers =
     countAssetLayer({
       key: "lettuce",
       count: lettuceCount,
-      y: lettuceY,
+      y:
+        lettuceY +
+        lettuceProfile.yOffset,
       z: 79,
       fallbackStep: 10,
-      scale: 1.02,
+      scale: lettuceProfile.scale,
       assets: {
         1: {
           src:
@@ -495,7 +501,10 @@ export function BurgerPreview({
           spriteId: "lettuce-5",
         },
       },
-    });
+    }).map((layer) => ({
+      ...layer,
+      x: lettuceProfile.x,
+    }));
 
   const layers: Layer[] = [
     {
@@ -669,7 +678,11 @@ export function BurgerPreview({
                             "bacon-",
                           )
                         ? "bacon"
-                        : undefined
+                        : layer.key.startsWith(
+                              "lettuce-",
+                            )
+                          ? "lettuce"
+                          : undefined
                 }
                 key={layer.key}
                 style={style}
@@ -705,7 +718,11 @@ export function BurgerPreview({
                           "bacon-",
                         )
                       ? "bacon"
-                      : undefined
+                      : layer.key.startsWith(
+                            "lettuce-",
+                          )
+                        ? "lettuce"
+                        : undefined
               }
               key={layer.key}
               src={layer.src}
