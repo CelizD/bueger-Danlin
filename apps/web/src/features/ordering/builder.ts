@@ -239,7 +239,7 @@ export function setIngredientQuantityBurger(
         .reduce(
           (sum, burger) =>
             sum +
-            (burger.extraQuantities[
+            (burger.extraQuantities?.[
               extraOptionId
             ] ??
               (burger.extraIds.includes(
@@ -285,7 +285,7 @@ export function setIngredientQuantityBurger(
         : burger.removedIds;
 
       const extraQuantities = {
-        ...burger.extraQuantities,
+        ...(burger.extraQuantities ?? {}),
       };
 
       if (extraQuantity > 0) {
