@@ -177,4 +177,140 @@ describe("reserveInventoryForOrder", () => {
       ]),
     );
   });
+
+  it("descuenta varias porciones del mismo ingrediente y extra", async () => {
+    const stock = new Map([
+      ["lettuce", 20],
+      ["meat", 20],
+    ]);
+
+    const usages = [
+      {
+        inventoryItemId: "lettuce",
+        productId: "combo",
+        modifierOptionId: "included-lettuce",
+        quantity: 1,
+        inventoryItem: {
+          id: "lettuce",
+          name: "Lechuga",
+          active: true,
+        },
+        modifierOption: {
+          kind: "REMOVABLE",
+        },
+      },
+      {
+        inventoryItemId: "meat",
+        productId: "combo",
+        modifierOptionId: "extra-meat",
+        quantity: 1,
+        inventoryItem: {
+          id: "meat",
+          name: "Carne",
+          active: true,
+        },
+        modifierOption: {
+          kind: "EXTRA",
+        },
+      },
+    ];
+
+    const decrements =
+      new Map<string, number>();
+
+    const tx = {
+      inventoryAllocation: {
+        findMany: vi
+          .fn()
+          .mockResolvedValue([]),
+        updateMany: vi.fn(),
+        create: vi
+          .fn()
+          .mockResolvedValue({}),
+      },
+      inventoryUsage: {
+        findMany: vi
+          .fn()
+          .mockResolvedValue(
+            usages,
+          ),
+      },
+      inventoryItem: {
+        findUnique: vi
+          .fn()
+          .mockImplementation(
+            ({ where }) =>
+              Promise.resolve({
+                id: where.id,
+                name:
+                  usages.find(
+                    (usage) =>
+                      usage.inventoryItemId ===
+                      where.id,
+                  )?.inventoryItem
+                    .name,
+                active: true,
+                stockQuantity:
+                  stock.get(
+                    where.id,
+                  ) ?? 0,
+              }),
+          ),
+        update: vi
+          .fn()
+          .mockImplementation(
+            ({ where, data }) => {
+              const amount =
+                data.stockQuantity
+                  .decrement as number;
+              decrements.set(
+                where.id,
+                amount,
+              );
+              return Promise.resolve(
+                {},
+              );
+            },
+          ),
+      },
+      $queryRawUnsafe: vi
+        .fn()
+        .mockResolvedValue([]),
+    };
+
+    await reserveInventoryForOrder(
+      tx,
+      "order-quantities",
+      [
+        {
+          productId: "combo",
+          quantity: 1,
+          modifiers: [
+            {
+              modifierOptionId:
+                "included-lettuce",
+              quantity: 3,
+              removed: false,
+            },
+            {
+              modifierOptionId:
+                "extra-meat",
+              quantity: 3,
+              removed: false,
+            },
+          ],
+        },
+      ],
+    );
+
+    expect(
+      Object.fromEntries(
+        decrements,
+      ),
+    ).toEqual({
+      lettuce: 3,
+      meat: 3,
+    });
+  });
+
 });
