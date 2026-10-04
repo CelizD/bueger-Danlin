@@ -151,6 +151,167 @@ export function toggleExtraBurger(
   };
 }
 
+
+export function setIngredientQuantityBurger(
+  burgers: BurgerSelection[],
+  burgerId: string,
+  includedOptionId: string | null,
+  extraOptionId: string,
+  totalQuantity: number,
+  inventory: InventoryAvailability | null,
+) {
+  const min = includedOptionId ? 0 : 1;
+
+  if (
+    !Number.isInteger(totalQuantity) ||
+    totalQuantity < min ||
+    totalQuantity > 5
+  ) {
+    return {
+      burgers,
+      error:
+        "La cantidad del ingrediente debe estar entre " +
+        min +
+        " y 5.",
+    };
+  }
+
+  const target = burgers.find(
+    (burger) => burger.localId === burgerId,
+  );
+
+  if (!target) {
+    return {
+      burgers,
+      error: "No se encontró la hamburguesa.",
+    };
+  }
+
+  const nextIncluded =
+    includedOptionId !== null &&
+    totalQuantity > 0;
+  const extraQuantity = Math.max(
+    0,
+    totalQuantity - 1,
+  );
+
+  if (includedOptionId && nextIncluded) {
+    const baseLimit =
+      inventory?.modifierLimits[
+        includedOptionId
+      ];
+
+    if (baseLimit !== undefined) {
+      const includedElsewhere =
+        burgers.filter(
+          (burger) =>
+            burger.localId !== burgerId &&
+            !burger.removedIds.includes(
+              includedOptionId,
+            ),
+        ).length;
+
+      if (includedElsewhere + 1 > baseLimit) {
+        return {
+          burgers,
+          error:
+            "Ese ingrediente ya no tiene inventario disponible.",
+        };
+      }
+    }
+  }
+
+  const extraLimit =
+    inventory?.modifierLimits[
+      extraOptionId
+    ];
+
+  if (
+    extraLimit !== undefined &&
+    extraQuantity > 0
+  ) {
+    const extrasElsewhere =
+      burgers
+        .filter(
+          (burger) =>
+            burger.localId !== burgerId,
+        )
+        .reduce(
+          (sum, burger) =>
+            sum +
+            (burger.extraQuantities[
+              extraOptionId
+            ] ??
+              (burger.extraIds.includes(
+                extraOptionId,
+              )
+                ? 1
+                : 0)),
+          0,
+        );
+
+    if (
+      extrasElsewhere + extraQuantity >
+      extraLimit
+    ) {
+      return {
+        burgers,
+        error:
+          "No hay inventario suficiente para esa cantidad.",
+      };
+    }
+  }
+
+  return {
+    burgers: burgers.map((burger) => {
+      if (burger.localId !== burgerId) {
+        return burger;
+      }
+
+      const removedIds = includedOptionId
+        ? nextIncluded
+          ? burger.removedIds.filter(
+              (id) =>
+                id !== includedOptionId,
+            )
+          : burger.removedIds.includes(
+                includedOptionId,
+              )
+            ? burger.removedIds
+            : [
+                ...burger.removedIds,
+                includedOptionId,
+              ]
+        : burger.removedIds;
+
+      const extraQuantities = {
+        ...burger.extraQuantities,
+      };
+
+      if (extraQuantity > 0) {
+        extraQuantities[
+          extraOptionId
+        ] = extraQuantity;
+      } else {
+        delete extraQuantities[
+          extraOptionId
+        ];
+      }
+
+      return {
+        ...burger,
+        removedIds,
+        extraIds:
+          burger.extraIds.filter(
+            (id) => id !== extraOptionId,
+          ),
+        extraQuantities,
+      };
+    }),
+    error: null,
+  };
+}
+
 export function appendBurger(
   burgers: BurgerSelection[],
   removableOptions: ModifierOption[],
