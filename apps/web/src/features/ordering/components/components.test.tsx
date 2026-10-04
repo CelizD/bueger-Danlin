@@ -447,6 +447,49 @@ describe("ordering components", () => {
     );
   });
 
+  it("apila cinco porciones de tomate usando la misma imagen y sin desplazamiento lateral", () => {
+    const html = renderToStaticMarkup(
+      <BurgerBuilder
+        comboName="Hamburguesa + papas"
+        burgers={[
+          {
+            localId: "burger-tomato-five",
+            removedIds: [],
+            extraIds: ["tomato-extra"],
+            modifierQuantities: {
+              "tomato-extra": 4,
+            },
+          },
+        ]}
+        comboPriceCents={13_000}
+        removableOptions={removable}
+        extraOptions={extras}
+        inventory={null}
+        maxCombosAvailable={5}
+        onAddBurger={vi.fn()}
+        onRemoveBurger={vi.fn()}
+        onSetModifierQuantities={vi.fn()}
+      />,
+    );
+
+    expect(
+      html.match(
+        /data-preview-layer="tomato-[1-5]"[^>]*src="\/burger-preview\/tomate\.svg"/g,
+      ),
+    ).toHaveLength(5);
+    expect(
+      html.match(
+        /data-preview-ingredient="tomato"/g,
+      ),
+    ).toHaveLength(5);
+    expect(html).toContain(
+      'data-preview-layer="tomato-5"',
+    );
+    expect(
+      html.match(/--burger-x:0px/g),
+    ).not.toBeNull();
+  });
+
   it("compacta el preview sin reservar espacio para ingredientes en cero", () => {
     const compactHtml = renderToStaticMarkup(
       <BurgerBuilder
