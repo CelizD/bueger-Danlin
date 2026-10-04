@@ -240,7 +240,7 @@ Implementado y cubierto por el pipeline actual:
 - MFA obligatorio para ADMIN;
 - TOTP + recovery codes;
 - sesiones revocables server-side;
-- RBAC estricto: ADMIN solo administración, KITCHEN solo Cocina y DELIVERY solo Entrega;
+- RBAC estricto: ADMIN controla administración + Cocina/Entrega; KITCHEN solo Cocina y DELIVERY solo Entrega;
 - CSRF;
 - CORS;
 - CSP;
