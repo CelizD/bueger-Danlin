@@ -137,7 +137,8 @@ export function useOrderCheckout({
             burger.extraIds,
           modifierQuantities:
             Object.entries(
-              burger.modifierQuantities,
+              burger.modifierQuantities ??
+                {},
             ).map(
               ([
                 modifierOptionId,
