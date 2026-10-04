@@ -77,7 +77,7 @@ export type BurgerSelection = {
   localId: string;
   removedIds: string[];
   extraIds: string[];
-  modifierQuantities: Record<string, number>;
+  modifierQuantities?: Record<string, number>;
 };
 
 export type CreatedOrder = {
@@ -139,7 +139,7 @@ export type CreateOrderInput = {
     quantity: number;
     removedModifierOptionIds: string[];
     extraModifierOptionIds: string[];
-    modifierQuantities: Array<{
+    modifierQuantities?: Array<{
       modifierOptionId: string;
       quantity: number;
     }>;
