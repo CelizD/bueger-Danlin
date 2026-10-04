@@ -4,9 +4,8 @@ import { loadOrderingData } from "./api";
 import {
   appendBurger,
   burgersForPickupSelection,
-  setIngredientQuantityBurger,
-  toggleExtraBurger,
-  toggleRemovedBurger,
+  setBurgerModifierQuantities,
+  type ModifierQuantityUpdate,
 } from "./builder";
 import { newBurger } from "./formatters";
 import {
@@ -31,22 +30,20 @@ import {
 export function useOrderingSession(
   setError: (message: string) => void,
 ) {
-  const [catalog, setCatalog] = useState<
-    CatalogProduct[]
-  >([]);
-  const [events, setEvents] = useState<
-    PickupEvent[]
-  >([]);
+  const [catalog, setCatalog] =
+    useState<CatalogProduct[]>([]);
+  const [events, setEvents] =
+    useState<PickupEvent[]>([]);
   const [event, setEvent] =
     useState<PickupEvent | null>(null);
   const [inventory, setInventory] =
     useState<InventoryAvailability | null>(
       null,
     );
-  const [burgers, setBurgers] = useState<
-    BurgerSelection[]
-  >([]);
-  const [cokes, setCokes] = useState(0);
+  const [burgers, setBurgers] =
+    useState<BurgerSelection[]>([]);
+  const [cokes, setCokes] =
+    useState(0);
   const [
     groupDeliveryAccepted,
     setGroupDeliveryAccepted,
@@ -240,39 +237,15 @@ export function useOrderingSession(
     );
   }
 
-  function toggleRemoved(
+  function setModifierQuantities(
     burgerId: string,
-    optionId: string,
+    updates: ModifierQuantityUpdate[],
   ) {
     const result =
-      toggleRemovedBurger(
+      setBurgerModifierQuantities(
         burgers,
         burgerId,
-        optionId,
-        inventory,
-      );
-
-    if (result.error) {
-      setError(result.error);
-      return;
-    }
-
-    setBurgers(result.burgers);
-  }
-
-  function setIngredientQuantity(
-    burgerId: string,
-    includedOptionId: string | null,
-    extraOptionId: string,
-    quantity: number,
-  ) {
-    const result =
-      setIngredientQuantityBurger(
-        burgers,
-        burgerId,
-        includedOptionId,
-        extraOptionId,
-        quantity,
+        updates,
         inventory,
       );
 
@@ -282,26 +255,6 @@ export function useOrderingSession(
     }
 
     setError("");
-    setBurgers(result.burgers);
-  }
-
-  function toggleExtra(
-    burgerId: string,
-    optionId: string,
-  ) {
-    const result =
-      toggleExtraBurger(
-        burgers,
-        burgerId,
-        optionId,
-        inventory,
-      );
-
-    if (result.error) {
-      setError(result.error);
-      return;
-    }
-
     setBurgers(result.burgers);
   }
 
@@ -353,9 +306,7 @@ export function useOrderingSession(
     setCokes,
     setGroupDeliveryAccepted,
     selectPickupEvent,
-    toggleRemoved,
-    toggleExtra,
-    setIngredientQuantity,
+    setModifierQuantities,
     addBurger,
     removeBurger,
   };
