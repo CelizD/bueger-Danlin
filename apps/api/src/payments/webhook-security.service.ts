@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { readSetting } from "../config/secret-setting.js";
 
 const WEBHOOK_TOLERANCE_SECONDS = 5 * 60;
 const MAX_STRIPE_SIGNATURE_HEADER = 2_048;
@@ -62,7 +63,7 @@ function assertRecentTimestamp(rawTimestamp: string) {
 @Injectable()
 export class WebhookSecurityService {
   verifyStripe(rawBody: Buffer, signatureHeader: string | undefined) {
-    const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
+    const secret = readSetting("STRIPE_WEBHOOK_SECRET");
 
     if (!secret) {
       throw new UnauthorizedException(
@@ -111,7 +112,7 @@ export class WebhookSecurityService {
     requestId: string | undefined;
     dataId: string | undefined;
   }) {
-    const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET?.trim();
+    const secret = readSetting("MERCADOPAGO_WEBHOOK_SECRET");
 
     if (!secret) {
       throw new UnauthorizedException(
