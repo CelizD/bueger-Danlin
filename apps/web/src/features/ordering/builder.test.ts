@@ -130,6 +130,31 @@ describe("ordering builder rules", () => {
     ).not.toContain("lettuce");
   });
 
+  it("rechaza cantidades negativas, decimales y mayores a cinco", () => {
+    for (const quantity of [
+      -1,
+      1.5,
+      6,
+    ]) {
+      const result =
+        setBurgerModifierQuantities(
+          burgers,
+          "b1",
+          [
+            {
+              option: lettuce,
+              quantity,
+            },
+          ],
+          inventory,
+        );
+
+      expect(result.error).toBe(
+        "Cada ingrediente puede tener entre 0 y 5 porciones.",
+      );
+    }
+  });
+
   it("convierte cantidad cero de un ingrediente incluido en removido", () => {
     const result =
       setBurgerModifierQuantities(
