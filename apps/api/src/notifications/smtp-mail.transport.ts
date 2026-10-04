@@ -6,6 +6,7 @@ import * as net from "node:net";
 import type { Socket } from "node:net";
 import * as tls from "node:tls";
 import type { TLSSocket } from "node:tls";
+import { readSetting } from "../config/secret-setting.js";
 
 export type MailAttachment = {
   filename: string;
@@ -24,7 +25,7 @@ export type MailMessage = {
 type SmtpSocket = Socket | TLSSocket;
 
 function env(name: string) {
-  return process.env[name]?.trim() ?? "";
+  return readSetting(name) ?? "";
 }
 
 function enabled() {
