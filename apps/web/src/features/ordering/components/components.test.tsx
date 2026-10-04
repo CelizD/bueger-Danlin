@@ -112,7 +112,16 @@ const pickupEvents: PickupEvent[] = [
 ];
 
 const inventory: InventoryAvailability = {
-  items: [],
+  items: [
+    {
+      key: "lettuce",
+      name: "Lechuga",
+      unit: "porción",
+      available: 0,
+      lowStock: true,
+      outOfStock: true,
+    },
+  ],
   productLimits: {},
   modifierLimits: {
     lettuce: 0,
@@ -220,7 +229,12 @@ describe("ordering components", () => {
           {
             localId: "burger-1",
             removedIds: ["lettuce"],
-            extraIds: [],
+            extraIds: [
+              "pickles",
+              "mayonnaise",
+              "chipotle",
+              "bbq-chipotle",
+            ],
             modifierQuantities: {},
           },
         ]}
@@ -273,6 +287,21 @@ describe("ordering components", () => {
     );
     expect(html).toContain(
       "/burger-preview/panarriba.svg",
+    );
+    expect(html).toContain(
+      "/burger-preview/pepinillos.svg",
+    );
+    expect(html).toContain(
+      "/burger-preview/mayonesa.svg",
+    );
+    expect(html).toContain(
+      "/burger-preview/chipotle.svg",
+    );
+    expect(html).toContain(
+      "/burger-preview/bbqchipotle.svg",
+    );
+    expect(html).toMatch(
+      /aria-label="Lechuga: 1 porción"[^>]*disabled/,
     );
   });
 
