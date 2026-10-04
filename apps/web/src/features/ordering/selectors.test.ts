@@ -197,7 +197,7 @@ describe("ordering selectors", () => {
         localId: "burger-1",
         removedIds: [],
         extraIds: [],
-        extraQuantities: {
+        modifierQuantities: {
           "cheese-extra": 3,
           "meat-extra": 2,
         },
