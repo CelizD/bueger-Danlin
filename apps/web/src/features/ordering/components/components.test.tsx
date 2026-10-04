@@ -371,6 +371,93 @@ describe("ordering components", () => {
     );
   });
 
+  it("compacta el preview sin reservar espacio para ingredientes en cero", () => {
+    const compactHtml = renderToStaticMarkup(
+      <BurgerBuilder
+        comboName="Hamburguesa + papas"
+        burgers={[
+          {
+            localId: "burger-compact",
+            removedIds: [
+              "bacon",
+              "lettuce",
+              "tomato",
+              "onion",
+              "ketchup",
+              "mustard",
+            ],
+            extraIds: [],
+            modifierQuantities: {},
+          },
+        ]}
+        comboPriceCents={13_000}
+        removableOptions={removable}
+        extraOptions={extras}
+        inventory={null}
+        maxCombosAvailable={5}
+        onAddBurger={vi.fn()}
+        onRemoveBurger={vi.fn()}
+        onSetModifierQuantities={vi.fn()}
+      />,
+    );
+
+    const fullHtml = renderToStaticMarkup(
+      <BurgerBuilder
+        comboName="Hamburguesa + papas"
+        burgers={[
+          {
+            localId: "burger-full",
+            removedIds: [],
+            extraIds: ["pickles"],
+            modifierQuantities: {
+              pickles: 2,
+            },
+          },
+        ]}
+        comboPriceCents={13_000}
+        removableOptions={removable}
+        extraOptions={extras}
+        inventory={null}
+        maxCombosAvailable={5}
+        onAddBurger={vi.fn()}
+        onRemoveBurger={vi.fn()}
+        onSetModifierQuantities={vi.fn()}
+      />,
+    );
+
+    const topBunY = (html: string) => {
+      const match = html.match(
+        /data-preview-layer="top-bun"[^>]*style="[^"]*--burger-y:([^;" ]+)px/,
+      );
+
+      expect(match?.[1]).toBeDefined();
+
+      return Number(match![1]);
+    };
+
+    expect(compactHtml).not.toContain(
+      'data-preview-layer="bacon-1"',
+    );
+    expect(compactHtml).not.toContain(
+      'data-preview-layer="white-onion-1"',
+    );
+    expect(compactHtml).not.toContain(
+      'data-preview-layer="tomato-1"',
+    );
+    expect(compactHtml).not.toContain(
+      'data-preview-layer="lettuce-1"',
+    );
+    expect(compactHtml).not.toContain(
+      'data-preview-layer="base-sauces"',
+    );
+
+    expect(
+      topBunY(compactHtml),
+    ).toBeGreaterThan(
+      topBunY(fullHtml),
+    );
+  });
+
   it("muestra puntos, progreso grupal y envío gratis", () => {
     const html = renderToStaticMarkup(
       <PickupPointSelector
