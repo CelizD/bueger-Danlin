@@ -6913,6 +6913,11 @@ svg.burger-preview-layer {
   transform-origin: 50% 50%;
 }
 
+.burger-preview-layer[data-preview-ingredient="cheese"] {
+  padding-inline: 10%;
+  transform-origin: 50% 50%;
+}
+
 .burger-preview-layer.is-active {
   opacity: 1;
   transform:
@@ -6963,6 +6968,10 @@ svg.burger-preview-layer {
 
   .burger-preview-layer[data-preview-ingredient="meat"] {
     padding-inline: 8%;
+  }
+
+  .burger-preview-layer[data-preview-ingredient="cheese"] {
+    padding-inline: 9%;
   }
 }
 
