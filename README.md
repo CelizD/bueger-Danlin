@@ -2,7 +2,7 @@
 
 Plataforma web de preventa de hamburguesas con pedidos programados para sábado, control de capacidad, inventario, cocina, entrega por QR y panel administrativo.
 
-> **Estado del MVP al 3 de octubre de 2026:** código funcional completo y validado por CI/Security. Los pendientes reales antes de abrir tráfico son infraestructura, credenciales/proveedores y validación operativa en producción. Consulta `docs/MVP_FINAL_STATUS.md`.
+> **Estado del MVP al 4 de octubre de 2026:** código funcional completo y validado por CI/Security. Los pendientes reales antes de abrir tráfico son infraestructura, credenciales/proveedores y validación operativa en producción. Consulta `docs/MVP_FINAL_STATUS.md`.
 
 ## Estado actual
 
@@ -29,6 +29,17 @@ Este flujo se ejecuta automáticamente en CI con una base PostgreSQL temporal.
 - Tocino extra: **+$15**
 - Papas extra: **+$25**
 - Coca-Cola en lata: **$30 MXN**
+
+### Personalización de la hamburguesa
+
+- Carne: **1–5** porciones.
+- Queso: **1–5** porciones.
+- Tocino, lechuga, tomate, cebolla blanca y pepinillos: **0–5** porciones.
+- Ketchup, mostaza, mayonesa, chipotle y BBQ con chipotle: selección **Sí/No**.
+- Las porciones adicionales de carne, queso y tocino usan los precios existentes; no se inventan precios nuevos para verduras, pepinillos o aderezos.
+- El preview visual cambia con la cantidad elegida y oculta ingredientes con cantidad `0`.
+- El backend valida enteros y límites, recalcula el precio y usa las cantidades reales para inventario.
+- Los pedidos nuevos guardan un snapshot legible de preparación; los pedidos históricos siguen siendo compatibles.
 
 ## Reglas de negocio
 
@@ -68,6 +79,9 @@ PostgreSQL es la fuente de verdad. Redis está preparado para infraestructura fu
 - fecha de entrega activa;
 - disponibilidad de inventario;
 - múltiples combos personalizados;
+- cantidades exactas por ingrediente dentro de los límites del producto;
+- aderezos Sí/No: ketchup, mostaza, mayonesa, chipotle y BBQ con chipotle;
+- preview visual de la hamburguesa según cantidades;
 - extras y bebidas;
 - precio estimado en frontend y precio final recalculado en backend;
 - creación de pedidos idempotente;
@@ -143,13 +157,19 @@ Incluye:
 
 El backend usa transacciones y locks de PostgreSQL para evitar sobreventa.
 
-Artículos base:
+Artículos controlados por inventario para el flujo actual:
 
 - carne;
 - queso;
 - tocino;
+- lechuga;
+- tomate;
+- cebolla blanca;
+- pepinillos;
 - papas;
 - Coca-Cola.
+
+Las cantidades seleccionadas por el cliente se convierten en consumo real de porciones. Lechuga, tomate, cebolla blanca y pepinillos deben cargarse con existencias reales en Admin antes de abrir ventas; el seed/migración no inventa stock de producción.
 
 Flujo:
 
@@ -339,6 +359,9 @@ La suite integrada levanta:
 Valida, entre otros casos:
 
 - `cliente -> pedido -> pago MOCK -> cocina -> READY -> QR -> entrega -> DELIVERED`;
+- personalización con varias carnes/quesos/tocino/verduras/pepinillos y aderezos;
+- preview y precio de una hamburguesa con cantidades múltiples;
+- cantidades finales visibles en Cocina, pedido del cliente y comprobante;
 - inventario y devolución exacta al cancelar/reembolsar;
 - entrega grupal con varios pedidos hasta `5 de 5`;
 - comprobante PDF real;
