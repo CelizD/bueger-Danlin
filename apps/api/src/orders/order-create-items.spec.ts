@@ -215,6 +215,31 @@ describe("prepareOrderItems", () => {
     );
   });
 
+  it("rechaza porciones gratuitas adicionales de un ingrediente con extra pagado", async () => {
+    await expect(
+      prepareOrderItems(
+        txWithProduct(),
+        [
+          {
+            productId: "combo-1",
+            quantity: 1,
+            removedModifierOptionIds: [],
+            extraModifierOptionIds: [],
+            modifierQuantities: [
+              {
+                modifierOptionId:
+                  "included-cheese",
+                quantity: 2,
+              },
+            ],
+          },
+        ] as any,
+      ),
+    ).rejects.toThrow(
+      "Las porciones adicionales de Queso deben enviarse como extra.",
+    );
+  });
+
   it("rechaza más de cinco carnes totales", async () => {
     await expect(
       prepareOrderItems(
