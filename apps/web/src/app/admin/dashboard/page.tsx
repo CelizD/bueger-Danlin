@@ -66,7 +66,7 @@ export default function DashboardPage() {
               aria-label="Filtrar panel por entrega"
             >
               <option value="ALL">
-                Todos los sábados
+                Todas las fechas
               </option>
               {data?.filter.events.map(
                 (event) => (
@@ -123,7 +123,7 @@ export default function DashboardPage() {
               <span>
                 {data.filter.selectedEvent
                   ? `Mostrando ${data.filter.selectedEvent.name} · ${dashboardEventDate(data.filter.selectedEvent.startsAt)}`
-                  : "Mostrando acumulado de todos los sábados"}
+                  : "Mostrando acumulado de todas las fechas"}
               </span>
             </div>
 
