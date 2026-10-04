@@ -21,7 +21,7 @@ export const ROLE_DESCRIPTIONS: Record<
       "Ver Dashboard de ventas",
       "Ver todos los pedidos",
       "Operar Cocina y Entrega",
-      "Administrar sábados",
+      "Administrar agenda",
       "Administrar inventario",
       "Crear y administrar personal",
       "MFA obligatorio para administradores",

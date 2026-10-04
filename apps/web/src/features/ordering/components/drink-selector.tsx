@@ -1,6 +1,9 @@
 import { money } from "@/features/ordering/formatters";
+import { apiUrl } from "@/lib/api/browser";
 
 type DrinkSelectorProps = {
+  name: string;
+  imagePath?: string | null;
   quantity: number;
   priceCents: number;
   inventoryLimit: number;
@@ -8,6 +11,8 @@ type DrinkSelectorProps = {
 };
 
 export function DrinkSelector({
+  name,
+  imagePath,
   quantity,
   priceCents,
   inventoryLimit,
@@ -23,8 +28,15 @@ export function DrinkSelector({
       </div>
 
       <div className="drink-row">
-        <div>
-          <strong>Coca-Cola lata</strong>
+        {imagePath && (
+          <img
+            className="catalog-product-image catalog-product-image-drink"
+            src={apiUrl(imagePath)}
+            alt={name}
+          />
+        )}
+        <div className="drink-copy">
+          <strong>{name}</strong>
           <span>
             {money.format(priceCents / 100)} c/u
             {inventoryLimit <= 0 ? " · Agotada" : ""}
@@ -35,7 +47,7 @@ export function DrinkSelector({
           <button
             type="button"
             onClick={() => onChange(Math.max(0, quantity - 1))}
-            aria-label="Quitar Coca-Cola"
+            aria-label={`Quitar ${name}`}
           >
             −
           </button>
@@ -46,7 +58,7 @@ export function DrinkSelector({
               onChange(Math.min(20, inventoryLimit, quantity + 1))
             }
             disabled={quantity >= inventoryLimit}
-            aria-label="Agregar Coca-Cola"
+            aria-label={`Agregar ${name}`}
           >
             +
           </button>

@@ -41,7 +41,7 @@ export default function SaturdaysPage() {
   if (loading) {
     return (
       <main className="admin-loading">
-        Cargando sábados…
+        Cargando agenda…
       </main>
     );
   }
@@ -60,12 +60,11 @@ export default function SaturdaysPage() {
             <p className="admin-kicker">
               Calendario de ventas
             </p>
-            <h1>Sábados</h1>
+            <h1>Agenda</h1>
             <p>
-              Crea la siguiente entrega,
-              define el cupo y controla
-              cuándo pueden ordenar los
-              clientes.
+              Gestiona fechas, horarios,
+              cupos y puntos de entrega
+              desde un solo lugar.
             </p>
           </div>
 

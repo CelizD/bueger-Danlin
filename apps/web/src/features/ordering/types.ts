@@ -13,6 +13,7 @@ export type CatalogProduct = {
   description: string | null;
   type: "COMBO" | "BEVERAGE" | "ADD_ON";
   priceCents: number;
+  imagePath?: string | null;
   modifierGroups: Array<{
     modifierGroup: {
       id: string;

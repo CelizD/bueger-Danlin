@@ -165,6 +165,8 @@ model Product {
   active        Boolean     @default(true)
   trackStock    Boolean     @default(false)
   stockQuantity Int?
+  imageData     Bytes?
+  imageMimeType String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 

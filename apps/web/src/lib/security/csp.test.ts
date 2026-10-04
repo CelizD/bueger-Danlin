@@ -28,6 +28,9 @@ describe("Content Security Policy", () => {
     expect(script).not.toContain("'unsafe-eval'");
     expect(policy).toContain("script-src-attr 'none'");
     expect(policy).toContain("upgrade-insecure-requests");
+    expect(directive(policy, "img-src")).toContain(
+      "https://api.example.com",
+    );
   });
 
   it("keeps only the development eval exception required by Next.js", () => {

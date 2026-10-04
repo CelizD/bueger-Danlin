@@ -19,7 +19,7 @@ describe("AdminSidebar", () => {
     expect(html).toContain("Pedidos");
     expect(html).toContain(">Cocina<");
     expect(html).toContain(">Entrega<");
-    expect(html).toContain("Sábados");
+    expect(html).toContain("Agenda");
     expect(html).toContain("Inventario");
     expect(html).toContain("Privacidad ARCO");
     expect(html).toContain("Personal");

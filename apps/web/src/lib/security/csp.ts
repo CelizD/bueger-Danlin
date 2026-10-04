@@ -26,9 +26,11 @@ export function buildContentSecurityPolicy({
     ...(isDevelopment ? ["'unsafe-eval'"] : []),
   ];
 
+  const api = apiOrigin(apiUrl);
+
   const connectSources = [
     "'self'",
-    apiOrigin(apiUrl),
+    api,
     ...(isDevelopment ? ["ws:"] : []),
   ];
 
@@ -41,7 +43,7 @@ export function buildContentSecurityPolicy({
     `script-src ${scriptSources.join(" ")}`,
     "script-src-attr 'none'",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    `img-src 'self' data: blob: ${api}`,
     "font-src 'self' data:",
     `connect-src ${connectSources.join(" ")}`,
     "media-src 'self' blob:",

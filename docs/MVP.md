@@ -129,7 +129,7 @@ Permitida antes del cierre. Después del cierre no hay cancelación automática.
 
 
 ## Roles del personal
-- `ADMIN`: control completo de la operación: Dashboard, Pedidos, Cocina, Entrega, Sábados, Inventario, ARCO y Personal.
+- `ADMIN`: control completo de la operación: Dashboard, Pedidos, Cocina, Entrega, Agenda, Inventario, ARCO y Personal.
 - `KITCHEN`: solo Cocina.
 - `DELIVERY`: solo Entrega.
 - La separación se valida tanto en navegación como en API: un rol fuera de su área recibe redirección o `403` según corresponda.

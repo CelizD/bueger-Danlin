@@ -181,6 +181,7 @@ describe("ordering components", () => {
   it("muestra bebida agotada y deshabilita aumentar cantidad", () => {
     const html = renderToStaticMarkup(
       <DrinkSelector
+        name="Coca-Cola lata"
         quantity={0}
         priceCents={3_000}
         inventoryLimit={0}
@@ -189,7 +190,7 @@ describe("ordering components", () => {
     );
 
     expect(html).toContain("Agotada");
-    expect(html).toContain('aria-label="Agregar Coca-Cola"');
+    expect(html).toContain('aria-label="Agregar Coca-Cola lata"');
     expect(html).toContain("disabled");
     expect(html).toContain('aria-live="polite"');
   });
@@ -197,6 +198,7 @@ describe("ordering components", () => {
   it("representa ingredientes y extras agotados como controles deshabilitados", () => {
     const html = renderToStaticMarkup(
       <BurgerBuilder
+        comboName="Hamburguesa + papas"
         burgers={[
           {
             localId: "burger-1",
@@ -242,6 +244,7 @@ describe("ordering components", () => {
   it("deshabilita agregar combo al alcanzar la capacidad disponible", () => {
     const html = renderToStaticMarkup(
       <BurgerBuilder
+        comboName="Hamburguesa + papas"
         burgers={[
           {
             localId: "burger-1",

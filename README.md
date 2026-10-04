@@ -130,7 +130,7 @@ Rutas administrativas para `ADMIN`:
 Incluye:
 
 - dashboard de ventas;
-- administración de sábados;
+- administración de agenda y puntos de entrega;
 - inventario;
 - cuentas de personal;
 - roles `ADMIN`, `KITCHEN` y `DELIVERY`;

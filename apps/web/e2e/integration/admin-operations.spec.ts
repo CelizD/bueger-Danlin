@@ -142,7 +142,7 @@ async function loginAdminWithMfa(
   );
 }
 
-test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
+test("admin real cubre MFA, inventario, agenda, personal y ARCO", async ({
   page,
   request,
 }) => {
@@ -220,6 +220,36 @@ test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
   ).toBeVisible();
   await assertNoBlockingA11y(page, "Inventario");
 
+  const cocaColaProductCard = page
+    .locator(".product-media-card")
+    .filter({ hasText: "Coca-Cola lata" });
+
+  await expect(cocaColaProductCard).toBeVisible();
+
+  await cocaColaProductCard
+    .locator('input[type="file"]')
+    .setInputFiles({
+      name: "coca-cola.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZcK0AAAAASUVORK5CYII=",
+        "base64",
+      ),
+    });
+
+  await expect(
+    page.getByText(
+      "Imagen de Coca-Cola lata actualizada.",
+    ),
+  ).toBeVisible();
+
+  await expect(
+    page
+      .locator(".product-media-card")
+      .filter({ hasText: "Coca-Cola lata" })
+      .locator("img"),
+  ).toBeVisible();
+
   await page
     .getByRole("button", { name: "Nuevo artículo" })
     .click();
@@ -272,9 +302,9 @@ test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
 
   await page.goto("/admin/sabados");
   await expect(
-    page.getByRole("heading", { name: "Sábados" }),
+    page.getByRole("heading", { name: "Agenda" }),
   ).toBeVisible();
-  await assertNoBlockingA11y(page, "Sábados");
+  await assertNoBlockingA11y(page, "Agenda");
 
   await page
     .getByRole("button", { name: "Nueva fecha" })
