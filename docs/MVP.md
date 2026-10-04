@@ -1,6 +1,6 @@
 # Reglas del MVP
 
-Fecha de corte: **3 de octubre de 2026**
+Fecha de corte: **4 de octubre de 2026**
 
 > Estado: reglas funcionales del MVP cerradas en código. Para el estado técnico completo y los pendientes reales de producción consulta `docs/MVP_FINAL_STATUS.md`.
 
@@ -12,15 +12,31 @@ Fecha de corte: **3 de octubre de 2026**
 - Cierre: viernes 9:00 p. m.
 - Varios combos por pedido.
 
-## Ingredientes
-Pan, carne, queso, tocino, lechuga, tomate, cebolla caramelizada, cebolla blanca, ketchup, mostaza y papas.
+## Ingredientes y personalización
+La hamburguesa se arma por porciones exactas y el backend valida los límites aunque el request sea manipulado:
 
-## Extras
-- Carne extra +$30
-- Queso extra +$10
-- Tocino extra +$15
-- Papas extra +$25
-- Coca-Cola lata $30
+- Carne: **1 a 5** porciones.
+- Queso: **1 a 5** porciones.
+- Tocino: **0 a 5** porciones.
+- Lechuga: **0 a 5** porciones.
+- Tomate: **0 a 5** porciones.
+- Cebolla blanca: **0 a 5** porciones.
+- Pepinillos: **0 a 5** porciones.
+- Aderezos booleanos **Sí/No**: ketchup, mostaza, mayonesa, chipotle y BBQ con chipotle.
+- Cebolla caramelizada y papas extra permanecen como opciones adicionales del catálogo.
+
+El preview visual refleja las cantidades seleccionadas. Una cantidad `0` oculta el ingrediente y las combinaciones de aderezos conservan su representación visual cuando existe un SVG correspondiente.
+
+## Extras y precios
+- Carne extra +$30 por porción adicional.
+- Queso extra +$10 por porción adicional.
+- Tocino extra +$15 por porción adicional.
+- Lechuga, tomate, cebolla blanca y pepinillos no agregan un precio nuevo en el MVP actual.
+- Ketchup, mostaza, mayonesa, chipotle y BBQ con chipotle no agregan un precio nuevo en el MVP actual.
+- Papas extra +$25.
+- Coca-Cola lata $30.
+
+El frontend muestra el precio estimado en tiempo real, pero el backend vuelve a calcularlo y es la autoridad final. Las cantidades reales también se usan para reservar/descontar inventario y se conservan en Cocina, Admin, vista del cliente, comprobante PDF y correo de compra.
 
 ## Cliente
 Nombre y teléfono obligatorios. Correo opcional. +52 por defecto.
