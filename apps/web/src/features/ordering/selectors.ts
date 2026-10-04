@@ -1,4 +1,4 @@
-import { burgerModifierQuantity } from "./builder";
+import { burgerModifierQuantity } from "./modifier-quantities";
 import type {
   BurgerSelection,
   CatalogProduct,
