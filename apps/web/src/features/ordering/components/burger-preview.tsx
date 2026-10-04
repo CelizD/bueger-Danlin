@@ -38,6 +38,47 @@ function optionByKey(
   );
 }
 
+function repeatedLayers({
+  key,
+  src,
+  count,
+  y,
+  step,
+  z,
+  scale = 1,
+  x = 0,
+}: {
+  key: string;
+  src: string;
+  count: number;
+  y: number;
+  step: number;
+  z: number;
+  scale?: number;
+  x?: number;
+}) {
+  return Array.from(
+    { length: Math.max(0, count) },
+    (_, index): Layer => ({
+      key: `${key}-${index + 1}`,
+      src,
+      active: true,
+      y: y - index * step,
+      z: z + index,
+      scale:
+        scale -
+        Math.min(index, 4) * 0.015,
+      x:
+        x +
+        (index % 2 === 0
+          ? -1
+          : 1) *
+          Math.min(index, 3) *
+          2,
+    }),
+  );
+}
+
 export function BurgerPreview({
   burger,
   removableOptions,
@@ -58,32 +99,81 @@ export function BurgerPreview({
     );
   };
 
-  const extra = (key: string) => {
+  const extraQuantity = (
+    key: string,
+  ) => {
     const option = optionByKey(
       extraOptions,
       key,
     );
 
-    return Boolean(
-      option &&
-        burger.extraIds.includes(
-          option.id,
-        ),
+    if (!option) return 0;
+
+    return Math.max(
+      burger.extraQuantities?.[
+        option.id
+      ] ?? 0,
+      burger.extraIds.includes(
+        option.id,
+      )
+        ? 1
+        : 0,
     );
   };
 
-  const extraMeat = extra("extra-meat");
+  const ingredientCount = (
+    includedKey: string,
+    extraKey: string,
+  ) =>
+    Number(included(includedKey)) +
+    extraQuantity(extraKey);
+
+  const meatCount =
+    1 + extraQuantity("extra-meat");
   const cheeseCount =
-    Number(included("included-cheese")) +
-    Number(extra("extra-cheese"));
+    ingredientCount(
+      "included-cheese",
+      "extra-cheese",
+    );
   const baconCount =
-    Number(included("included-bacon")) +
-    Number(extra("extra-bacon"));
-  const ketchup = included(
-    "included-ketchup",
-  );
-  const mustard = included(
-    "included-mustard",
+    ingredientCount(
+      "included-bacon",
+      "extra-bacon",
+    );
+  const lettuceCount =
+    ingredientCount(
+      "included-lettuce",
+      "extra-lettuce",
+    );
+  const tomatoCount =
+    ingredientCount(
+      "included-tomato",
+      "extra-tomato",
+    );
+  const whiteOnionCount =
+    ingredientCount(
+      "included-white-onion",
+      "extra-white-onion",
+    );
+  const caramelizedOnionCount =
+    ingredientCount(
+      "included-caramelized-onion",
+      "extra-caramelized-onion",
+    );
+  const ketchupCount =
+    ingredientCount(
+      "included-ketchup",
+      "extra-ketchup",
+    );
+  const mustardCount =
+    ingredientCount(
+      "included-mustard",
+      "extra-mustard",
+    );
+
+  const sharedSauceCount = Math.min(
+    ketchupCount,
+    mustardCount,
   );
 
   const layers: Layer[] = [
@@ -94,121 +184,118 @@ export function BurgerPreview({
       y: 150,
       z: 10,
     },
-    {
+    ...repeatedLayers({
       key: "ketchup-mustard",
       src: `${ASSET_ROOT}/ketchupmostaza.svg`,
-      active: ketchup && mustard,
+      count: sharedSauceCount,
       y: 118,
+      step: 6,
       z: 20,
       scale: 0.72,
-    },
-    {
+    }),
+    ...repeatedLayers({
       key: "ketchup",
       src: `${ASSET_ROOT}/ketchup.svg`,
-      active: ketchup && !mustard,
-      y: 118,
-      z: 20,
+      count:
+        ketchupCount -
+        sharedSauceCount,
+      y:
+        112 -
+        sharedSauceCount * 4,
+      step: 5,
+      z: 24,
       scale: 0.68,
-    },
-    {
+      x: -4,
+    }),
+    ...repeatedLayers({
       key: "mustard",
       src: `${ASSET_ROOT}/mostasa.svg`,
-      active: mustard && !ketchup,
-      y: 118,
-      z: 20,
+      count:
+        mustardCount -
+        sharedSauceCount,
+      y:
+        108 -
+        sharedSauceCount * 4,
+      step: 5,
+      z: 27,
       scale: 0.68,
-    },
-    {
+      x: 4,
+    }),
+    ...repeatedLayers({
       key: "meat",
       src: `${ASSET_ROOT}/carne.svg`,
-      active: !extraMeat,
+      count: meatCount,
       y: 82,
-      z: 30,
-    },
-    {
-      key: "double-meat",
-      src: `${ASSET_ROOT}/doblecarne.svg`,
-      active: extraMeat,
-      y: 80,
-      z: 30,
-    },
-    {
+      step: 23,
+      z: 32,
+    }),
+    ...repeatedLayers({
       key: "cheese",
       src: `${ASSET_ROOT}/queso.svg`,
-      active: cheeseCount === 1,
-      y: 42,
-      z: 40,
-    },
-    {
-      key: "double-cheese",
-      src: `${ASSET_ROOT}/doblequeso.svg`,
-      active: cheeseCount >= 2,
-      y: 42,
-      z: 40,
-    },
-    {
+      count: cheeseCount,
+      y: 44 - (meatCount - 1) * 10,
+      step: 9,
+      z: 42,
+    }),
+    ...repeatedLayers({
       key: "bacon",
       src: `${ASSET_ROOT}/dobletocino.svg`,
-      active: baconCount >= 1,
-      y: 3,
-      z: 50,
+      count: baconCount,
+      y:
+        2 -
+        (meatCount - 1) * 10 -
+        Math.max(
+          0,
+          cheeseCount - 1,
+        ) *
+          4,
+      step: 11,
+      z: 52,
       scale: 0.92,
-    },
-    {
-      key: "extra-bacon",
-      src: `${ASSET_ROOT}/dobletocino.svg`,
-      active: baconCount >= 2,
-      y: -17,
-      z: 51,
-      scale: 0.82,
-      x: 7,
-    },
-    {
+    }),
+    ...repeatedLayers({
       key: "white-onion",
       src: `${ASSET_ROOT}/cebolla.svg`,
-      active: included(
-        "included-white-onion",
-      ),
+      count: whiteOnionCount,
       y: -48,
-      z: 60,
+      step: 9,
+      z: 62,
       scale: 0.9,
-    },
-    {
+    }),
+    ...repeatedLayers({
       key: "caramelized-onion",
       src: `${ASSET_ROOT}/cebollaacaramelizada.svg`,
-      active: included(
-        "included-caramelized-onion",
-      ),
-      y: -75,
-      z: 61,
+      count:
+        caramelizedOnionCount,
+      y: -72,
+      step: 8,
+      z: 67,
       scale: 0.86,
-    },
-    {
+    }),
+    ...repeatedLayers({
       key: "tomato",
       src: `${ASSET_ROOT}/tomate.svg`,
-      active: included(
-        "included-tomato",
-      ),
-      y: -88,
-      z: 65,
+      count: tomatoCount,
+      y: -91,
+      step: 9,
+      z: 72,
       scale: 0.94,
-    },
-    {
+    }),
+    ...repeatedLayers({
       key: "lettuce",
       src: `${ASSET_ROOT}/lechuga.svg`,
-      active: included(
-        "included-lettuce",
-      ),
-      y: -112,
-      z: 70,
+      count: lettuceCount,
+      y: -115,
+      step: 10,
+      z: 77,
       scale: 1.02,
-    },
+    }),
     {
       key: "top-bun",
       src: `${ASSET_ROOT}/panarriba.svg`,
       active: true,
-      y: -150,
-      z: 80,
+      y: -155,
+      z: 90,
     },
   ];
 
@@ -260,7 +347,6 @@ export function BurgerPreview({
           );
         })}
       </div>
-
     </div>
   );
 }
