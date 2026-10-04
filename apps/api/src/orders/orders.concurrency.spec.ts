@@ -37,6 +37,8 @@ async function createEvent(code: string, maxCombos: number) {
       startsAt: new Date(now + 2 * 60 * 60 * 1000),
       closesAt: new Date(now + 60 * 60 * 1000),
       maxCombos,
+      freeDeliveryMinPaidCombos:
+        Math.min(5, maxCombos),
       status: "OPEN",
     },
   });
