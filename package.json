@@ -18,6 +18,7 @@
     "infra:down": "docker compose down",
     "db:seed": "prisma db seed",
     "db:migrate:deploy": "prisma migrate deploy",
+    "db:verify-domain-constraints": "tsx database/prisma/verify-domain-constraints.ts",
     "ci": "pnpm lint && pnpm test && pnpm build",
     "bundle:report": "pnpm --filter @burger/web bundle:report",
     "db:seed:e2e": "tsx database/prisma/e2e-seed.ts",

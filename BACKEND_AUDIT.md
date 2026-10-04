@@ -30,7 +30,7 @@ Leyenda:
 | Tests cross-tenant | 🔵 | No aplica mientras siga siendo un solo negocio |
 | PostgreSQL como fuente de verdad | ✅ | Pedidos, capacidad, inventario, auth y pagos se apoyan en PostgreSQL |
 | Constraints e índices básicos | ✅ | PK, unique e índices en usuarios, pedidos, pagos, eventos, inventario y auditoría |
-| Constraints de dominio adicionales | 🟡 | Faltan CHECK SQL explícitos para algunos invariantes numéricos (cantidades/dinero >= 0) |
+| Constraints de dominio adicionales | ✅ | CHECK SQL versionados para cantidades, montos, intentos y reglas numéricas de entrega; CI verifica que estén presentes y validados |
 | Concurrencia | ✅ | SELECT ... FOR UPDATE para capacidad, inventario, pago y operaciones sensibles |
 | Idempotencia de órdenes | ✅ | requestKey único + requestHash; replay seguro y detección de reutilización distinta |
 | Idempotencia de pagos | ✅ | Payment.idempotencyKey único; confirmación mock idempotente |
