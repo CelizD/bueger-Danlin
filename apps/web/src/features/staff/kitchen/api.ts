@@ -37,7 +37,7 @@ export async function fetchKitchenOrders(): Promise<
 
   const meData = await me.json();
 
-  if (meData.user.role !== "KITCHEN") {
+  if (!["ADMIN", "KITCHEN"].includes(meData.user.role)) {
     return { authorized: false };
   }
 

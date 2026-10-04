@@ -15,8 +15,8 @@ export type AdminSection =
 const sectionRoles: Record<AdminSection, readonly StaffRole[]> = {
   dashboard: ["ADMIN"],
   pedidos: ["ADMIN"],
-  cocina: ["KITCHEN"],
-  entrega: ["DELIVERY"],
+  cocina: ["ADMIN", "KITCHEN"],
+  entrega: ["ADMIN", "DELIVERY"],
   sabados: ["ADMIN"],
   inventario: ["ADMIN"],
   arco: ["ADMIN"],

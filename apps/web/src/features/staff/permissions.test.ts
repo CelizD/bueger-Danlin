@@ -16,10 +16,12 @@ const sections: AdminSection[] = [
 ];
 
 describe("staff navigation permissions", () => {
-  it("limita administrador a las secciones administrativas", () => {
+  it("permite al administrador controlar toda la operación", () => {
     const adminSections: AdminSection[] = [
       "dashboard",
       "pedidos",
+      "cocina",
+      "entrega",
       "sabados",
       "inventario",
       "arco",
@@ -30,8 +32,6 @@ describe("staff navigation permissions", () => {
       expect(canAccessAdminSection("ADMIN", section)).toBe(true);
     }
 
-    expect(canAccessAdminSection("ADMIN", "cocina")).toBe(false);
-    expect(canAccessAdminSection("ADMIN", "entrega")).toBe(false);
   });
 
   it("limita cocina a su operación", () => {

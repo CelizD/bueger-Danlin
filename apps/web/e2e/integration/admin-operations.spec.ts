@@ -182,20 +182,20 @@ test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
     await apiStatus(page, {
       path: "/staff/kitchen/orders",
     }),
-  ).toBe(403);
+  ).toBe(200);
 
   expect(
     await apiStatus(page, {
       path: "/staff/delivery/orders",
     }),
-  ).toBe(403);
+  ).toBe(200);
 
   await expect(
     page.getByRole("link", { name: "Cocina" }),
-  ).toHaveCount(0);
+  ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Entrega" }),
-  ).toHaveCount(0);
+  ).toBeVisible();
 
   await expect(
     page.getByRole("heading", {
@@ -404,12 +404,14 @@ test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
   ).toContainText("Resuelta");
 
   await page.goto("/admin/cocina");
-  await expect(page).toHaveURL(
-    (url) => url.pathname === "/admin/dashboard",
-  );
+  await expect(
+    page.getByRole("heading", { name: "Cocina", level: 1 }),
+  ).toBeVisible();
+  await assertNoBlockingA11y(page, "Cocina");
 
   await page.goto("/admin/entrega");
-  await expect(page).toHaveURL(
-    (url) => url.pathname === "/admin/dashboard",
-  );
+  await expect(
+    page.getByRole("heading", { name: "Entrega", level: 1 }),
+  ).toBeVisible();
+  await assertNoBlockingA11y(page, "Entrega");
 });
