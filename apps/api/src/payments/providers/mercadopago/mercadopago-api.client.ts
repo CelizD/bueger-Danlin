@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { assertRealPaymentsEnabled } from "../../real-payments.guard.js";
+import { readSetting } from "../../../config/secret-setting.js";
 import type {
   MercadoPagoCreateOrderInput,
   MercadoPagoOrderResponse,
@@ -25,7 +26,7 @@ export class MercadoPagoApiError extends Error {
 }
 
 function requireAccessToken() {
-  const token = process.env.MERCADOPAGO_ACCESS_TOKEN?.trim();
+  const token = readSetting("MERCADOPAGO_ACCESS_TOKEN");
 
   if (!token) {
     throw new Error(
