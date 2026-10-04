@@ -2,7 +2,7 @@ import { money } from "@/features/ordering/formatters";
 import {
   burgerModifierQuantity,
   type ModifierQuantityUpdate,
-} from "@/features/ordering/builder";
+} from "@/features/ordering/modifier-quantities";
 import { apiUrl } from "@/lib/api/browser";
 import { BurgerPreview } from "./burger-preview";
 import type {
