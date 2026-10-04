@@ -170,10 +170,11 @@ async function main() {
     { key: "extra-fries", name: "Papas extra", priceDeltaCents: 2500 },
     { key: "extra-lettuce", name: "Lechuga extra", priceDeltaCents: 0 },
     { key: "extra-tomato", name: "Tomate extra", priceDeltaCents: 0 },
-    { key: "extra-caramelized-onion", name: "Cebolla caramelizada extra", priceDeltaCents: 0 },
-    { key: "extra-white-onion", name: "Cebolla blanca extra", priceDeltaCents: 0 },
-    { key: "extra-ketchup", name: "Ketchup extra", priceDeltaCents: 0 },
-    { key: "extra-mustard", name: "Mostaza extra", priceDeltaCents: 0 },
+    { key: "extra-white-onion", name: "Cebolla extra", priceDeltaCents: 0 },
+    { key: "extra-pickles", name: "Pepinillos", priceDeltaCents: 0 },
+    { key: "extra-mayonnaise", name: "Mayonesa", priceDeltaCents: 0 },
+    { key: "extra-chipotle", name: "Chipotle", priceDeltaCents: 0 },
+    { key: "extra-bbq-chipotle", name: "BBQ con Chipotle", priceDeltaCents: 0 },
   ] as const;
 
   for (const [index, option] of extraOptions.entries()) {
