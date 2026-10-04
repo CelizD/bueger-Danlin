@@ -163,4 +163,29 @@ describe("ordering selectors", () => {
   it("no permite capacidad sin evento abierto", () => {
     expect(availableComboLimit(null, 50)).toBe(0);
   });
+
+  it("multiplica extras cuantificados en el total previo", () => {
+    const burgers: BurgerSelection[] = [
+      {
+        localId: "burger-1",
+        removedIds: [],
+        extraIds: [],
+        extraQuantities: {
+          "cheese-extra": 3,
+          "meat-extra": 2,
+        },
+      },
+    ];
+
+    const total = calculatePreviewTotal(
+      burgers,
+      combo,
+      coke,
+      0,
+      modifierOptions(combo, "EXTRA"),
+    );
+
+    expect(total).toBe(22_000);
+  });
+
 });
