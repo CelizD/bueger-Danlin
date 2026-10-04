@@ -190,7 +190,7 @@ describe("ordering components", () => {
     );
 
     expect(html).toContain("Agotada");
-    expect(html).toContain('aria-label="Agregar Coca-Cola"');
+    expect(html).toContain('aria-label="Agregar Coca-Cola lata"');
     expect(html).toContain("disabled");
     expect(html).toContain('aria-live="polite"');
   });
