@@ -59,6 +59,10 @@ export function CustomerOrderItems({
                       {
                         modifier.optionName
                       }
+                      {!modifier.removed &&
+                        modifier.quantity > 1
+                        ? ` × ${modifier.quantity}`
+                        : ""}
                     </span>
                   ),
                 )}
