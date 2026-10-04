@@ -1,3 +1,4 @@
+import { BURGER_MAX_INGREDIENT_QUANTITY } from "@burger/types";
 import { Type } from "class-transformer";
 import {
   ArrayMaxSize,
@@ -42,7 +43,7 @@ export class CreateOrderModifierQuantityDto {
 
   @IsInt()
   @Min(1)
-  @Max(5)
+  @Max(BURGER_MAX_INGREDIENT_QUANTITY)
   quantity!: number;
 }
 
