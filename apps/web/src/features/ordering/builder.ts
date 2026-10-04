@@ -13,6 +13,33 @@ const EMPTY_INVENTORY: InventoryAvailability = {
   modifierLimits: {},
 };
 
+export type ModifierQuantityUpdate = {
+  option: ModifierOption;
+  quantity: number;
+};
+
+export function burgerModifierQuantity(
+  burger: BurgerSelection,
+  option: ModifierOption,
+) {
+  if (option.kind === "REMOVABLE") {
+    if (burger.removedIds.includes(option.id)) {
+      return 0;
+    }
+
+    return burger.modifierQuantities[option.id] ?? 1;
+  }
+
+  if (option.kind === "EXTRA") {
+    return (
+      burger.modifierQuantities[option.id] ??
+      (burger.extraIds.includes(option.id) ? 1 : 0)
+    );
+  }
+
+  return 0;
+}
+
 export function burgersForPickupSelection(
   current: BurgerSelection[],
   nextLimit: number,
@@ -37,227 +64,66 @@ export function burgersForPickupSelection(
   return current.slice(0, nextLimit);
 }
 
-export function toggleRemovedBurger(
+export function setBurgerModifierQuantities(
   burgers: BurgerSelection[],
   burgerId: string,
-  optionId: string,
+  updates: ModifierQuantityUpdate[],
   inventory: InventoryAvailability | null,
 ) {
-  const limit =
-    inventory?.modifierLimits[optionId];
-  const burger = burgers.find(
-    (item) => item.localId === burgerId,
-  );
-  const tryingToInclude =
-    burger?.removedIds.includes(optionId) ??
-    false;
-
-  if (
-    tryingToInclude &&
-    limit !== undefined
-  ) {
-    const includedElsewhere =
-      burgers.filter(
-        (item) =>
-          item.localId !== burgerId &&
-          !item.removedIds.includes(
-            optionId,
-          ),
-      ).length;
-
-    if (includedElsewhere >= limit) {
-      return {
-        burgers,
-        error:
-          "Ese ingrediente ya no tiene inventario disponible.",
-      };
-    }
-  }
-
-  return {
-    burgers: burgers.map((item) =>
-      item.localId === burgerId
-        ? {
-            ...item,
-            removedIds:
-              item.removedIds.includes(
-                optionId,
-              )
-                ? item.removedIds.filter(
-                    (id) => id !== optionId,
-                  )
-                : [
-                    ...item.removedIds,
-                    optionId,
-                  ],
-          }
-        : item,
-    ),
-    error: null,
-  };
-}
-
-export function toggleExtraBurger(
-  burgers: BurgerSelection[],
-  burgerId: string,
-  optionId: string,
-  inventory: InventoryAvailability | null,
-) {
-  const limit =
-    inventory?.modifierLimits[optionId];
-  const selectedCount = burgers.filter(
-    (burger) =>
-      burger.extraIds.includes(optionId),
-  ).length;
-  const burger = burgers.find(
-    (item) => item.localId === burgerId,
-  );
-  const alreadySelected =
-    burger?.extraIds.includes(optionId) ??
-    false;
-
-  if (
-    !alreadySelected &&
-    limit !== undefined &&
-    selectedCount >= limit
-  ) {
-    return {
-      burgers,
-      error:
-        "Ese extra ya no tiene inventario disponible.",
-    };
-  }
-
-  return {
-    burgers: burgers.map((item) =>
-      item.localId === burgerId
-        ? {
-            ...item,
-            extraIds:
-              item.extraIds.includes(
-                optionId,
-              )
-                ? item.extraIds.filter(
-                    (id) => id !== optionId,
-                  )
-                : [
-                    ...item.extraIds,
-                    optionId,
-                  ],
-          }
-        : item,
-    ),
-    error: null,
-  };
-}
-
-
-export function setIngredientQuantityBurger(
-  burgers: BurgerSelection[],
-  burgerId: string,
-  includedOptionId: string | null,
-  extraOptionId: string,
-  totalQuantity: number,
-  inventory: InventoryAvailability | null,
-) {
-  const min = includedOptionId ? 0 : 1;
-
-  if (
-    !Number.isInteger(totalQuantity) ||
-    totalQuantity < min ||
-    totalQuantity > 5
-  ) {
-    return {
-      burgers,
-      error:
-        "La cantidad del ingrediente debe estar entre " +
-        min +
-        " y 5.",
-    };
-  }
-
   const target = burgers.find(
-    (burger) => burger.localId === burgerId,
+    (item) => item.localId === burgerId,
   );
 
   if (!target) {
     return {
       burgers,
-      error: "No se encontró la hamburguesa.",
+      error: "No encontramos la hamburguesa.",
     };
   }
 
-  const nextIncluded =
-    includedOptionId !== null &&
-    totalQuantity > 0;
-  const extraQuantity = Math.max(
-    0,
-    totalQuantity - 1,
-  );
-
-  if (includedOptionId && nextIncluded) {
-    const baseLimit =
-      inventory?.modifierLimits[
-        includedOptionId
-      ];
-
-    if (baseLimit !== undefined) {
-      const includedElsewhere =
-        burgers.filter(
-          (burger) =>
-            burger.localId !== burgerId &&
-            !burger.removedIds.includes(
-              includedOptionId,
-            ),
-        ).length;
-
-      if (includedElsewhere + 1 > baseLimit) {
-        return {
-          burgers,
-          error:
-            "Ese ingrediente ya no tiene inventario disponible.",
-        };
-      }
-    }
-  }
-
-  const extraLimit =
-    inventory?.modifierLimits[
-      extraOptionId
-    ];
-
-  if (
-    extraLimit !== undefined &&
-    extraQuantity > 0
-  ) {
-    const extrasElsewhere =
-      burgers
-        .filter(
-          (burger) =>
-            burger.localId !== burgerId,
-        )
-        .reduce(
-          (sum, burger) =>
-            sum +
-            (burger.extraQuantities?.[
-              extraOptionId
-            ] ??
-              (burger.extraIds.includes(
-                extraOptionId,
-              )
-                ? 1
-                : 0)),
-          0,
-        );
-
+  for (const update of updates) {
     if (
-      extrasElsewhere + extraQuantity >
-      extraLimit
+      !Number.isInteger(update.quantity) ||
+      update.quantity < 0 ||
+      update.quantity > 5
     ) {
       return {
         burgers,
         error:
-          "No hay inventario suficiente para esa cantidad.",
+          "Cada ingrediente puede tener entre 0 y 5 porciones.",
+      };
+    }
+
+    const limit =
+      inventory?.modifierLimits[update.option.id];
+
+    if (limit === undefined) {
+      continue;
+    }
+
+    const usedElsewhere = burgers
+      .filter(
+        (burger) =>
+          burger.localId !== burgerId,
+      )
+      .reduce(
+        (sum, burger) =>
+          sum +
+          burgerModifierQuantity(
+            burger,
+            update.option,
+          ),
+        0,
+      );
+
+    if (
+      usedElsewhere + update.quantity >
+      limit
+    ) {
+      return {
+        burgers,
+        error:
+          "No hay suficientes porciones de ese ingrediente en inventario.",
       };
     }
   }
@@ -268,48 +134,184 @@ export function setIngredientQuantityBurger(
         return burger;
       }
 
-      const removedIds = includedOptionId
-        ? nextIncluded
-          ? burger.removedIds.filter(
-              (id) =>
-                id !== includedOptionId,
-            )
-          : burger.removedIds.includes(
-                includedOptionId,
-              )
-            ? burger.removedIds
-            : [
-                ...burger.removedIds,
-                includedOptionId,
-              ]
-        : burger.removedIds;
-
-      const extraQuantities = {
-        ...(burger.extraQuantities ?? {}),
+      const removedIds = [
+        ...burger.removedIds,
+      ];
+      const extraIds = [
+        ...burger.extraIds,
+      ];
+      const modifierQuantities = {
+        ...burger.modifierQuantities,
       };
 
-      if (extraQuantity > 0) {
-        extraQuantities[
-          extraOptionId
-        ] = extraQuantity;
-      } else {
-        delete extraQuantities[
-          extraOptionId
-        ];
+      for (const {
+        option,
+        quantity,
+      } of updates) {
+        if (
+          option.kind === "REMOVABLE"
+        ) {
+          const removedIndex =
+            removedIds.indexOf(option.id);
+
+          if (quantity === 0) {
+            if (removedIndex < 0) {
+              removedIds.push(option.id);
+            }
+            delete modifierQuantities[
+              option.id
+            ];
+          } else {
+            if (removedIndex >= 0) {
+              removedIds.splice(
+                removedIndex,
+                1,
+              );
+            }
+
+            if (quantity === 1) {
+              delete modifierQuantities[
+                option.id
+              ];
+            } else {
+              modifierQuantities[
+                option.id
+              ] = quantity;
+            }
+          }
+
+          continue;
+        }
+
+        if (option.kind === "EXTRA") {
+          const extraIndex =
+            extraIds.indexOf(option.id);
+
+          if (quantity === 0) {
+            if (extraIndex >= 0) {
+              extraIds.splice(
+                extraIndex,
+                1,
+              );
+            }
+            delete modifierQuantities[
+              option.id
+            ];
+          } else {
+            if (extraIndex < 0) {
+              extraIds.push(option.id);
+            }
+
+            if (quantity === 1) {
+              delete modifierQuantities[
+                option.id
+              ];
+            } else {
+              modifierQuantities[
+                option.id
+              ] = quantity;
+            }
+          }
+        }
       }
 
       return {
         ...burger,
         removedIds,
-        extraIds:
-          burger.extraIds.filter(
-            (id) => id !== extraOptionId,
-          ),
-        extraQuantities,
+        extraIds,
+        modifierQuantities,
       };
     }),
     error: null,
   };
+}
+
+export function toggleRemovedBurger(
+  burgers: BurgerSelection[],
+  burgerId: string,
+  optionId: string,
+  inventory: InventoryAvailability | null,
+) {
+  const burger = burgers.find(
+    (item) => item.localId === burgerId,
+  );
+
+  if (!burger) {
+    return {
+      burgers,
+      error: "No encontramos la hamburguesa.",
+    };
+  }
+
+  const option: ModifierOption = {
+    id: optionId,
+    name: "",
+    kind: "REMOVABLE",
+    priceDeltaCents: 0,
+    defaultSelected: true,
+  };
+
+  return setBurgerModifierQuantities(
+    burgers,
+    burgerId,
+    [
+      {
+        option,
+        quantity:
+          burgerModifierQuantity(
+            burger,
+            option,
+          ) === 0
+            ? 1
+            : 0,
+      },
+    ],
+    inventory,
+  );
+}
+
+export function toggleExtraBurger(
+  burgers: BurgerSelection[],
+  burgerId: string,
+  optionId: string,
+  inventory: InventoryAvailability | null,
+) {
+  const burger = burgers.find(
+    (item) => item.localId === burgerId,
+  );
+
+  if (!burger) {
+    return {
+      burgers,
+      error: "No encontramos la hamburguesa.",
+    };
+  }
+
+  const option: ModifierOption = {
+    id: optionId,
+    name: "",
+    kind: "EXTRA",
+    priceDeltaCents: 0,
+    defaultSelected: false,
+  };
+
+  return setBurgerModifierQuantities(
+    burgers,
+    burgerId,
+    [
+      {
+        option,
+        quantity:
+          burgerModifierQuantity(
+            burger,
+            option,
+          ) > 0
+            ? 0
+            : 1,
+      },
+    ],
+    inventory,
+  );
 }
 
 export function appendBurger(
@@ -330,12 +332,15 @@ export function appendBurger(
         }
 
         const currentlyIncluded =
-          burgers.filter(
-            (burger) =>
-              !burger.removedIds.includes(
-                option.id,
+          burgers.reduce(
+            (sum, burger) =>
+              sum +
+              burgerModifierQuantity(
+                burger,
+                option,
               ),
-          ).length;
+            0,
+          );
 
         return currentlyIncluded >= limit;
       })
