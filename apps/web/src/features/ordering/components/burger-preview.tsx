@@ -143,17 +143,29 @@ export function BurgerPreview({
     extraQuantity("extra-bacon");
 
   const lettuceCount =
-    removableQuantity(
-      "included-lettuce",
-    );
+    Math.min(
+      1,
+      removableQuantity(
+        "included-lettuce",
+      ),
+    ) +
+    extraQuantity("extra-lettuce");
   const tomatoCount =
-    removableQuantity(
-      "included-tomato",
-    );
+    Math.min(
+      1,
+      removableQuantity(
+        "included-tomato",
+      ),
+    ) +
+    extraQuantity("extra-tomato");
   const whiteOnionCount =
-    removableQuantity(
-      "included-white-onion",
-    );
+    Math.min(
+      1,
+      removableQuantity(
+        "included-white-onion",
+      ),
+    ) +
+    extraQuantity("extra-white-onion");
   const caramelizedOnionCount =
     removableQuantity(
       "included-caramelized-onion",
