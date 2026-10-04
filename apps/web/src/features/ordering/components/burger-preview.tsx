@@ -4,6 +4,7 @@ import {
 import type { CSSProperties } from "react";
 import { calculateBurgerStackLayout } from "./burger-preview-layout";
 import { meatVisualProfile } from "./burger-preview-meat";
+import { cheeseVisualProfile } from "./burger-preview-cheese";
 import type {
   BurgerSelection,
   ModifierOption,
@@ -382,13 +383,19 @@ export function BurgerPreview({
       x: meatProfile.x,
     }));
 
+  const cheeseProfile =
+    cheeseVisualProfile(cheeseCount);
+
   const cheeseLayers =
     countAssetLayer({
       key: "cheese",
       count: cheeseCount,
-      y: cheeseY,
+      y:
+        cheeseY +
+        cheeseProfile.yOffset,
       z: 44,
       fallbackStep: 9,
+      scale: cheeseProfile.scale,
       assets: {
         1: {
           src:
@@ -407,7 +414,10 @@ export function BurgerPreview({
           spriteId: "cheese-5",
         },
       },
-    });
+    }).map((layer) => ({
+      ...layer,
+      x: cheeseProfile.x,
+    }));
 
   let baconLayers: Layer[] = [];
 
@@ -650,7 +660,11 @@ export function BurgerPreview({
                     "meat-",
                   )
                     ? "meat"
-                    : undefined
+                    : layer.key.startsWith(
+                          "cheese-",
+                        )
+                      ? "cheese"
+                      : undefined
                 }
                 key={layer.key}
                 style={style}
@@ -678,7 +692,11 @@ export function BurgerPreview({
                   "meat-",
                 )
                   ? "meat"
-                  : undefined
+                  : layer.key.startsWith(
+                        "cheese-",
+                      )
+                    ? "cheese"
+                    : undefined
               }
               key={layer.key}
               src={layer.src}
