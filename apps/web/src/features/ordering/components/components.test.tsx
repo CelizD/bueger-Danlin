@@ -13,26 +13,41 @@ import type {
 } from "../types";
 
 const removable: ModifierOption[] = [
-  {
-    id: "lettuce",
-    key: "included-lettuce",
-    name: "Lechuga",
-    kind: "REMOVABLE",
-    priceDeltaCents: 0,
-    defaultSelected: true,
-  },
-];
+  ["lettuce", "included-lettuce", "Lechuga"],
+  ["tomato", "included-tomato", "Tomate"],
+  ["onion", "included-white-onion", "Cebolla"],
+  ["cheese", "included-cheese", "Queso"],
+  ["bacon", "included-bacon", "Tocino"],
+  ["ketchup", "included-ketchup", "Ketchup"],
+  ["mustard", "included-mustard", "Mostaza"],
+].map(([id, key, name]) => ({
+  id,
+  key,
+  name,
+  kind: "REMOVABLE" as const,
+  priceDeltaCents: 0,
+  defaultSelected: true,
+}));
 
 const extras: ModifierOption[] = [
-  {
-    id: "bacon-extra",
-    key: "extra-bacon",
-    name: "Tocino extra",
-    kind: "EXTRA",
-    priceDeltaCents: 1_500,
-    defaultSelected: false,
-  },
-];
+  ["meat-extra", "extra-meat", "Carne extra", 3_000],
+  ["cheese-extra", "extra-cheese", "Queso extra", 1_000],
+  ["bacon-extra", "extra-bacon", "Tocino extra", 1_500],
+  ["lettuce-extra", "extra-lettuce", "Lechuga extra", 0],
+  ["tomato-extra", "extra-tomato", "Tomate extra", 0],
+  ["onion-extra", "extra-white-onion", "Cebolla extra", 0],
+  ["pickles", "extra-pickles", "Pepinillos", 0],
+  ["mayonnaise", "extra-mayonnaise", "Mayonesa", 0],
+  ["chipotle", "extra-chipotle", "Chipotle", 0],
+  ["bbq-chipotle", "extra-bbq-chipotle", "BBQ con Chipotle", 0],
+].map(([id, key, name, priceDeltaCents]) => ({
+  id: String(id),
+  key: String(key),
+  name: String(name),
+  kind: "EXTRA" as const,
+  priceDeltaCents: Number(priceDeltaCents),
+  defaultSelected: false,
+}));
 
 
 const pickupEvents: PickupEvent[] = [
@@ -233,7 +248,25 @@ describe("ordering components", () => {
       'aria-label="Lechuga: 5 porciones"',
     );
     expect(html).toContain(
-      'aria-label="Cantidad de Tocino extra"',
+      'aria-label="Cantidad de Queso"',
+    );
+    expect(html).toContain(
+      'aria-label="Queso: 1 porción"',
+    );
+    expect(html).not.toContain(
+      'aria-label="Queso: sin ingrediente"',
+    );
+    expect(html).toContain(
+      'aria-label="Cantidad de Tocino"',
+    );
+    expect(html).toContain(
+      'aria-label="Cantidad de Pepinillos"',
+    );
+    expect(html).toContain(
+      'aria-label="Mayonesa: Sí o No"',
+    );
+    expect(html).toContain(
+      'aria-label="BBQ con Chipotle: Sí o No"',
     );
     expect(html).toContain(
       "Vista previa en vivo",
