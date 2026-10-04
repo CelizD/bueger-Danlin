@@ -20,6 +20,8 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [x] Nginx reverse proxy versionado.
 - [x] HTTPS obligatorio en API de producción.
 - [x] Secretos fuera de Git.
+- [x] API preparada para secretos mediante `*_FILE` y mounts read-only.
+- [x] Go-live bloquea `SECRETS_BACKEND=unconfigured`.
 - [x] Backup PostgreSQL cifrado con age.
 - [x] SHA-256 del backup.
 - [x] Restore drill aislado.
@@ -48,6 +50,10 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 ### Infraestructura
 
 - [ ] Contratar VPS.
+- [ ] Elegir y desplegar Vault, Secret Manager o flujo KMS-backed para secretos de producción.
+- [ ] Configurar `SECRETS_BACKEND` con el backend real.
+- [ ] Materializar y probar los archivos descritos en `deploy/SECRETS.md`.
+- [ ] Migrar también credenciales de infraestructura restantes (PostgreSQL bootstrap/migrate, Redis, S3 y Grafana) al backend elegido.
 - [ ] Crear usuario de deploy no-root.
 - [ ] SSH solo con claves.
 - [ ] Deshabilitar login SSH de root.
