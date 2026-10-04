@@ -62,6 +62,42 @@ function currentTotp(secret: string) {
   return String(binary % 1_000_000).padStart(6, "0");
 }
 
+async function apiStatus(
+  page: import("@playwright/test").Page,
+  input: {
+    method?: string;
+    path: string;
+    body?: unknown;
+  },
+) {
+  return page.evaluate(
+    async ({ apiUrl, method, path, body }) => {
+      const response = await fetch(apiUrl + path, {
+        method,
+        credentials: "include",
+        headers:
+          body === undefined
+            ? undefined
+            : {
+                "content-type": "application/json",
+              },
+        body:
+          body === undefined
+            ? undefined
+            : JSON.stringify(body),
+      });
+
+      return response.status;
+    },
+    {
+      apiUrl: API_URL,
+      method: input.method ?? "GET",
+      path: input.path,
+      body: input.body,
+    },
+  );
+}
+
 async function loginAdminWithMfa(
   page: import("@playwright/test").Page,
 ) {
@@ -141,6 +177,25 @@ test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
   };
 
   await loginAdminWithMfa(page);
+
+  expect(
+    await apiStatus(page, {
+      path: "/staff/kitchen/orders",
+    }),
+  ).toBe(403);
+
+  expect(
+    await apiStatus(page, {
+      path: "/staff/delivery/orders",
+    }),
+  ).toBe(403);
+
+  await expect(
+    page.getByRole("link", { name: "Cocina" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "Entrega" }),
+  ).toHaveCount(0);
 
   await expect(
     page.getByRole("heading", {
@@ -349,20 +404,12 @@ test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
   ).toContainText("Resuelta");
 
   await page.goto("/admin/cocina");
-  await expect(
-    page.getByRole("heading", {
-      name: "Cocina",
-      level: 1,
-    }),
-  ).toBeVisible();
-  await assertNoBlockingA11y(page, "Cocina");
+  await expect(page).toHaveURL(
+    (url) => url.pathname === "/admin/dashboard",
+  );
 
   await page.goto("/admin/entrega");
-  await expect(
-    page.getByRole("heading", {
-      name: "Entrega",
-      level: 1,
-    }),
-  ).toBeVisible();
-  await assertNoBlockingA11y(page, "Entrega");
+  await expect(page).toHaveURL(
+    (url) => url.pathname === "/admin/dashboard",
+  );
 });
