@@ -60,6 +60,12 @@ type Props = {
     burgerId: string,
     optionId: string,
   ) => void;
+  onSetIngredientQuantity: (
+    burgerId: string,
+    includedOptionId: string | null,
+    extraOptionId: string,
+    quantity: number,
+  ) => void;
   onCokesChange: (
     quantity: number,
   ) => void;
@@ -116,6 +122,7 @@ export function OrderingForm({
   onRemoveBurger,
   onToggleRemoved,
   onToggleExtra,
+  onSetIngredientQuantity,
   onCokesChange,
   onNameChange,
   onPhoneChange,
@@ -273,6 +280,9 @@ export function OrderingForm({
             }
             onToggleExtra={
               onToggleExtra
+            }
+            onSetIngredientQuantity={
+              onSetIngredientQuantity
             }
           />
 
