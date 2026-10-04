@@ -75,4 +75,49 @@ describe("KitchenOrderCard", () => {
     expect(secondBurger).not.toContain("Sin Lechuga");
     expect(secondBurger).not.toContain("+ Carne extra");
   });
+
+  it("muestra cantidades totales sin etiquetas de extra", () => {
+    const quantifiedOrder: KitchenOrder = {
+      ...order,
+      items: [
+        {
+          ...order.items[0]!,
+          preparationSnapshot: {
+            included: [],
+            removed: [],
+            extras: [],
+            quantities: [
+              "Carne ×3",
+              "Queso ×4",
+              "Tocino ×2",
+              "Lechuga ×1",
+              "Tomate ×0",
+            ],
+            sauces: [
+              "Ketchup: Sí",
+              "Mostaza: No",
+            ],
+            others: [],
+          },
+        },
+      ],
+    };
+
+    const html = renderToStaticMarkup(
+      <KitchenOrderCard
+        order={quantifiedOrder}
+        busy={false}
+        onTransition={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain("Cantidades");
+    expect(html).toContain("Carne ×3");
+    expect(html).toContain("Queso ×4");
+    expect(html).toContain("Tomate ×0");
+    expect(html).toContain("Aderezos");
+    expect(html).toContain("Ketchup: Sí");
+    expect(html).not.toContain("Carne extra");
+    expect(html).not.toContain("+ Queso extra");
+  });
 });
