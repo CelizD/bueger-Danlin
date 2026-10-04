@@ -3,6 +3,10 @@ packages:
   - "packages/*"
 
 minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  - "next@16.3.8"
+  - "deepmerge-ts@8.0.2"
+  - "mysql2@3.24.4"
 trustPolicy: no-downgrade
 blockExoticSubdeps: true
 
