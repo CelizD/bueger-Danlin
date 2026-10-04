@@ -1,5 +1,6 @@
 import { money } from "@/features/ordering/formatters";
 import { apiUrl } from "@/lib/api/browser";
+import { BurgerPreview } from "./burger-preview";
 import type {
   BurgerSelection,
   InventoryAvailability,
@@ -55,17 +56,19 @@ export function BurgerBuilder({
       <div className="burger-list">
         {burgers.map((burger, burgerIndex) => (
           <article className="burger-card" key={burger.localId}>
-            {comboImagePath && (
-              <img
-                className="catalog-product-image catalog-product-image-combo"
-                src={apiUrl(comboImagePath)}
-                alt={comboName}
-              />
-            )}
             <div className="burger-card-title">
-              <div>
-                <span>Combo {burgerIndex + 1}</span>
-                <strong>{money.format(comboPriceCents / 100)}</strong>
+              <div className="burger-card-title-main">
+                {comboImagePath && (
+                  <img
+                    className="burger-card-product-thumb"
+                    src={apiUrl(comboImagePath)}
+                    alt={comboName}
+                  />
+                )}
+                <div className="burger-card-title-copy">
+                  <span>Combo {burgerIndex + 1}</span>
+                  <strong>{money.format(comboPriceCents / 100)}</strong>
+                </div>
               </div>
               {burgers.length > 1 && (
                 <button
@@ -78,6 +81,13 @@ export function BurgerBuilder({
                 </button>
               )}
             </div>
+
+            <BurgerPreview
+              burger={burger}
+              removableOptions={removableOptions}
+              extraOptions={extraOptions}
+              label={`${comboName}, combo ${burgerIndex + 1}`}
+            />
 
             <div className="option-block">
               <p className="option-title">Ingredientes incluidos</p>
