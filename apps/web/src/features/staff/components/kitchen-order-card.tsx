@@ -81,6 +81,31 @@ function KitchenComboPreparation({
     return <small>Completa</small>;
   }
 
+  if (preparation.quantities) {
+    return (
+      <div className="kitchen-preparation">
+        <PreparationGroup
+          title="Cantidades"
+          values={preparation.quantities}
+          variant="included"
+          prefix=""
+        />
+        <PreparationGroup
+          title="Aderezos"
+          values={preparation.sauces ?? []}
+          variant="included"
+          prefix=""
+        />
+        <PreparationGroup
+          title="Otros"
+          values={preparation.others ?? []}
+          variant="extra"
+          prefix=""
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="kitchen-preparation">
       <PreparationGroup
