@@ -142,7 +142,7 @@ async function loginAdminWithMfa(
   );
 }
 
-test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
+test("admin real cubre MFA, inventario, agenda, personal y ARCO", async ({
   page,
   request,
 }) => {
@@ -272,9 +272,9 @@ test("admin real cubre MFA, inventario, sábados, personal y ARCO", async ({
 
   await page.goto("/admin/sabados");
   await expect(
-    page.getByRole("heading", { name: "Sábados" }),
+    page.getByRole("heading", { name: "Agenda" }),
   ).toBeVisible();
-  await assertNoBlockingA11y(page, "Sábados");
+  await assertNoBlockingA11y(page, "Agenda");
 
   await page
     .getByRole("button", { name: "Nueva fecha" })
