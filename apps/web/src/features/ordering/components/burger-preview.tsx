@@ -7,6 +7,7 @@ import { meatVisualProfile } from "./burger-preview-meat";
 import { cheeseVisualProfile } from "./burger-preview-cheese";
 import { baconVisualProfile } from "./burger-preview-bacon";
 import { lettuceVisualProfile } from "./burger-preview-lettuce";
+import { tomatoVisualProfile } from "./burger-preview-tomato";
 import type {
   BurgerSelection,
   ModifierOption,
@@ -506,6 +507,28 @@ export function BurgerPreview({
       x: lettuceProfile.x,
     }));
 
+  const tomatoProfile =
+    tomatoVisualProfile(tomatoCount);
+
+  const tomatoLayers = Array.from(
+    { length: tomatoCount },
+    (_, index): Layer => ({
+      key: `tomato-${index + 1}`,
+      src:
+        `${ASSET_ROOT}/tomate.svg`,
+      active: true,
+      y:
+        tomatoY +
+        tomatoProfile.yOffset -
+        index * tomatoProfile.step,
+      z: 72 + index,
+      scale:
+        tomatoProfile.scale -
+        index * 0.008,
+      x: tomatoProfile.x,
+    }),
+  );
+
   const layers: Layer[] = [
     {
       key: "bottom-bun",
@@ -592,18 +615,7 @@ export function BurgerPreview({
       z: 68,
       scale: 0.82,
     }),
-    ...repeatedLayers({
-      key: "tomato",
-      asset: {
-        src:
-          `${ASSET_ROOT}/tomate.svg`,
-      },
-      count: tomatoCount,
-      y: tomatoY,
-      step: 9,
-      z: 72,
-      scale: 0.94,
-    }),
+    ...tomatoLayers,
     ...lettuceLayers,
     {
       key: "top-bun",
@@ -682,7 +694,11 @@ export function BurgerPreview({
                               "lettuce-",
                             )
                           ? "lettuce"
-                          : undefined
+                          : layer.key.startsWith(
+                                "tomato-",
+                              )
+                            ? "tomato"
+                            : undefined
                 }
                 key={layer.key}
                 style={style}
@@ -722,7 +738,11 @@ export function BurgerPreview({
                             "lettuce-",
                           )
                         ? "lettuce"
-                        : undefined
+                        : layer.key.startsWith(
+                              "tomato-",
+                            )
+                          ? "tomato"
+                          : undefined
               }
               key={layer.key}
               src={layer.src}
