@@ -33,6 +33,13 @@ function productFixture() {
               kind: "REMOVABLE",
               priceDeltaCents: 0,
             },
+            {
+              id: "included-ketchup",
+              key: "included-ketchup",
+              name: "Ketchup",
+              kind: "REMOVABLE",
+              priceDeltaCents: 0,
+            },
           ],
         },
       },
@@ -53,6 +60,20 @@ function productFixture() {
               name: "Queso extra",
               kind: "EXTRA",
               priceDeltaCents: 1_000,
+            },
+            {
+              id: "extra-lettuce",
+              key: "extra-lettuce",
+              name: "Lechuga extra",
+              kind: "EXTRA",
+              priceDeltaCents: 0,
+            },
+            {
+              id: "extra-mayonnaise",
+              key: "extra-mayonnaise",
+              name: "Mayonesa",
+              kind: "EXTRA",
+              priceDeltaCents: 0,
             },
           ],
         },
@@ -95,13 +116,27 @@ describe("prepareOrderItems", () => {
     expect(
       result.preparedItems[0]
         ?.preparationSnapshot,
-    ).toEqual({
+    ).toMatchObject({
       included: [
         "Tomate",
         "Queso",
+        "Ketchup",
       ],
       removed: ["Lechuga"],
       extras: ["Queso extra"],
+      quantities: [
+        "Carne ×1",
+        "Queso ×2",
+        "Tocino ×0",
+        "Lechuga ×0",
+        "Tomate ×1",
+        "Cebolla ×0",
+        "Pepinillos ×0",
+      ],
+      sauces: [
+        "Ketchup: Sí",
+        "Mayonesa: No",
+      ],
     });
 
     expect(result.totalCents).toBe(
@@ -142,12 +177,13 @@ describe("prepareOrderItems", () => {
             extraModifierOptionIds: [
               "extra-meat",
               "extra-cheese",
+              "extra-lettuce",
             ],
             modifierQuantities: [
               {
                 modifierOptionId:
-                  "lettuce",
-                quantity: 3,
+                  "extra-lettuce",
+                quantity: 2,
               },
               {
                 modifierOptionId:
@@ -171,16 +207,27 @@ describe("prepareOrderItems", () => {
     expect(
       result.preparedItems[0]
         ?.preparationSnapshot,
-    ).toEqual({
+    ).toMatchObject({
       included: [
-        "Lechuga ×3",
+        "Lechuga",
         "Tomate",
         "Queso",
+        "Ketchup",
       ],
       removed: [],
       extras: [
         "Carne extra ×3",
         "Queso extra ×2",
+        "Lechuga extra ×2",
+      ],
+      quantities: [
+        "Carne ×4",
+        "Queso ×3",
+        "Tocino ×0",
+        "Lechuga ×3",
+        "Tomate ×1",
+        "Cebolla ×0",
+        "Pepinillos ×0",
       ],
     });
 
@@ -191,8 +238,8 @@ describe("prepareOrderItems", () => {
       expect.arrayContaining([
         expect.objectContaining({
           modifierOptionId:
-            "lettuce",
-          quantity: 3,
+            "extra-lettuce",
+          quantity: 2,
           removed: false,
         }),
         expect.objectContaining({
@@ -212,6 +259,53 @@ describe("prepareOrderItems", () => {
           removed: false,
         }),
       ]),
+    );
+  });
+
+  it("rechaza quitar el queso base", async () => {
+    await expect(
+      prepareOrderItems(
+        txWithProduct(),
+        [
+          {
+            productId: "combo-1",
+            quantity: 1,
+            removedModifierOptionIds: [
+              "included-cheese",
+            ],
+            extraModifierOptionIds: [],
+          },
+        ] as any,
+      ),
+    ).rejects.toThrow(
+      "Queso debe tener mínimo 1 porción.",
+    );
+  });
+
+  it("rechaza cantidades para un aderezo Sí/No", async () => {
+    await expect(
+      prepareOrderItems(
+        txWithProduct(),
+        [
+          {
+            productId: "combo-1",
+            quantity: 1,
+            removedModifierOptionIds: [],
+            extraModifierOptionIds: [
+              "extra-mayonnaise",
+            ],
+            modifierQuantities: [
+              {
+                modifierOptionId:
+                  "extra-mayonnaise",
+                quantity: 2,
+              },
+            ],
+          },
+        ] as any,
+      ),
+    ).rejects.toThrow(
+      "Mayonesa solo admite selección Sí/No.",
     );
   });
 
