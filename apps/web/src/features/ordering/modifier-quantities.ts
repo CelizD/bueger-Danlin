@@ -22,7 +22,7 @@ export function burgerModifierQuantity(
     }
 
     return (
-      burger.modifierQuantities[
+      burger.modifierQuantities?.[
         option.id
       ] ?? 1
     );
@@ -30,7 +30,7 @@ export function burgerModifierQuantity(
 
   if (option.kind === "EXTRA") {
     return (
-      burger.modifierQuantities[
+      burger.modifierQuantities?.[
         option.id
       ] ??
       (burger.extraIds.includes(
