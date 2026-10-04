@@ -151,7 +151,7 @@ Incluye:
 
 - dashboard;
 - pedidos;
-- sábados/puntos de entrega;
+- agenda/puntos de entrega;
 - configuración de entrega grupal;
 - inventario;
 - personal y asignación de roles;
