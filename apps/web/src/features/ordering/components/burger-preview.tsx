@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 import { calculateBurgerStackLayout } from "./burger-preview-layout";
 import { meatVisualProfile } from "./burger-preview-meat";
 import { cheeseVisualProfile } from "./burger-preview-cheese";
+import { baconVisualProfile } from "./burger-preview-bacon";
 import type {
   BurgerSelection,
   ModifierOption,
@@ -419,53 +420,53 @@ export function BurgerPreview({
       x: cheeseProfile.x,
     }));
 
+  const baconProfile =
+    baconVisualProfile(baconCount);
+
   let baconLayers: Layer[] = [];
 
-  if (baconCount === 1) {
+  if (
+    baconCount > 0 &&
+    baconProfile.exactSpriteId
+  ) {
     baconLayers = [
       {
-        key: "bacon-1",
+        key: `bacon-${baconCount}`,
+        spriteId:
+          baconProfile.exactSpriteId,
+        active: true,
+        y:
+          baconY +
+          baconProfile.yOffset,
+        z: 52,
+        scale: baconProfile.scale,
+        x: baconProfile.x,
+      },
+    ];
+  } else if (
+    baconProfile.repeatSingleCount >
+    0
+  ) {
+    baconLayers = Array.from(
+      {
+        length:
+          baconProfile.repeatSingleCount,
+      },
+      (_, index): Layer => ({
+        key: `bacon-${index + 1}`,
         spriteId: "bacon-1",
         active: true,
-        y: baconY,
-        z: 52,
-        scale: 0.92,
-      },
-    ];
-  } else if (baconCount === 2) {
-    baconLayers = [
-      {
-        key: "bacon-2",
-        spriteId: "bacon-2",
-        active: true,
-        y: baconY,
-        z: 52,
-        scale: 0.92,
-      },
-    ];
-  } else if (baconCount === 4) {
-    baconLayers = [
-      {
-        key: "bacon-4",
-        spriteId: "bacon-4",
-        active: true,
-        y: baconY,
-        z: 52,
-        scale: 0.92,
-      },
-    ];
-  } else if (baconCount > 0) {
-    baconLayers = repeatedLayers({
-      key: "bacon",
-      asset: {
-        spriteId: "bacon-1",
-      },
-      count: baconCount,
-      y: baconY,
-      step: 10,
-      z: 52,
-      scale: 0.92,
-    });
+        y:
+          baconY +
+          baconProfile.yOffset -
+          index * baconProfile.step,
+        z: 52 + index,
+        scale:
+          baconProfile.scale -
+          index * 0.01,
+        x: baconProfile.x,
+      }),
+    );
   }
 
   const lettuceLayers =
@@ -664,7 +665,11 @@ export function BurgerPreview({
                           "cheese-",
                         )
                       ? "cheese"
-                      : undefined
+                      : layer.key.startsWith(
+                            "bacon-",
+                          )
+                        ? "bacon"
+                        : undefined
                 }
                 key={layer.key}
                 style={style}
@@ -696,7 +701,11 @@ export function BurgerPreview({
                         "cheese-",
                       )
                     ? "cheese"
-                    : undefined
+                    : layer.key.startsWith(
+                          "bacon-",
+                        )
+                      ? "bacon"
+                      : undefined
               }
               key={layer.key}
               src={layer.src}

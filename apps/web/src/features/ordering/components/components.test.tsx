@@ -371,6 +371,46 @@ describe("ordering components", () => {
     );
   });
 
+  it("apila cinco porciones de tocino con el SVG sencillo sin desplazamiento lateral", () => {
+    const html = renderToStaticMarkup(
+      <BurgerBuilder
+        comboName="Hamburguesa + papas"
+        burgers={[
+          {
+            localId: "burger-bacon-five",
+            removedIds: [],
+            extraIds: ["bacon-extra"],
+            modifierQuantities: {
+              "bacon-extra": 4,
+            },
+          },
+        ]}
+        comboPriceCents={13_000}
+        removableOptions={removable}
+        extraOptions={extras}
+        inventory={null}
+        maxCombosAvailable={5}
+        onAddBurger={vi.fn()}
+        onRemoveBurger={vi.fn()}
+        onSetModifierQuantities={vi.fn()}
+      />,
+    );
+
+    expect(
+      html.match(
+        /ingredients-sprite\.svg#bacon-1/g,
+      ),
+    ).toHaveLength(5);
+    expect(
+      html.match(
+        /data-preview-ingredient="bacon"/g,
+      ),
+    ).toHaveLength(5);
+    expect(html).not.toContain(
+      "ingredients-sprite.svg#bacon-4",
+    );
+  });
+
   it("compacta el preview sin reservar espacio para ingredientes en cero", () => {
     const compactHtml = renderToStaticMarkup(
       <BurgerBuilder
