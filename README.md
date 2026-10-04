@@ -452,6 +452,7 @@ El RTO todavía debe medirse mediante un simulacro de pérdida total del VPS.
 Documentación:
 
 - `deploy/PRODUCTION.md`
+- `docs/DATABASE_MIGRATIONS.md`
 - `deploy/DR.md`
 - `deploy/OFFSITE_BACKUP.md`
 - `deploy/GO_LIVE_CHECKLIST.md`
