@@ -1,3 +1,6 @@
+import {
+  burgerModifierQuantity,
+} from "@/features/ordering/builder";
 import type { CSSProperties } from "react";
 import type {
   BurgerSelection,
@@ -85,96 +88,136 @@ export function BurgerPreview({
   extraOptions,
   label,
 }: BurgerPreviewProps) {
-  const included = (key: string) => {
+  const quantity = (
+    options: ModifierOption[],
+    key: string,
+  ) => {
     const option = optionByKey(
-      removableOptions,
+      options,
       key,
     );
 
-    return Boolean(
-      option &&
-        !burger.removedIds.includes(
-          option.id,
-        ),
-    );
+    return option
+      ? burgerModifierQuantity(
+          burger,
+          option,
+        )
+      : 0;
   };
 
   const extraQuantity = (
     key: string,
-  ) => {
-    const option = optionByKey(
+  ) =>
+    quantity(
       extraOptions,
       key,
     );
 
-    if (!option) return 0;
-
-    return Math.max(
-      burger.extraQuantities?.[
-        option.id
-      ] ?? 0,
-      burger.extraIds.includes(
-        option.id,
-      )
-        ? 1
-        : 0,
-    );
-  };
-
-  const ingredientCount = (
-    includedKey: string,
-    extraKey: string,
+  const removableQuantity = (
+    key: string,
   ) =>
-    Number(included(includedKey)) +
-    extraQuantity(extraKey);
+    quantity(
+      removableOptions,
+      key,
+    );
 
   const meatCount =
     1 + extraQuantity("extra-meat");
+
   const cheeseCount =
-    ingredientCount(
-      "included-cheese",
-      "extra-cheese",
-    );
+    Math.min(
+      1,
+      removableQuantity(
+        "included-cheese",
+      ),
+    ) +
+    extraQuantity("extra-cheese");
+
   const baconCount =
-    ingredientCount(
-      "included-bacon",
-      "extra-bacon",
-    );
+    Math.min(
+      1,
+      removableQuantity(
+        "included-bacon",
+      ),
+    ) +
+    extraQuantity("extra-bacon");
+
   const lettuceCount =
-    ingredientCount(
+    removableQuantity(
       "included-lettuce",
-      "extra-lettuce",
     );
   const tomatoCount =
-    ingredientCount(
+    removableQuantity(
       "included-tomato",
-      "extra-tomato",
     );
   const whiteOnionCount =
-    ingredientCount(
+    removableQuantity(
       "included-white-onion",
-      "extra-white-onion",
     );
   const caramelizedOnionCount =
-    ingredientCount(
+    removableQuantity(
       "included-caramelized-onion",
-      "extra-caramelized-onion",
     );
   const ketchupCount =
-    ingredientCount(
+    removableQuantity(
       "included-ketchup",
-      "extra-ketchup",
     );
   const mustardCount =
-    ingredientCount(
+    removableQuantity(
       "included-mustard",
-      "extra-mustard",
     );
 
-  const sharedSauceCount = Math.min(
-    ketchupCount,
-    mustardCount,
-  );
+  const sharedSauceCount =
+    Math.min(
+      ketchupCount,
+      mustardCount,
+    );
+
+  const meatLayers =
+    meatCount === 2
+      ? [
+          {
+            key: "double-meat",
+            src: `${ASSET_ROOT}/doblecarne.svg`,
+            active: true,
+            y: 80,
+            z: 32,
+          },
+        ]
+      : repeatedLayers({
+          key: "meat",
+          src: `${ASSET_ROOT}/carne.svg`,
+          count: meatCount,
+          y: 82,
+          step: 23,
+          z: 32,
+        });
+
+  const cheeseLayers =
+    cheeseCount === 2
+      ? [
+          {
+            key: "double-cheese",
+            src: `${ASSET_ROOT}/doblequeso.svg`,
+            active: true,
+            y:
+              44 -
+              (meatCount - 1) *
+                10,
+            z: 44,
+          },
+        ]
+      : repeatedLayers({
+          key: "cheese",
+          src: `${ASSET_ROOT}/queso.svg`,
+          count: cheeseCount,
+          y:
+            44 -
+            (meatCount - 1) *
+              10,
+          step: 9,
+          z: 42,
+        });
 
   const layers: Layer[] = [
     {
@@ -221,29 +264,16 @@ export function BurgerPreview({
       scale: 0.68,
       x: 4,
     }),
-    ...repeatedLayers({
-      key: "meat",
-      src: `${ASSET_ROOT}/carne.svg`,
-      count: meatCount,
-      y: 82,
-      step: 23,
-      z: 32,
-    }),
-    ...repeatedLayers({
-      key: "cheese",
-      src: `${ASSET_ROOT}/queso.svg`,
-      count: cheeseCount,
-      y: 44 - (meatCount - 1) * 10,
-      step: 9,
-      z: 42,
-    }),
+    ...meatLayers,
+    ...cheeseLayers,
     ...repeatedLayers({
       key: "bacon",
       src: `${ASSET_ROOT}/dobletocino.svg`,
       count: baconCount,
       y:
         2 -
-        (meatCount - 1) * 10 -
+        (meatCount - 1) *
+          10 -
         Math.max(
           0,
           cheeseCount - 1,
@@ -303,7 +333,9 @@ export function BurgerPreview({
     <div className="burger-preview-wrap">
       <div className="burger-preview-head">
         <div>
-          <span>Vista previa en vivo</span>
+          <span>
+            Vista previa en vivo
+          </span>
           <strong>
             Se arma mientras eliges
           </strong>
@@ -323,11 +355,14 @@ export function BurgerPreview({
 
         {layers.map((layer) => {
           const style: LayerStyle = {
-            "--burger-y": `${layer.y}px`,
-            "--burger-scale": String(
-              layer.scale ?? 1,
-            ),
-            "--burger-x": `${layer.x ?? 0}px`,
+            "--burger-y":
+              `${layer.y}px`,
+            "--burger-scale":
+              String(
+                layer.scale ?? 1,
+              ),
+            "--burger-x":
+              `${layer.x ?? 0}px`,
             zIndex: layer.z,
           };
 
