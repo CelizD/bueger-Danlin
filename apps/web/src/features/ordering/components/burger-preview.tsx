@@ -3,6 +3,7 @@ import {
 } from "@/features/ordering/modifier-quantities";
 import type { CSSProperties } from "react";
 import { calculateBurgerStackLayout } from "./burger-preview-layout";
+import { meatVisualProfile } from "./burger-preview-meat";
 import type {
   BurgerSelection,
   ModifierOption,
@@ -344,13 +345,19 @@ export function BurgerPreview({
     lettuce: lettuceCount,
   });
 
+  const meatProfile =
+    meatVisualProfile(meatCount);
+
   const meatLayers =
     countAssetLayer({
       key: "meat",
       count: meatCount,
-      y: meatY,
+      y:
+        meatY +
+        meatProfile.yOffset,
       z: 32,
       fallbackStep: 23,
+      scale: meatProfile.scale,
       assets: {
         1: {
           src:
@@ -370,7 +377,10 @@ export function BurgerPreview({
           spriteId: "meat-5",
         },
       },
-    });
+    }).map((layer) => ({
+      ...layer,
+      x: meatProfile.x,
+    }));
 
   const cheeseLayers =
     countAssetLayer({
@@ -635,6 +645,13 @@ export function BurgerPreview({
                 data-preview-layer={
                   layer.key
                 }
+                data-preview-ingredient={
+                  layer.key.startsWith(
+                    "meat-",
+                  )
+                    ? "meat"
+                    : undefined
+                }
                 key={layer.key}
                 style={style}
                 viewBox="0 0 512 512"
@@ -655,6 +672,13 @@ export function BurgerPreview({
               className={className}
               data-preview-layer={
                 layer.key
+              }
+              data-preview-ingredient={
+                layer.key.startsWith(
+                  "meat-",
+                )
+                  ? "meat"
+                  : undefined
               }
               key={layer.key}
               src={layer.src}
