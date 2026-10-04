@@ -308,20 +308,126 @@ export function BurgerPreview({
       "extra-bbq-chipotle",
     ) > 0;
 
-  const upperLift = Math.min(
-    88,
-    Math.max(0, meatCount - 1) * 11 +
-      Math.max(0, cheeseCount - 1) * 7 +
-      Math.max(0, baconCount - 1) * 5 +
-      Math.max(0, lettuceCount - 1) * 3 +
-      Math.max(0, tomatoCount - 1) * 2,
+  const baseSauce = sauceAsset(
+    ketchupSelected,
+    mustardSelected,
+    mayonnaiseSelected,
   );
+
+  const hasSauce =
+    Boolean(baseSauce) ||
+    chipotleSelected ||
+    bbqChipotleSelected;
+
+  const sauceY = 116;
+  const meatY =
+    hasSauce ? 82 : 92;
+
+  let stackY =
+    meatY -
+    (39 +
+      Math.max(
+        0,
+        meatCount - 1,
+      ) *
+        11);
+
+  const cheeseY = stackY;
+
+  if (cheeseCount > 0) {
+    stackY -=
+      41 +
+      Math.max(
+        0,
+        cheeseCount - 1,
+      ) *
+        5;
+  }
+
+  const baconY = stackY;
+
+  if (baconCount > 0) {
+    stackY -=
+      22 +
+      Math.max(
+        0,
+        baconCount - 1,
+      ) *
+        7;
+  }
+
+  const caramelizedOnionY =
+    stackY;
+
+  if (
+    caramelizedOnionCount > 0
+  ) {
+    stackY -=
+      16 +
+      Math.max(
+        0,
+        caramelizedOnionCount -
+          1,
+      ) *
+        8;
+  }
+
+  const whiteOnionY = stackY;
+
+  if (whiteOnionCount > 0) {
+    stackY -=
+      14 +
+      Math.max(
+        0,
+        whiteOnionCount - 1,
+      ) *
+        9;
+  }
+
+  const picklesY = stackY;
+
+  if (picklesCount > 0) {
+    stackY -=
+      11 +
+      Math.max(
+        0,
+        picklesCount - 1,
+      ) *
+        7;
+  }
+
+  const tomatoY = stackY;
+
+  if (tomatoCount > 0) {
+    stackY -=
+      18 +
+      Math.max(
+        0,
+        tomatoCount - 1,
+      ) *
+        9;
+  }
+
+  const lettuceY = stackY;
+
+  if (lettuceCount > 0) {
+    stackY -=
+      21 +
+      Math.max(
+        0,
+        lettuceCount - 1,
+      ) *
+        7;
+  }
+
+  const topBunY =
+    stackY - 30;
 
   const meatLayers =
     countAssetLayer({
       key: "meat",
       count: meatCount,
-      y: 82,
+      y: meatY,
       z: 32,
       fallbackStep: 23,
       assets: {
@@ -349,13 +455,7 @@ export function BurgerPreview({
     countAssetLayer({
       key: "cheese",
       count: cheeseCount,
-      y:
-        43 -
-        Math.max(
-          0,
-          meatCount - 1,
-        ) *
-          11,
+      y: cheeseY,
       z: 44,
       fallbackStep: 9,
       assets: {
@@ -377,13 +477,6 @@ export function BurgerPreview({
         },
       },
     });
-
-  const baconY =
-    2 -
-    Math.max(0, meatCount - 1) *
-      10 -
-    Math.max(0, cheeseCount - 1) *
-      5;
 
   let baconLayers: Layer[] = [];
 
@@ -438,11 +531,7 @@ export function BurgerPreview({
     countAssetLayer({
       key: "lettuce",
       count: lettuceCount,
-      y:
-        -118 -
-        Math.round(
-          upperLift * 0.2,
-        ),
+      y: lettuceY,
       z: 79,
       fallbackStep: 10,
       scale: 1.02,
@@ -466,12 +555,6 @@ export function BurgerPreview({
       },
     });
 
-  const baseSauce = sauceAsset(
-    ketchupSelected,
-    mustardSelected,
-    mayonnaiseSelected,
-  );
-
   const layers: Layer[] = [
     {
       key: "bottom-bun",
@@ -487,7 +570,7 @@ export function BurgerPreview({
             key: "base-sauces",
             ...baseSauce,
             active: true,
-            y: 116,
+            y: sauceY,
             z: 20,
             scale: 0.72,
           } satisfies Layer,
@@ -499,7 +582,7 @@ export function BurgerPreview({
             key: "chipotle",
             spriteId: "chipotle",
             active: true,
-            y: 108,
+            y: sauceY - 6,
             z: 22,
             scale: 0.69,
             x: -4,
@@ -512,7 +595,7 @@ export function BurgerPreview({
             key: "bbq-chipotle",
             spriteId: "bbq-chipotle",
             active: true,
-            y: 101,
+            y: sauceY - 12,
             z: 24,
             scale: 0.68,
             x: 5,
@@ -523,22 +606,6 @@ export function BurgerPreview({
     ...cheeseLayers,
     ...baconLayers,
     ...repeatedLayers({
-      key: "white-onion",
-      asset: {
-        src:
-          `${ASSET_ROOT}/cebolla.svg`,
-      },
-      count: whiteOnionCount,
-      y:
-        -49 -
-        Math.round(
-          upperLift * 0.12,
-        ),
-      step: 9,
-      z: 62,
-      scale: 0.9,
-    }),
-    ...repeatedLayers({
       key: "caramelized-onion",
       asset: {
         src:
@@ -546,14 +613,22 @@ export function BurgerPreview({
       },
       count:
         caramelizedOnionCount,
-      y:
-        -70 -
-        Math.round(
-          upperLift * 0.14,
-        ),
+      y: caramelizedOnionY,
       step: 8,
-      z: 67,
+      z: 60,
       scale: 0.86,
+    }),
+    ...repeatedLayers({
+      key: "white-onion",
+      asset: {
+        src:
+          `${ASSET_ROOT}/cebolla.svg`,
+      },
+      count: whiteOnionCount,
+      y: whiteOnionY,
+      step: 9,
+      z: 64,
+      scale: 0.9,
     }),
     ...repeatedLayers({
       key: "pickles",
@@ -561,13 +636,9 @@ export function BurgerPreview({
         spriteId: "pickles",
       },
       count: picklesCount,
-      y:
-        -82 -
-        Math.round(
-          upperLift * 0.15,
-        ),
-      step: 8,
-      z: 70,
+      y: picklesY,
+      step: 7,
+      z: 68,
       scale: 0.82,
     }),
     ...repeatedLayers({
@@ -577,13 +648,9 @@ export function BurgerPreview({
           `${ASSET_ROOT}/tomate.svg`,
       },
       count: tomatoCount,
-      y:
-        -96 -
-        Math.round(
-          upperLift * 0.18,
-        ),
+      y: tomatoY,
       step: 9,
-      z: 74,
+      z: 72,
       scale: 0.94,
     }),
     ...lettuceLayers,
@@ -592,11 +659,7 @@ export function BurgerPreview({
       src:
         `${ASSET_ROOT}/panarriba.svg`,
       active: true,
-      y:
-        -158 -
-        Math.round(
-          upperLift * 0.5,
-        ),
+      y: topBunY,
       z: 92,
     },
   ];
