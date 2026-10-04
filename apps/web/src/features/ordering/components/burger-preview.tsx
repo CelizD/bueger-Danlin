@@ -178,6 +178,14 @@ export function BurgerPreview({
     removableQuantity(
       "included-mustard",
     );
+  const mayonnaiseCount =
+    extraQuantity("extra-mayonnaise");
+  const chipotleCount =
+    extraQuantity("extra-chipotle");
+  const bbqChipotleCount =
+    extraQuantity("extra-bbq-chipotle");
+  const picklesCount =
+    extraQuantity("extra-pickles");
 
   const sharedSauceCount =
     Math.min(
@@ -276,6 +284,35 @@ export function BurgerPreview({
       scale: 0.68,
       x: 4,
     }),
+    ...repeatedLayers({
+      key: "mayonnaise",
+      src: `${ASSET_ROOT}/mayonesa.svg`,
+      count: mayonnaiseCount,
+      y: 103,
+      step: 5,
+      z: 28,
+      scale: 0.68,
+      x: -2,
+    }),
+    ...repeatedLayers({
+      key: "chipotle",
+      src: `${ASSET_ROOT}/chipotle.svg`,
+      count: chipotleCount,
+      y: 98,
+      step: 5,
+      z: 29,
+      scale: 0.68,
+      x: 2,
+    }),
+    ...repeatedLayers({
+      key: "bbq-chipotle",
+      src: `${ASSET_ROOT}/bbqchipotle.svg`,
+      count: bbqChipotleCount,
+      y: 93,
+      step: 5,
+      z: 30,
+      scale: 0.68,
+    }),
     ...meatLayers,
     ...cheeseLayers,
     ...repeatedLayers({
@@ -315,12 +352,21 @@ export function BurgerPreview({
       scale: 0.86,
     }),
     ...repeatedLayers({
+      key: "pickles",
+      src: `${ASSET_ROOT}/pepinillos.svg`,
+      count: picklesCount,
+      y: -82,
+      step: 8,
+      z: 70,
+      scale: 0.84,
+    }),
+    ...repeatedLayers({
       key: "tomato",
       src: `${ASSET_ROOT}/tomate.svg`,
       count: tomatoCount,
-      y: -91,
+      y: -96,
       step: 9,
-      z: 72,
+      z: 73,
       scale: 0.94,
     }),
     ...repeatedLayers({

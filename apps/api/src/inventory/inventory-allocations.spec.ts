@@ -31,10 +31,10 @@ describe("reserveInventoryForOrder", () => {
       {
         inventoryItemId: "cheese",
         productId: "combo",
-        modifierOptionId: "included-cheese",
+        modifierOptionId: null,
         quantity: 1,
         inventoryItem: { id: "cheese", name: "Queso", active: true },
-        modifierOption: { kind: "REMOVABLE" },
+        modifierOption: null,
       },
       {
         inventoryItemId: "bacon",
@@ -117,7 +117,7 @@ describe("reserveInventoryForOrder", () => {
         quantity: 1,
         modifiers: [
           {
-            modifierOptionId: "included-cheese",
+            modifierOptionId: "included-bacon",
             quantity: 1,
             removed: true,
           },
@@ -147,17 +147,17 @@ describe("reserveInventoryForOrder", () => {
     ]);
 
     expect(Object.fromEntries(decrements)).toEqual({
-      bacon: 2,
-      cheese: 2,
+      bacon: 1,
+      cheese: 3,
       coke: 2,
       fries: 2,
       meat: 3,
     });
 
-    expect(stock.get("cheese")).toBe(98);
+    expect(stock.get("cheese")).toBe(97);
     expect(stock.get("meat")).toBe(97);
     expect(stock.get("fries")).toBe(98);
-    expect(stock.get("bacon")).toBe(98);
+    expect(stock.get("bacon")).toBe(99);
     expect(stock.get("coke")).toBe(98);
 
     expect(allocations).toEqual(
@@ -165,7 +165,7 @@ describe("reserveInventoryForOrder", () => {
         expect.objectContaining({
           orderId: "order-1",
           inventoryItemId: "cheese",
-          quantity: 2,
+          quantity: 3,
           status: "RESERVED",
         }),
         expect.objectContaining({

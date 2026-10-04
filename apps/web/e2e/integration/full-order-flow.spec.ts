@@ -274,12 +274,21 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     })
     .click();
 
+  const firstPickles = firstPreview.locator(
+    'img[src="/burger-preview/pepinillos.svg"]',
+  );
+  const firstMayonnaise = firstPreview.locator(
+    'img[src="/burger-preview/mayonesa.svg"]',
+  );
+
   await firstBurger
     .getByRole("button", {
       name: "Mayonesa: Sí",
     })
     .click();
 
+  await expect(firstPickles).toHaveCount(2);
+  await expect(firstMayonnaise).toHaveCount(1);
   await expect(firstMeat).toHaveCount(4);
   await expect(firstCheese).toHaveCount(4);
   await expect(firstBacon).toHaveCount(2);

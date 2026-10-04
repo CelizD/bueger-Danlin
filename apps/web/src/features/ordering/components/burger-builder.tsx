@@ -44,12 +44,14 @@ function QuantityPicker({
   value,
   min,
   hint,
+  max = 5,
   onChange,
 }: {
   name: string;
   value: number;
   min: 0 | 1;
   hint: string;
+  max?: number;
   onChange: (quantity: number) => void;
 }) {
   return (
@@ -76,6 +78,7 @@ function QuantityPicker({
                 : "ingredient-quantity-button"
             }
             aria-pressed={value === quantity}
+            disabled={quantity > max}
             aria-label={
               quantity === 0
                 ? `${name}: sin ingrediente`
@@ -304,6 +307,139 @@ export function BurgerBuilder({
     } => Boolean(item.option),
   );
 
+  const stockByKey = new Map(
+    inventory?.items.map((item) => [
+      item.key,
+      item.available,
+    ]) ?? [],
+  );
+
+  function burgerIngredientTotal(
+    item: BurgerSelection,
+    ingredient:
+      | "meat"
+      | "cheese"
+      | "bacon"
+      | "lettuce"
+      | "tomato"
+      | "onion"
+      | "pickles",
+  ) {
+    if (ingredient === "meat") {
+      return (
+        1 +
+        (meatExtra
+          ? burgerModifierQuantity(
+              item,
+              meatExtra,
+            )
+          : 0)
+      );
+    }
+
+    if (ingredient === "cheese") {
+      return cheeseIncluded && cheeseExtra
+        ? pairQuantity(
+            item,
+            cheeseIncluded,
+            cheeseExtra,
+          )
+        : 0;
+    }
+
+    if (ingredient === "bacon") {
+      return baconIncluded && baconExtra
+        ? pairQuantity(
+            item,
+            baconIncluded,
+            baconExtra,
+          )
+        : 0;
+    }
+
+    if (ingredient === "lettuce") {
+      return lettuceIncluded && lettuceExtra
+        ? pairQuantity(
+            item,
+            lettuceIncluded,
+            lettuceExtra,
+          )
+        : 0;
+    }
+
+    if (ingredient === "tomato") {
+      return tomatoIncluded && tomatoExtra
+        ? pairQuantity(
+            item,
+            tomatoIncluded,
+            tomatoExtra,
+          )
+        : 0;
+    }
+
+    if (ingredient === "onion") {
+      return onionIncluded && onionExtra
+        ? pairQuantity(
+            item,
+            onionIncluded,
+            onionExtra,
+          )
+        : 0;
+    }
+
+    return pickles
+      ? burgerModifierQuantity(
+          item,
+          pickles,
+        )
+      : 0;
+  }
+
+  function maxIngredientQuantity(
+    burgerId: string,
+    ingredient:
+      | "meat"
+      | "cheese"
+      | "bacon"
+      | "lettuce"
+      | "tomato"
+      | "onion"
+      | "pickles",
+    inventoryKey: string,
+  ) {
+    const available =
+      stockByKey.get(inventoryKey);
+
+    if (available === undefined) {
+      return 5;
+    }
+
+    const usedByOtherBurgers =
+      burgers
+        .filter(
+          (item) =>
+            item.localId !== burgerId,
+        )
+        .reduce(
+          (sum, item) =>
+            sum +
+            burgerIngredientTotal(
+              item,
+              ingredient,
+            ),
+          0,
+        );
+
+    return Math.max(
+      0,
+      Math.min(
+        5,
+        available -
+          usedByOtherBurgers,
+      ),
+    );
+  }
+
   const handledIds = new Set<string>();
 
   for (const option of [
@@ -476,6 +612,11 @@ export function BurgerBuilder({
                               )
                             }
                             min={1}
+                            max={maxIngredientQuantity(
+                              burger.localId,
+                              "meat",
+                              "meat",
+                            )}
                             hint={
                               meatExtra.priceDeltaCents >
                               0
@@ -514,6 +655,11 @@ export function BurgerBuilder({
                                 cheeseExtra,
                               )}
                               min={1}
+                              max={maxIngredientQuantity(
+                                burger.localId,
+                                "cheese",
+                                "cheese",
+                              )}
                               hint={pairHint(
                                 cheeseExtra,
                                 1,
@@ -541,6 +687,11 @@ export function BurgerBuilder({
                                 baconExtra,
                               )}
                               min={0}
+                              max={maxIngredientQuantity(
+                                burger.localId,
+                                "bacon",
+                                "bacon",
+                              )}
                               hint={pairHint(
                                 baconExtra,
                                 0,
@@ -568,6 +719,11 @@ export function BurgerBuilder({
                                 lettuceExtra,
                               )}
                               min={0}
+                              max={maxIngredientQuantity(
+                                burger.localId,
+                                "lettuce",
+                                "lettuce",
+                              )}
                               hint={pairHint(
                                 lettuceExtra,
                                 0,
@@ -595,6 +751,11 @@ export function BurgerBuilder({
                                 tomatoExtra,
                               )}
                               min={0}
+                              max={maxIngredientQuantity(
+                                burger.localId,
+                                "tomato",
+                                "tomato",
+                              )}
                               hint={pairHint(
                                 tomatoExtra,
                                 0,
@@ -622,6 +783,11 @@ export function BurgerBuilder({
                                 onionExtra,
                               )}
                               min={0}
+                              max={maxIngredientQuantity(
+                                burger.localId,
+                                "onion",
+                                "onion",
+                              )}
                               hint={pairHint(
                                 onionExtra,
                                 0,
@@ -647,6 +813,11 @@ export function BurgerBuilder({
                               pickles,
                             )}
                             min={0}
+                            max={maxIngredientQuantity(
+                              burger.localId,
+                              "pickles",
+                              "pickles",
+                            )}
                             hint="Hasta 5 porciones · sin cargo adicional"
                             onChange={(
                               quantity,
