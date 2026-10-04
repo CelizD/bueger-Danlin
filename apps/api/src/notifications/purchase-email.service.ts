@@ -453,6 +453,7 @@ export class PurchaseEmailService {
           optionName: string;
           removed: boolean;
           priceDeltaCents: number;
+          quantity: number;
         }>;
       }>;
       payments: Array<{
@@ -602,6 +603,8 @@ export class PurchaseEmailService {
                     modifier.removed,
                   priceDeltaCents:
                     modifier.priceDeltaCents,
+                  quantity:
+                    modifier.quantity,
                 }),
               ),
           }),
