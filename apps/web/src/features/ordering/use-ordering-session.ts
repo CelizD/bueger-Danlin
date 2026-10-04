@@ -5,8 +5,10 @@ import {
   appendBurger,
   burgersForPickupSelection,
   setBurgerModifierQuantities,
-  type ModifierQuantityUpdate,
 } from "./builder";
+import type {
+  ModifierQuantityUpdate,
+} from "./modifier-quantities";
 import { newBurger } from "./formatters";
 import {
   availableComboLimit,
