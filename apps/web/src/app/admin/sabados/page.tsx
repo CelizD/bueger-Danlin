@@ -62,10 +62,9 @@ export default function SaturdaysPage() {
             </p>
             <h1>Agenda</h1>
             <p>
-              Crea la siguiente entrega,
-              define el cupo y controla
-              cuándo pueden ordenar los
-              clientes.
+              Gestiona fechas, horarios,
+              cupos y puntos de entrega
+              desde un solo lugar.
             </p>
           </div>
 
