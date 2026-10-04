@@ -158,7 +158,9 @@ export class AdminProductsService {
       await tx.product.update({
         where: { id },
         data: {
-          imageData: file.buffer,
+          imageData: Uint8Array.from(
+            file.buffer,
+          ),
           imageMimeType: detected,
         },
       });
