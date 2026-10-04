@@ -385,3 +385,8 @@ Orden recomendado de lectura:
 6. `SECURITY_AUDIT.md` — auditoría de seguridad, considerando su fecha/snapshot.
 
 Los audits de backend/frontend reflejan etapas anteriores del proyecto y no deben usarse solos para determinar qué falta hoy.
+
+
+## Validación de infraestructura real
+
+Usar `deploy/REAL_INFRA_VALIDATION.md` para TLS real, benchmark Argon2id, Core Web Vitals y smoke responsive final.
