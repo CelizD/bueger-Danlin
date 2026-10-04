@@ -46,6 +46,17 @@ export class CreateOrderModifierQuantityDto {
   quantity!: number;
 }
 
+export class CreateOrderModifierQuantityDto {
+  @IsString()
+  @MinLength(1)
+  optionId!: string;
+
+  @IsInt()
+  @Min(0)
+  @Max(5)
+  quantity!: number;
+}
+
 export class CreateOrderItemDto {
   @IsString()
   @MinLength(1)
