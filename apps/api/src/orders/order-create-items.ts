@@ -81,7 +81,10 @@ export async function prepareOrderItems(
 
     const removedIds =
       item.removedModifierOptionIds ?? [];
-    const extraIds = item.extraModifierOptionIds ?? [];
+    const extraIds =
+      item.extraModifierOptionIds ?? [];
+    const quantifiedExtras =
+      item.extraModifierQuantities ?? [];
 
     if (
       new Set(removedIds).size !== removedIds.length
@@ -94,6 +97,43 @@ export async function prepareOrderItems(
     if (new Set(extraIds).size !== extraIds.length) {
       throw new BadRequestException(
         "Hay extras duplicados en un item.",
+      );
+    }
+
+    const quantifiedIds =
+      quantifiedExtras.map(
+        (entry) => entry.optionId,
+      );
+
+    if (
+      new Set(quantifiedIds).size !==
+      quantifiedIds.length
+    ) {
+      throw new BadRequestException(
+        "Hay cantidades de extras duplicadas en un item.",
+      );
+    }
+
+    if (
+      quantifiedIds.some((optionId) =>
+        extraIds.includes(optionId),
+      )
+    ) {
+      throw new BadRequestException(
+        "Un extra no puede enviarse a la vez como selección simple y con cantidad.",
+      );
+    }
+
+    if (
+      quantifiedExtras.some(
+        (entry) =>
+          !Number.isInteger(entry.quantity) ||
+          entry.quantity < 1 ||
+          entry.quantity > 4,
+      )
+    ) {
+      throw new BadRequestException(
+        "La cantidad de un extra debe estar entre 1 y 4.",
       );
     }
 
@@ -150,8 +190,17 @@ export async function prepareOrderItems(
 
     let extrasCents = 0;
 
-    for (const optionId of extraIds) {
-      const option: any = optionById.get(optionId);
+    const selectedExtras = [
+      ...extraIds.map((optionId) => ({
+        optionId,
+        quantity: 1,
+      })),
+      ...quantifiedExtras,
+    ];
+
+    for (const selected of selectedExtras) {
+      const option: any =
+        optionById.get(selected.optionId);
 
       if (!option || option.kind !== "EXTRA") {
         throw new BadRequestException(
@@ -159,14 +208,24 @@ export async function prepareOrderItems(
         );
       }
 
-      extrasCents += option.priceDeltaCents;
-      preparationSnapshot.extras.push(option.name);
+      extrasCents +=
+        option.priceDeltaCents *
+        selected.quantity;
+
+      preparationSnapshot.extras.push(
+        selected.quantity > 1
+          ? `${option.name} × ${selected.quantity}`
+          : option.name,
+      );
 
       modifiers.push({
         modifierOptionId: option.id,
         optionName: option.name,
-        priceDeltaCents: option.priceDeltaCents,
-        quantity: item.quantity,
+        priceDeltaCents:
+          option.priceDeltaCents,
+        quantity:
+          item.quantity *
+          selected.quantity,
         removed: false,
       });
     }
