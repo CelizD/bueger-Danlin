@@ -88,4 +88,68 @@ describe("prepareOrderItems", () => {
       ),
     ).toBe(false);
   });
+
+  it("multiplica precio y cantidad de extras cuantificados", async () => {
+    const tx = {
+      product: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: "combo-1",
+            name: "Combo Hamburguesa + Papas",
+            type: "COMBO",
+            priceCents: 13_000,
+            modifierGroups: [
+              {
+                modifierGroup: {
+                  active: true,
+                  options: [
+                    {
+                      id: "extra-cheese",
+                      name: "Queso extra",
+                      kind: "EXTRA",
+                      priceDeltaCents: 1_000,
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ]),
+      },
+    };
+
+    const result = await prepareOrderItems(
+      tx,
+      [
+        {
+          productId: "combo-1",
+          quantity: 1,
+          removedModifierOptionIds: [],
+          extraModifierOptionIds: [],
+          extraModifierQuantities: [
+            {
+              optionId: "extra-cheese",
+              quantity: 3,
+            },
+          ],
+        },
+      ] as any,
+    );
+
+    expect(result.totalCents).toBe(16_000);
+    expect(
+      result.preparedItems[0]?.preparationSnapshot.extras,
+    ).toEqual(["Queso extra × 3"]);
+    expect(
+      result.preparedItems[0]?.modifiers,
+    ).toEqual([
+      expect.objectContaining({
+        modifierOptionId: "extra-cheese",
+        priceDeltaCents: 1_000,
+        quantity: 3,
+        removed: false,
+      }),
+    ]);
+  });
+
 });
