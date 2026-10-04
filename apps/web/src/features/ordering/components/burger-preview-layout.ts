@@ -41,7 +41,7 @@ const HEIGHTS = {
     base: 12,
     extra: 6,
   },
-  pickles: { base: 10, extra: 5 },
+  pickles: { base: 9, extra: 4 },
   tomato: { base: 16, extra: 7 },
   lettuce: { base: 19, extra: 6 },
 } satisfies Record<string, HeightProfile>;
