@@ -15,6 +15,7 @@ import type {
 const removable: ModifierOption[] = [
   {
     id: "lettuce",
+    key: "included-lettuce",
     name: "Lechuga",
     kind: "REMOVABLE",
     priceDeltaCents: 0,
@@ -25,6 +26,7 @@ const removable: ModifierOption[] = [
 const extras: ModifierOption[] = [
   {
     id: "bacon-extra",
+    key: "extra-bacon",
     name: "Tocino extra",
     kind: "EXTRA",
     priceDeltaCents: 1_500,
@@ -220,6 +222,8 @@ describe("ordering components", () => {
 
     expect(html).toContain("Lechuga · Agotado");
     expect(html).toContain("Tocino extra · Agotado");
+    expect(html).toContain("Vista previa en vivo");
+    expect(html).toContain("/burger-preview/panarriba.svg");
     expect((html.match(/disabled/g) ?? []).length).toBeGreaterThanOrEqual(3);
   });
 

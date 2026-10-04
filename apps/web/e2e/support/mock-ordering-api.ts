@@ -57,6 +57,7 @@ export async function mockOrderingApi(page: Page) {
                 options: [
                   {
                     id: "lettuce",
+                    key: "included-lettuce",
                     name: "Lechuga",
                     kind: "REMOVABLE",
                     priceDeltaCents: 0,
@@ -64,6 +65,7 @@ export async function mockOrderingApi(page: Page) {
                   },
                   {
                     id: "cheese-extra",
+                    key: "extra-cheese",
                     name: "Queso extra",
                     kind: "EXTRA",
                     priceDeltaCents: 1000,

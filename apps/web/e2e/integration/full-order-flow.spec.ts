@@ -211,9 +211,30 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   const firstBurger = burgerCards.nth(0);
   const secondBurger = burgerCards.nth(1);
 
+  const firstPreview =
+    firstBurger.getByTestId("burger-preview");
+  const secondPreview =
+    secondBurger.getByTestId("burger-preview");
+
+  const firstLettuce = firstPreview.locator(
+    'img[src="/burger-preview/lechuga.svg"]',
+  );
+  const firstMeat = firstPreview.locator(
+    'img[src="/burger-preview/carne.svg"]',
+  );
+  const firstDoubleMeat = firstPreview.locator(
+    'img[src="/burger-preview/doblecarne.svg"]',
+  );
+
+  await expect(firstLettuce).toHaveClass(/is-active/);
+  await expect(firstMeat).toHaveClass(/is-active/);
+  await expect(firstDoubleMeat).not.toHaveClass(/is-active/);
+
   await firstBurger
     .getByRole("checkbox", { name: /^Lechuga/ })
     .uncheck();
+
+  await expect(firstLettuce).not.toHaveClass(/is-active/);
   await firstBurger
     .getByRole("checkbox", { name: /^Queso$/ })
     .uncheck();
@@ -221,12 +242,41 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     .getByRole("checkbox", { name: /^Carne extra/ })
     .check();
 
+  await expect(firstMeat).not.toHaveClass(/is-active/);
+  await expect(firstDoubleMeat).toHaveClass(/is-active/);
+
+  await expect(
+    secondBurger.getByText(
+      /El tomate ya está conectado/,
+    ),
+  ).toBeVisible();
+
   await secondBurger
     .getByRole("checkbox", { name: /^Tomate/ })
     .uncheck();
+
+  await expect(
+    secondBurger.getByText(
+      /El tomate ya está conectado/,
+    ),
+  ).toHaveCount(0);
+
+  const secondCheese = secondPreview.locator(
+    'img[src="/burger-preview/queso.svg"]',
+  );
+  const secondDoubleCheese = secondPreview.locator(
+    'img[src="/burger-preview/doblequeso.svg"]',
+  );
+
+  await expect(secondCheese).toHaveClass(/is-active/);
+  await expect(secondDoubleCheese).not.toHaveClass(/is-active/);
+
   await secondBurger
     .getByRole("checkbox", { name: /^Queso extra/ })
     .check();
+
+  await expect(secondCheese).not.toHaveClass(/is-active/);
+  await expect(secondDoubleCheese).toHaveClass(/is-active/);
 
   await page
     .getByRole("button", { name: "Agregar Coca-Cola" })
