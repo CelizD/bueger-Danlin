@@ -14,13 +14,14 @@ import { MfaService } from "./mfa.service.js";
 import { RolesGuard } from "./roles.guard.js";
 import { StaffAuthGuard } from "./staff-auth.guard.js";
 import { StaffSessionService } from "./staff-session.service.js";
+import { readSetting } from "../config/secret-setting.js";
 
 @Module({
   imports: [
     JwtModule.registerAsync({
       global: true,
       useFactory: () => {
-        const secret = process.env.AUTH_JWT_SECRET;
+        const secret = readSetting("AUTH_JWT_SECRET");
 
         if (!secret || secret.length < 32) {
           throw new Error(
