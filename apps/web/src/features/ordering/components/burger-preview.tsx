@@ -184,12 +184,22 @@ export function BurgerPreview({
       scale: 0.86,
     },
     {
+      key: "tomato",
+      src: `${ASSET_ROOT}/tomate.svg`,
+      active: included(
+        "included-tomato",
+      ),
+      y: -88,
+      z: 65,
+      scale: 0.94,
+    },
+    {
       key: "lettuce",
       src: `${ASSET_ROOT}/lechuga.svg`,
       active: included(
         "included-lettuce",
       ),
-      y: -105,
+      y: -112,
       z: 70,
       scale: 1.02,
     },
@@ -251,14 +261,6 @@ export function BurgerPreview({
         })}
       </div>
 
-      {included("included-tomato") && (
-        <p className="burger-preview-note">
-          El tomate ya está conectado a
-          tu selección; falta agregar su
-          imagen individual para mostrarlo
-          en esta primera prueba.
-        </p>
-      )}
     </div>
   );
 }

@@ -245,21 +245,17 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await expect(firstMeat).not.toHaveClass(/is-active/);
   await expect(firstDoubleMeat).toHaveClass(/is-active/);
 
-  await expect(
-    secondBurger.getByText(
-      /El tomate ya está conectado/,
-    ),
-  ).toBeVisible();
+  const secondTomato = secondPreview.locator(
+    'img[src="/burger-preview/tomate.svg"]',
+  );
+
+  await expect(secondTomato).toHaveClass(/is-active/);
 
   await secondBurger
     .getByRole("checkbox", { name: /^Tomate/ })
     .uncheck();
 
-  await expect(
-    secondBurger.getByText(
-      /El tomate ya está conectado/,
-    ),
-  ).toHaveCount(0);
+  await expect(secondTomato).not.toHaveClass(/is-active/);
 
   const secondCheese = secondPreview.locator(
     'img[src="/burger-preview/queso.svg"]',
