@@ -317,7 +317,7 @@ export function BurgerPreview({
     ...cheeseLayers,
     ...repeatedLayers({
       key: "bacon",
-      src: `${ASSET_ROOT}/tocino.svg`,
+      src: `${ASSET_ROOT}/dobletocino.svg`,
       count: baconCount,
       y:
         2 -
