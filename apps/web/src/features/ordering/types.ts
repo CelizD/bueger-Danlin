@@ -1,6 +1,6 @@
 export type ModifierOption = {
   id: string;
-  key: string;
+  key?: string;
   name: string;
   kind: "REMOVABLE" | "EXTRA" | "ADD_ON";
   priceDeltaCents: number;
