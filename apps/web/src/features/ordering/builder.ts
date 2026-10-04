@@ -118,7 +118,7 @@ export function setBurgerModifierQuantities(
         ...burger.extraIds,
       ];
       const modifierQuantities = {
-        ...burger.modifierQuantities,
+        ...(burger.modifierQuantities ?? {}),
       };
 
       for (const {
