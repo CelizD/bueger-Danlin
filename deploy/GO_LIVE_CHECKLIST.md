@@ -1,6 +1,6 @@
 # Go-live checklist — Burger Danlin
 
-Fecha de corte documental: **30 de septiembre de 2026**
+Fecha de corte documental: **3 de octubre de 2026**
 
 > **Estado del código del MVP:** completo y validado en CI/Security. Este checklist contiene principalmente tareas que solo pueden cerrarse con VPS, dominio, credenciales reales, SMTP, almacenamiento offsite y pruebas operativas. Consulta `docs/MVP_FINAL_STATUS.md` para el resumen final.
 
@@ -38,6 +38,9 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [x] Endpoint de métricas bloqueado desde Nginx público.
 - [x] Runbooks de incidentes versionados para cuenta comprometida, secretos, DB, supply chain y DDoS/caída.
 - [x] Workflow DAST manual con OWASP ZAP preparado y restringido a staging.
+- [x] RBAC estricto validado: ADMIN solo administración, KITCHEN solo Cocina y DELIVERY solo Entrega.
+- [x] SMTP end-to-end validado en CI con Mailpit, incluyendo comprobante PDF adjunto.
+- [x] Flujo integrado validado: pedido, inventario, pago MOCK, cancelación/refund, entrega grupal, Cocina, QR, Entrega y comprobante.
 
 ## Pendiente hasta tener VPS/dominio/proveedores
 
