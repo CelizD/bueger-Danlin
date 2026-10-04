@@ -62,10 +62,29 @@ export async function reserveInventoryForOrder(
             modifier.removed,
         );
 
-        if (!removed) {
-          required +=
-            item.quantity * usage.quantity;
+        if (removed) {
+          continue;
         }
+
+        const customQuantity =
+          item.modifiers
+            .filter(
+              (modifier) =>
+                modifier.modifierOptionId ===
+                  usage.modifierOptionId &&
+                !modifier.removed,
+            )
+            .reduce(
+              (sum, modifier) =>
+                sum + modifier.quantity,
+              0,
+            );
+
+        required +=
+          (customQuantity > 0
+            ? customQuantity
+            : item.quantity) *
+          usage.quantity;
 
         continue;
       }
