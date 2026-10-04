@@ -1,4 +1,5 @@
 import { money } from "@/features/ordering/formatters";
+import { apiUrl } from "@/lib/api/browser";
 import type {
   BurgerSelection,
   InventoryAvailability,
@@ -7,6 +8,8 @@ import type {
 
 type BurgerBuilderProps = {
   burgers: BurgerSelection[];
+  comboName: string;
+  comboImagePath?: string | null;
   comboPriceCents: number;
   removableOptions: ModifierOption[];
   extraOptions: ModifierOption[];
@@ -20,6 +23,8 @@ type BurgerBuilderProps = {
 
 export function BurgerBuilder({
   burgers,
+  comboName,
+  comboImagePath,
   comboPriceCents,
   removableOptions,
   extraOptions,
@@ -50,6 +55,13 @@ export function BurgerBuilder({
       <div className="burger-list">
         {burgers.map((burger, burgerIndex) => (
           <article className="burger-card" key={burger.localId}>
+            {comboImagePath && (
+              <img
+                className="catalog-product-image catalog-product-image-combo"
+                src={apiUrl(comboImagePath)}
+                alt={comboName}
+              />
+            )}
             <div className="burger-card-title">
               <div>
                 <span>Combo {burgerIndex + 1}</span>
