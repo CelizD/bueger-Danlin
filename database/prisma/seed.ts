@@ -269,7 +269,6 @@ async function main() {
   }
 
   const optionKeys = [
-    "included-cheese",
     "included-bacon",
     "included-lettuce",
     "included-tomato",
@@ -313,10 +312,10 @@ async function main() {
       modifierKey: null,
     },
     {
-      key: "cheese-included",
+      key: "cheese-base",
       inventoryKey: "cheese",
       productId: combo.id,
-      modifierKey: "included-cheese",
+      modifierKey: null,
     },
     {
       key: "bacon-included",
@@ -391,6 +390,12 @@ async function main() {
       modifierKey: "extra-fries",
     },
   ] as const;
+
+  // Queso es obligatorio en el personalizador; no debe conservar
+  // el consumo histórico como ingrediente removible.
+  await prisma.inventoryUsage.deleteMany({
+    where: { key: "cheese-included" },
+  });
 
   for (const usage of usageDefinitions) {
     const inventoryItemId = inventoryByKey.get(usage.inventoryKey)?.id;
