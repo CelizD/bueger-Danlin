@@ -196,6 +196,7 @@ export class CustomerOrdersService {
           optionName: modifier.optionName,
           removed: modifier.removed,
           priceDeltaCents: modifier.priceDeltaCents,
+          quantity: modifier.quantity,
         })),
       })),
     };
