@@ -91,6 +91,8 @@ antes de arrancar la nueva configuración.
 
 El bootstrap rechaza de forma segura un runtime que todavía sea propietario de la base, esquema o tablas.
 
+Consulta `deploy/SECRETS.md` antes del go-live para configurar el backend externo y los secretos de aplicación mediante `*_FILE`.
+
 ## 3. Clave de backup age
 
 Construye primero la utilidad:
