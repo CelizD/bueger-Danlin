@@ -19,7 +19,7 @@ No se consideran pendientes actuales los elementos que ya están implementados y
 
 | Área | Estado | Evidencia / decisión |
 | --- | --- | --- |
-| Next.js + React + TypeScript | ✅ | Next.js 16.3.6, React 19 y TypeScript strict |
+| Next.js + React + TypeScript | ✅ | Next.js 16.3.8, React 19 y TypeScript strict |
 | Arquitectura frontend | ✅ MVP | una sola app Web modular; no requiere microfrontends ni otra app separada |
 | Organización por feature | ✅ MVP | `ordering`, `privacy`, `seller` y `staff`; nuevas extracciones solo si aparece duplicación o crecimiento real |
 | API browser boundary | ✅ | URL, request ID y errores HTTP centralizados en `src/lib/api/browser.ts` |
