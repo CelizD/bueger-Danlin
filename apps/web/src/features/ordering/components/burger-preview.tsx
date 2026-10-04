@@ -22,7 +22,8 @@ type LayerStyle = CSSProperties & {
 
 type Layer = {
   key: string;
-  src: string;
+  src?: string;
+  spriteId?: string;
   active: boolean;
   y: number;
   z: number;
@@ -30,7 +31,14 @@ type Layer = {
   x?: number;
 };
 
+type AssetRef = Pick<
+  Layer,
+  "src" | "spriteId"
+>;
+
 const ASSET_ROOT = "/burger-preview";
+const SPRITE_PATH =
+  `${ASSET_ROOT}/ingredients-sprite.svg`;
 
 function optionByKey(
   options: ModifierOption[],
@@ -43,7 +51,7 @@ function optionByKey(
 
 function repeatedLayers({
   key,
-  src,
+  asset,
   count,
   y,
   step,
@@ -52,7 +60,7 @@ function repeatedLayers({
   x = 0,
 }: {
   key: string;
-  src: string;
+  asset: AssetRef;
   count: number;
   y: number;
   step: number;
@@ -64,7 +72,7 @@ function repeatedLayers({
     { length: Math.max(0, count) },
     (_, index): Layer => ({
       key: `${key}-${index + 1}`,
-      src,
+      ...asset,
       active: true,
       y: y - index * step,
       z: z + index,
@@ -80,6 +88,108 @@ function repeatedLayers({
           2,
     }),
   );
+}
+
+function countAssetLayer({
+  key,
+  count,
+  y,
+  z,
+  assets,
+  fallbackStep,
+  scale = 1,
+}: {
+  key: string;
+  count: number;
+  y: number;
+  z: number;
+  assets: Record<number, AssetRef>;
+  fallbackStep: number;
+  scale?: number;
+}): Layer[] {
+  if (count <= 0) {
+    return [];
+  }
+
+  const exact = assets[count];
+
+  if (exact) {
+    return [
+      {
+        key: `${key}-${count}`,
+        ...exact,
+        active: true,
+        y,
+        z,
+        scale,
+      },
+    ];
+  }
+
+  const single = assets[1];
+
+  if (!single) {
+    return [];
+  }
+
+  return repeatedLayers({
+    key,
+    asset: single,
+    count,
+    y,
+    step: fallbackStep,
+    z,
+    scale,
+  });
+}
+
+function sauceAsset(
+  ketchup: boolean,
+  mustard: boolean,
+  mayonnaise: boolean,
+): AssetRef | null {
+  if (
+    ketchup &&
+    mustard &&
+    mayonnaise
+  ) {
+    return {
+      spriteId:
+        "ketchup-mustard-mayonnaise",
+    };
+  }
+
+  if (ketchup && mustard) {
+    return {
+      spriteId: "ketchup-mustard",
+    };
+  }
+
+  if (ketchup && mayonnaise) {
+    return {
+      spriteId: "ketchup-mayonnaise",
+    };
+  }
+
+  if (mustard && mayonnaise) {
+    return {
+      spriteId: "mustard-mayonnaise",
+    };
+  }
+
+  if (ketchup) {
+    return { spriteId: "ketchup" };
+  }
+
+  if (mustard) {
+    return { spriteId: "mustard" };
+  }
+
+  if (mayonnaise) {
+    return { spriteId: "mayonnaise" };
+  }
+
+  return null;
 }
 
 export function BurgerPreview({
@@ -150,6 +260,7 @@ export function BurgerPreview({
       ),
     ) +
     extraQuantity("extra-lettuce");
+
   const tomatoCount =
     Math.min(
       1,
@@ -158,6 +269,7 @@ export function BurgerPreview({
       ),
     ) +
     extraQuantity("extra-tomato");
+
   const whiteOnionCount =
     Math.min(
       1,
@@ -166,224 +278,326 @@ export function BurgerPreview({
       ),
     ) +
     extraQuantity("extra-white-onion");
+
+  const picklesCount =
+    extraQuantity("extra-pickles");
+
   const caramelizedOnionCount =
     removableQuantity(
       "included-caramelized-onion",
     );
-  const ketchupCount =
+
+  const ketchupSelected =
     removableQuantity(
       "included-ketchup",
-    );
-  const mustardCount =
+    ) > 0;
+  const mustardSelected =
     removableQuantity(
       "included-mustard",
-    );
-  const mayonnaiseCount =
-    extraQuantity("extra-mayonnaise");
-  const chipotleCount =
-    extraQuantity("extra-chipotle");
-  const bbqChipotleCount =
-    extraQuantity("extra-bbq-chipotle");
-  const picklesCount =
-    extraQuantity("extra-pickles");
+    ) > 0;
+  const mayonnaiseSelected =
+    extraQuantity(
+      "extra-mayonnaise",
+    ) > 0;
+  const chipotleSelected =
+    extraQuantity(
+      "extra-chipotle",
+    ) > 0;
+  const bbqChipotleSelected =
+    extraQuantity(
+      "extra-bbq-chipotle",
+    ) > 0;
 
-  const sharedSauceCount =
-    Math.min(
-      ketchupCount,
-      mustardCount,
-    );
+  const upperLift = Math.min(
+    88,
+    Math.max(0, meatCount - 1) * 11 +
+      Math.max(0, cheeseCount - 1) * 7 +
+      Math.max(0, baconCount - 1) * 5 +
+      Math.max(0, lettuceCount - 1) * 3 +
+      Math.max(0, tomatoCount - 1) * 2,
+  );
 
   const meatLayers =
-    meatCount === 2
-      ? [
-          {
-            key: "double-meat",
-            src: `${ASSET_ROOT}/doblecarne.svg`,
-            active: true,
-            y: 80,
-            z: 32,
-          },
-        ]
-      : repeatedLayers({
-          key: "meat",
-          src: `${ASSET_ROOT}/carne.svg`,
-          count: meatCount,
-          y: 82,
-          step: 23,
-          z: 32,
-        });
+    countAssetLayer({
+      key: "meat",
+      count: meatCount,
+      y: 82,
+      z: 32,
+      fallbackStep: 23,
+      assets: {
+        1: {
+          src:
+            `${ASSET_ROOT}/carne.svg`,
+        },
+        2: {
+          src:
+            `${ASSET_ROOT}/doblecarne.svg`,
+        },
+        3: {
+          spriteId: "meat-3",
+        },
+        4: {
+          spriteId: "meat-4",
+        },
+        5: {
+          spriteId: "meat-5",
+        },
+      },
+    });
 
   const cheeseLayers =
-    cheeseCount === 2
-      ? [
-          {
-            key: "double-cheese",
-            src: `${ASSET_ROOT}/doblequeso.svg`,
-            active: true,
-            y:
-              44 -
-              (meatCount - 1) *
-                10,
-            z: 44,
-          },
-        ]
-      : repeatedLayers({
-          key: "cheese",
-          src: `${ASSET_ROOT}/queso.svg`,
-          count: cheeseCount,
-          y:
-            44 -
-            (meatCount - 1) *
-              10,
-          step: 9,
-          z: 42,
-        });
+    countAssetLayer({
+      key: "cheese",
+      count: cheeseCount,
+      y:
+        43 -
+        Math.max(
+          0,
+          meatCount - 1,
+        ) *
+          11,
+      z: 44,
+      fallbackStep: 9,
+      assets: {
+        1: {
+          src:
+            `${ASSET_ROOT}/queso.svg`,
+        },
+        2: {
+          spriteId: "cheese-2",
+        },
+        3: {
+          spriteId: "cheese-3",
+        },
+        4: {
+          spriteId: "cheese-4",
+        },
+        5: {
+          spriteId: "cheese-5",
+        },
+      },
+    });
+
+  const baconY =
+    2 -
+    Math.max(0, meatCount - 1) *
+      10 -
+    Math.max(0, cheeseCount - 1) *
+      5;
+
+  let baconLayers: Layer[] = [];
+
+  if (baconCount === 1) {
+    baconLayers = [
+      {
+        key: "bacon-1",
+        spriteId: "bacon-1",
+        active: true,
+        y: baconY,
+        z: 52,
+        scale: 0.92,
+      },
+    ];
+  } else if (baconCount === 2) {
+    baconLayers = [
+      {
+        key: "bacon-2",
+        spriteId: "bacon-2",
+        active: true,
+        y: baconY,
+        z: 52,
+        scale: 0.92,
+      },
+    ];
+  } else if (baconCount === 4) {
+    baconLayers = [
+      {
+        key: "bacon-4",
+        spriteId: "bacon-4",
+        active: true,
+        y: baconY,
+        z: 52,
+        scale: 0.92,
+      },
+    ];
+  } else if (baconCount > 0) {
+    baconLayers = repeatedLayers({
+      key: "bacon",
+      asset: {
+        spriteId: "bacon-1",
+      },
+      count: baconCount,
+      y: baconY,
+      step: 10,
+      z: 52,
+      scale: 0.92,
+    });
+  }
+
+  const lettuceLayers =
+    countAssetLayer({
+      key: "lettuce",
+      count: lettuceCount,
+      y:
+        -118 -
+        Math.round(
+          upperLift * 0.2,
+        ),
+      z: 79,
+      fallbackStep: 10,
+      scale: 1.02,
+      assets: {
+        1: {
+          src:
+            `${ASSET_ROOT}/lechuga.svg`,
+        },
+        2: {
+          spriteId: "lettuce-2",
+        },
+        3: {
+          spriteId: "lettuce-3",
+        },
+        4: {
+          spriteId: "lettuce-4",
+        },
+        5: {
+          spriteId: "lettuce-5",
+        },
+      },
+    });
+
+  const baseSauce = sauceAsset(
+    ketchupSelected,
+    mustardSelected,
+    mayonnaiseSelected,
+  );
 
   const layers: Layer[] = [
     {
       key: "bottom-bun",
-      src: `${ASSET_ROOT}/panabajo.svg`,
+      src:
+        `${ASSET_ROOT}/panabajo.svg`,
       active: true,
       y: 150,
       z: 10,
     },
-    ...repeatedLayers({
-      key: "ketchup-mustard",
-      src: `${ASSET_ROOT}/ketchupmostaza.svg`,
-      count: sharedSauceCount,
-      y: 118,
-      step: 6,
-      z: 20,
-      scale: 0.72,
-    }),
-    ...repeatedLayers({
-      key: "ketchup",
-      src: `${ASSET_ROOT}/ketchup.svg`,
-      count:
-        ketchupCount -
-        sharedSauceCount,
-      y:
-        112 -
-        sharedSauceCount * 4,
-      step: 5,
-      z: 24,
-      scale: 0.68,
-      x: -4,
-    }),
-    ...repeatedLayers({
-      key: "mustard",
-      src: `${ASSET_ROOT}/mostasa.svg`,
-      count:
-        mustardCount -
-        sharedSauceCount,
-      y:
-        108 -
-        sharedSauceCount * 4,
-      step: 5,
-      z: 27,
-      scale: 0.68,
-      x: 4,
-    }),
-    ...repeatedLayers({
-      key: "mayonnaise",
-      src: `${ASSET_ROOT}/mayonesa.svg`,
-      count: mayonnaiseCount,
-      y: 103,
-      step: 5,
-      z: 28,
-      scale: 0.68,
-      x: -2,
-    }),
-    ...repeatedLayers({
-      key: "chipotle",
-      src: `${ASSET_ROOT}/chipotle.svg`,
-      count: chipotleCount,
-      y: 98,
-      step: 5,
-      z: 29,
-      scale: 0.68,
-      x: 2,
-    }),
-    ...repeatedLayers({
-      key: "bbq-chipotle",
-      src: `${ASSET_ROOT}/bbqchipotle.svg`,
-      count: bbqChipotleCount,
-      y: 93,
-      step: 5,
-      z: 30,
-      scale: 0.68,
-    }),
+    ...(baseSauce
+      ? [
+          {
+            key: "base-sauces",
+            ...baseSauce,
+            active: true,
+            y: 116,
+            z: 20,
+            scale: 0.72,
+          } satisfies Layer,
+        ]
+      : []),
+    ...(chipotleSelected
+      ? [
+          {
+            key: "chipotle",
+            spriteId: "chipotle",
+            active: true,
+            y: 108,
+            z: 22,
+            scale: 0.69,
+            x: -4,
+          } satisfies Layer,
+        ]
+      : []),
+    ...(bbqChipotleSelected
+      ? [
+          {
+            key: "bbq-chipotle",
+            spriteId: "bbq-chipotle",
+            active: true,
+            y: 101,
+            z: 24,
+            scale: 0.68,
+            x: 5,
+          } satisfies Layer,
+        ]
+      : []),
     ...meatLayers,
     ...cheeseLayers,
-    ...repeatedLayers({
-      key: "bacon",
-      src: `${ASSET_ROOT}/dobletocino.svg`,
-      count: baconCount,
-      y:
-        2 -
-        (meatCount - 1) *
-          10 -
-        Math.max(
-          0,
-          cheeseCount - 1,
-        ) *
-          4,
-      step: 11,
-      z: 52,
-      scale: 0.92,
-    }),
+    ...baconLayers,
     ...repeatedLayers({
       key: "white-onion",
-      src: `${ASSET_ROOT}/cebolla.svg`,
+      asset: {
+        src:
+          `${ASSET_ROOT}/cebolla.svg`,
+      },
       count: whiteOnionCount,
-      y: -48,
+      y:
+        -49 -
+        Math.round(
+          upperLift * 0.12,
+        ),
       step: 9,
       z: 62,
       scale: 0.9,
     }),
     ...repeatedLayers({
       key: "caramelized-onion",
-      src: `${ASSET_ROOT}/cebollaacaramelizada.svg`,
+      asset: {
+        src:
+          `${ASSET_ROOT}/cebollaacaramelizada.svg`,
+      },
       count:
         caramelizedOnionCount,
-      y: -72,
+      y:
+        -70 -
+        Math.round(
+          upperLift * 0.14,
+        ),
       step: 8,
       z: 67,
       scale: 0.86,
     }),
     ...repeatedLayers({
       key: "pickles",
-      src: `${ASSET_ROOT}/pepinillos.svg`,
+      asset: {
+        spriteId: "pickles",
+      },
       count: picklesCount,
-      y: -82,
+      y:
+        -82 -
+        Math.round(
+          upperLift * 0.15,
+        ),
       step: 8,
       z: 70,
-      scale: 0.84,
+      scale: 0.82,
     }),
     ...repeatedLayers({
       key: "tomato",
-      src: `${ASSET_ROOT}/tomate.svg`,
+      asset: {
+        src:
+          `${ASSET_ROOT}/tomate.svg`,
+      },
       count: tomatoCount,
-      y: -96,
+      y:
+        -96 -
+        Math.round(
+          upperLift * 0.18,
+        ),
       step: 9,
-      z: 73,
+      z: 74,
       scale: 0.94,
     }),
-    ...repeatedLayers({
-      key: "lettuce",
-      src: `${ASSET_ROOT}/lechuga.svg`,
-      count: lettuceCount,
-      y: -115,
-      step: 10,
-      z: 77,
-      scale: 1.02,
-    }),
+    ...lettuceLayers,
     {
       key: "top-bun",
-      src: `${ASSET_ROOT}/panarriba.svg`,
+      src:
+        `${ASSET_ROOT}/panarriba.svg`,
       active: true,
-      y: -155,
-      z: 90,
+      y:
+        -158 -
+        Math.round(
+          upperLift * 0.5,
+        ),
+      z: 92,
     },
   ];
 
@@ -424,14 +638,39 @@ export function BurgerPreview({
             zIndex: layer.z,
           };
 
+          const className =
+            layer.active
+              ? "burger-preview-layer is-active"
+              : "burger-preview-layer";
+
+          if (layer.spriteId) {
+            return (
+              <svg
+                aria-hidden="true"
+                className={className}
+                data-preview-layer={
+                  layer.key
+                }
+                key={layer.key}
+                style={style}
+                viewBox="0 0 512 512"
+              >
+                <use
+                  href={`${SPRITE_PATH}#${layer.spriteId}`}
+                  width="100%"
+                  height="100%"
+                />
+              </svg>
+            );
+          }
+
           return (
             <img
               aria-hidden="true"
               alt=""
-              className={
-                layer.active
-                  ? "burger-preview-layer is-active"
-                  : "burger-preview-layer"
+              className={className}
+              data-preview-layer={
+                layer.key
               }
               key={layer.key}
               src={layer.src}
