@@ -56,3 +56,72 @@ ON CONFLICT ("key") DO UPDATE SET
   "active" = EXCLUDED."active",
   "sortOrder" = EXCLUDED."sortOrder",
   "updatedAt" = CURRENT_TIMESTAMP;
+
+
+-- Track the requested vegetable/pickle portions in the same inventory system.
+-- New inventory rows start at 0 so production never assumes stock that was not counted.
+INSERT INTO "InventoryItem" (
+  "id",
+  "key",
+  "name",
+  "unit",
+  "stockQuantity",
+  "lowStockThreshold",
+  "active",
+  "createdAt",
+  "updatedAt"
+)
+VALUES
+  ('qty-inventory-lettuce-v1', 'lettuce', 'Lechuga', 'porción', 0, 10, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('qty-inventory-tomato-v1', 'tomato', 'Tomate', 'porción', 0, 10, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('qty-inventory-onion-v1', 'onion', 'Cebolla', 'porción', 0, 10, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('qty-inventory-pickles-v1', 'pickles', 'Pepinillos', 'porción', 0, 10, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT ("key") DO UPDATE SET
+  "name" = EXCLUDED."name",
+  "unit" = EXCLUDED."unit",
+  "active" = true,
+  "updatedAt" = CURRENT_TIMESTAMP;
+
+WITH combo AS (
+  SELECT "id"
+  FROM "Product"
+  WHERE "slug" = 'combo-hamburguesa-papas'
+  LIMIT 1
+),
+usage_source("id", "key", "inventoryKey", "modifierKey") AS (
+  VALUES
+    ('qty-usage-lettuce-included-v1', 'lettuce-included', 'lettuce', 'included-lettuce'),
+    ('qty-usage-lettuce-extra-v1', 'lettuce-extra', 'lettuce', 'extra-lettuce'),
+    ('qty-usage-tomato-included-v1', 'tomato-included', 'tomato', 'included-tomato'),
+    ('qty-usage-tomato-extra-v1', 'tomato-extra', 'tomato', 'extra-tomato'),
+    ('qty-usage-onion-included-v1', 'onion-included', 'onion', 'included-white-onion'),
+    ('qty-usage-onion-extra-v1', 'onion-extra', 'onion', 'extra-white-onion'),
+    ('qty-usage-pickles-extra-v1', 'pickles-extra', 'pickles', 'extra-pickles')
+)
+INSERT INTO "InventoryUsage" (
+  "id",
+  "key",
+  "inventoryItemId",
+  "productId",
+  "modifierOptionId",
+  "quantity"
+)
+SELECT
+  source."id",
+  source."key",
+  inventory."id",
+  combo."id",
+  modifier."id",
+  1
+FROM usage_source source
+JOIN "InventoryItem" inventory
+  ON inventory."key" = source."inventoryKey"
+JOIN combo
+  ON true
+JOIN "ModifierOption" modifier
+  ON modifier."key" = source."modifierKey"
+ON CONFLICT ("key") DO UPDATE SET
+  "inventoryItemId" = EXCLUDED."inventoryItemId",
+  "productId" = EXCLUDED."productId",
+  "modifierOptionId" = EXCLUDED."modifierOptionId",
+  "quantity" = EXCLUDED."quantity";
