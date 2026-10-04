@@ -355,4 +355,52 @@ describe("OrdersService idempotency", () => {
     expect(findUnique).toHaveBeenCalledTimes(2);
     expect(result.orderCode).toBe("H-A1B2C3D4");
   });
+
+  it("reintenta la lectura si el ganador de la carrera P2002 todavía no es visible", async () => {
+    const existing = replay(normalizedHash(dto));
+    const findUnique = vi
+      .fn()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(existing);
+    const prisma = {
+      order: { findUnique },
+      $transaction: vi.fn().mockRejectedValue({
+        code: "P2002",
+      }),
+    } as unknown as PrismaService;
+    const inventory = {} as InventoryService;
+    const service = new OrdersService(prisma, inventory);
+
+    const result = await service.create(
+      dto,
+      "idempotency-key-123456",
+    );
+
+    expect(findUnique).toHaveBeenCalledTimes(3);
+    expect(result.orderCode).toBe("H-A1B2C3D4");
+  });
+
+  it("devuelve conflicto controlado si el pedido concurrente nunca aparece", async () => {
+    const findUnique = vi.fn().mockResolvedValue(null);
+    const prisma = {
+      order: { findUnique },
+      $transaction: vi.fn().mockRejectedValue({
+        code: "P2002",
+      }),
+    } as unknown as PrismaService;
+    const inventory = {} as InventoryService;
+    const service = new OrdersService(prisma, inventory);
+
+    await expect(
+      service.create(
+        dto,
+        "idempotency-key-123456",
+      ),
+    ).rejects.toThrow(
+      "El pedido concurrente todavía se está procesando. Reintenta con la misma Idempotency-Key.",
+    );
+
+    expect(findUnique).toHaveBeenCalledTimes(6);
+  });
 });
