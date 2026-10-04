@@ -1,6 +1,6 @@
 import {
   burgerModifierQuantity,
-} from "@/features/ordering/builder";
+} from "@/features/ordering/modifier-quantities";
 import type { CSSProperties } from "react";
 import type {
   BurgerSelection,
