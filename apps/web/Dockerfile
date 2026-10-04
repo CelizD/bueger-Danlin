@@ -19,7 +19,17 @@ COPY packages packages
 RUN pnpm install --frozen-lockfile
 
 ARG NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_PAYMENT_PROVIDER=mock
+ARG NEXT_PUBLIC_PAYMENT_PROVIDER
+
+RUN if [ -z "$NEXT_PUBLIC_API_URL" ]; then \
+      echo "NEXT_PUBLIC_API_URL is required for the production Web image" >&2; \
+      exit 1; \
+    fi; \
+    if [ "$NEXT_PUBLIC_PAYMENT_PROVIDER" != "mercadopago" ]; then \
+      echo "NEXT_PUBLIC_PAYMENT_PROVIDER must be mercadopago for the production Web image" >&2; \
+      exit 1; \
+    fi
+
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_PAYMENT_PROVIDER=$NEXT_PUBLIC_PAYMENT_PROVIDER
 ENV NEXT_TELEMETRY_DISABLED=1
