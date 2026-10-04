@@ -260,9 +260,10 @@ Implementado y cubierto por el pipeline actual:
 - DB/Redis no públicos en Compose de producción;
 - secretos fuera de Git.
 
-Dependabot quedó limpio al cierre del MVP:
+Dependencias de seguridad revisadas al cierre del MVP:
 
-- Next.js **16.3.5**;
+- Next.js **16.3.8**;
+- Prisma **7.10.0** con overrides de seguridad para `deepmerge-ts 8.0.2` y `mysql2 3.24.4`;
 - `class-validator` **0.15.1**;
 - `@nestjs/throttler` **6.7.0**;
 - `pnpm/action-setup` **6.1.0**;
