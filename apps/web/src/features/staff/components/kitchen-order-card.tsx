@@ -75,7 +75,10 @@ function KitchenComboPreparation({
   const hasDetails =
     preparation.included.length > 0 ||
     preparation.removed.length > 0 ||
-    preparation.extras.length > 0;
+    preparation.extras.length > 0 ||
+    (preparation.quantities?.length ?? 0) > 0 ||
+    (preparation.sauces?.length ?? 0) > 0 ||
+    (preparation.others?.length ?? 0) > 0;
 
   if (!hasDetails) {
     return <small>Completa</small>;
