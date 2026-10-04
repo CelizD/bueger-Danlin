@@ -21,9 +21,9 @@ const removable: ModifierOption[] = [
   ["ketchup", "included-ketchup", "Ketchup"],
   ["mustard", "included-mustard", "Mostaza"],
 ].map(([id, key, name]) => ({
-  id,
-  key,
-  name,
+  id: String(id),
+  key: String(key),
+  name: String(name),
   kind: "REMOVABLE" as const,
   priceDeltaCents: 0,
   defaultSelected: true,
