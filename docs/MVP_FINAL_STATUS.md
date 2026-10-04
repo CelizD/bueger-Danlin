@@ -144,8 +144,8 @@ Rutas administrativas para `ADMIN`:
 
 Áreas operativas aisladas:
 
-- `/admin/cocina` → solo `KITCHEN`;
-- `/admin/entrega` → solo `DELIVERY`.
+- `/admin/cocina` → `ADMIN` y `KITCHEN`;
+- `/admin/entrega` → `ADMIN` y `DELIVERY`.
 
 Incluye:
 
