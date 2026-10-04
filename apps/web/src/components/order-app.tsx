@@ -153,6 +153,9 @@ export function OrderApp({
       onToggleExtra={
         ordering.toggleExtra
       }
+      onSetIngredientQuantity={
+        ordering.setIngredientQuantity
+      }
       onCokesChange={
         ordering.setCokes
       }
