@@ -301,6 +301,22 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await expect(firstMeatFour).toHaveCount(1);
   await expect(firstCheeseFour).toHaveCount(1);
   await expect(firstBaconTwo).toHaveCount(1);
+
+  await expect
+    .poll(async () =>
+      firstMeatFour
+        .locator("use")
+        .evaluate((element) => {
+          try {
+            return (
+              element as SVGGraphicsElement
+            ).getBBox().width;
+          } catch {
+            return 0;
+          }
+        }),
+    )
+    .toBeGreaterThan(0);
   await expect(firstOnion).toHaveCount(3);
   await expect(firstBurger).toContainText(
     "$265",
