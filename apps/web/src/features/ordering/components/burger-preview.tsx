@@ -2,6 +2,7 @@ import {
   burgerModifierQuantity,
 } from "@/features/ordering/modifier-quantities";
 import type { CSSProperties } from "react";
+import { calculateBurgerStackLayout } from "./burger-preview-layout";
 import type {
   BurgerSelection,
   ModifierOption,
@@ -319,109 +320,29 @@ export function BurgerPreview({
     chipotleSelected ||
     bbqChipotleSelected;
 
-  const sauceY = 116;
-  const meatY =
-    hasSauce ? 82 : 92;
-
-  let stackY =
-    meatY -
-    (39 +
-      Math.max(
-        0,
-        meatCount - 1,
-      ) *
-        11);
-
-  const cheeseY = stackY;
-
-  if (cheeseCount > 0) {
-    stackY -=
-      41 +
-      Math.max(
-        0,
-        cheeseCount - 1,
-      ) *
-        5;
-  }
-
-  const baconY = stackY;
-
-  if (baconCount > 0) {
-    stackY -=
-      22 +
-      Math.max(
-        0,
-        baconCount - 1,
-      ) *
-        7;
-  }
-
-  const caramelizedOnionY =
-    stackY;
-
-  if (
-    caramelizedOnionCount > 0
-  ) {
-    stackY -=
-      16 +
-      Math.max(
-        0,
-        caramelizedOnionCount -
-          1,
-      ) *
-        8;
-  }
-
-  const whiteOnionY = stackY;
-
-  if (whiteOnionCount > 0) {
-    stackY -=
-      14 +
-      Math.max(
-        0,
-        whiteOnionCount - 1,
-      ) *
-        9;
-  }
-
-  const picklesY = stackY;
-
-  if (picklesCount > 0) {
-    stackY -=
-      11 +
-      Math.max(
-        0,
-        picklesCount - 1,
-      ) *
-        7;
-  }
-
-  const tomatoY = stackY;
-
-  if (tomatoCount > 0) {
-    stackY -=
-      18 +
-      Math.max(
-        0,
-        tomatoCount - 1,
-      ) *
-        9;
-  }
-
-  const lettuceY = stackY;
-
-  if (lettuceCount > 0) {
-    stackY -=
-      21 +
-      Math.max(
-        0,
-        lettuceCount - 1,
-      ) *
-        7;
-  }
-
-  const topBunY =
-    stackY - 30;
+  const {
+    sauceY,
+    meatY,
+    cheeseY,
+    baconY,
+    caramelizedOnionY,
+    whiteOnionY,
+    picklesY,
+    tomatoY,
+    lettuceY,
+    topBunY,
+  } = calculateBurgerStackLayout({
+    hasSauce,
+    meat: meatCount,
+    cheese: cheeseCount,
+    bacon: baconCount,
+    caramelizedOnion:
+      caramelizedOnionCount,
+    whiteOnion: whiteOnionCount,
+    pickles: picklesCount,
+    tomato: tomatoCount,
+    lettuce: lettuceCount,
+  });
 
   const meatLayers =
     countAssetLayer({
