@@ -6928,6 +6928,11 @@ svg.burger-preview-layer {
   transform-origin: 50% 50%;
 }
 
+.burger-preview-layer[data-preview-ingredient="tomato"] {
+  padding-inline: 11%;
+  transform-origin: 50% 50%;
+}
+
 .burger-preview-layer.is-active {
   opacity: 1;
   transform:
@@ -6990,6 +6995,10 @@ svg.burger-preview-layer {
 
   .burger-preview-layer[data-preview-ingredient="lettuce"] {
     padding-inline: 7%;
+  }
+
+  .burger-preview-layer[data-preview-ingredient="tomato"] {
+    padding-inline: 10%;
   }
 }
 
