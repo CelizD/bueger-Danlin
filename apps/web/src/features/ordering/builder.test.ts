@@ -1,6 +1,7 @@
 import {
   appendBurger,
   burgersForPickupSelection,
+  setIngredientQuantityBurger,
   toggleExtraBurger,
   toggleRemovedBurger,
 } from "./builder";
@@ -143,4 +144,40 @@ describe("ordering builder rules", () => {
       next[1]?.removedIds,
     ).toContain("lettuce");
   });
+
+  it("permite seleccionar hasta cinco porciones de un ingrediente", () => {
+    const result =
+      setIngredientQuantityBurger(
+        [
+          {
+            localId: "b1",
+            removedIds: [],
+            extraIds: [],
+            extraQuantities: {},
+          },
+        ],
+        "b1",
+        "lettuce",
+        "cheese",
+        5,
+        {
+          ...inventory,
+          modifierLimits: {
+            lettuce: 5,
+            cheese: 4,
+          },
+        },
+      );
+
+    expect(result.error).toBeNull();
+    expect(
+      result.burgers[0]
+        ?.extraQuantities?.cheese,
+    ).toBe(4);
+    expect(
+      result.burgers[0]
+        ?.removedIds,
+    ).not.toContain("lettuce");
+  });
+
 });
