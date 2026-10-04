@@ -1,6 +1,6 @@
 # Estado final del MVP — Burger Danlin
 
-Fecha de corte: **3 de octubre de 2026**
+Fecha de corte: **4 de octubre de 2026**
 
 Este documento es la fuente resumida de verdad para el estado funcional del MVP. Los documentos de auditoría más antiguos deben leerse como snapshots históricos y no como lista vigente de pendientes.
 
@@ -12,7 +12,7 @@ El flujo principal está implementado y validado en CI:
 
 `cliente → pedido → pago → cocina → READY → QR → entrega → DELIVERED`
 
-La cobertura integrada también valida inventario, cancelación/reembolso MOCK, entrega grupal con varios pedidos, comprobante PDF, correo SMTP mediante Mailpit y separación estricta de roles.
+La cobertura integrada también valida cantidades múltiples de ingredientes, preview, recálculo de precio, consumo real de inventario, presentación de cantidades en Cocina/cliente/comprobante, cancelación/reembolso MOCK, entrega grupal con varios pedidos, correo SMTP mediante Mailpit y separación estricta de roles.
 
 El repositorio también cubre cancelación, reembolso, pagos tardíos, entrega grupal, comprobante PDF, correo de confirmación, privacidad, derechos ARCO, consentimiento para menores, administración, observabilidad preparada, backups y retención técnica.
 
@@ -33,12 +33,27 @@ Lo pendiente para abrir tráfico real ya no es desarrollo funcional principal. S
 - Si no se alcanza la meta, el costo de traslado se divide entre los pedidos pagados y se cobra al entregar.
 - Un punto de entrega requiere nombre, dirección exacta, latitud y longitud antes de poder recibir pedidos.
 
+### Personalización vigente de hamburguesa
+
+- Carne: **1–5** porciones.
+- Queso: **1–5** porciones.
+- Tocino, lechuga, tomate, cebolla blanca y pepinillos: **0–5** porciones.
+- Aderezos Sí/No: **ketchup, mostaza, mayonesa, chipotle y BBQ con chipotle**.
+- Carne, queso y tocino multiplican únicamente los precios de extra ya existentes.
+- Verduras, pepinillos y los nuevos aderezos no introducen precios adicionales en el MVP actual.
+- La API rechaza cantidades negativas, decimales, texto, valores mayores a 5 y combinaciones que intenten evadir extras pagados.
+- El preview, precio, inventario, Cocina, Admin, vista del cliente, comprobante PDF y correo usan las cantidades reales.
+- Los pedidos históricos sin el nuevo snapshot de cantidades siguen siendo compatibles.
+
 ## 3. Cliente / checkout
 
 Implementado:
 
 - catálogo e inventario;
 - múltiples combos personalizados;
+- selección exacta 1–5 / 0–5 por ingrediente;
+- aderezos Sí/No;
+- preview visual en vivo según las cantidades;
 - extras y bebidas;
 - pickup event activo;
 - ubicación exacta del punto;
