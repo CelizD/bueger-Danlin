@@ -4,6 +4,7 @@ import { loadOrderingData } from "./api";
 import {
   appendBurger,
   burgersForPickupSelection,
+  setIngredientQuantityBurger,
   toggleExtraBurger,
   toggleRemovedBurger,
 } from "./builder";
@@ -259,6 +260,31 @@ export function useOrderingSession(
     setBurgers(result.burgers);
   }
 
+  function setIngredientQuantity(
+    burgerId: string,
+    includedOptionId: string | null,
+    extraOptionId: string,
+    quantity: number,
+  ) {
+    const result =
+      setIngredientQuantityBurger(
+        burgers,
+        burgerId,
+        includedOptionId,
+        extraOptionId,
+        quantity,
+        inventory,
+      );
+
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+
+    setError("");
+    setBurgers(result.burgers);
+  }
+
   function toggleExtra(
     burgerId: string,
     optionId: string,
@@ -329,6 +355,7 @@ export function useOrderingSession(
     selectPickupEvent,
     toggleRemoved,
     toggleExtra,
+    setIngredientQuantity,
     addBurger,
     removeBurger,
   };
