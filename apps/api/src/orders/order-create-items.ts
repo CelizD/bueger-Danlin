@@ -11,6 +11,9 @@ export type PreparedOrderItem = {
     included: string[];
     removed: string[];
     extras: string[];
+    quantities?: string[];
+    sauces?: string[];
+    others?: string[];
   };
   modifiers: Array<{
     modifierOptionId: string;
@@ -20,6 +23,29 @@ export type PreparedOrderItem = {
     removed: boolean;
   }>;
 };
+
+const QUANTIFIED_KEYS = new Set([
+  "included-cheese",
+  "included-bacon",
+  "included-lettuce",
+  "included-tomato",
+  "included-white-onion",
+  "extra-meat",
+  "extra-cheese",
+  "extra-bacon",
+  "extra-lettuce",
+  "extra-tomato",
+  "extra-white-onion",
+  "extra-pickles",
+]);
+
+const SAUCE_KEYS = [
+  ["included-ketchup", "Ketchup"],
+  ["included-mustard", "Mostaza"],
+  ["extra-mayonnaise", "Mayonesa"],
+  ["extra-chipotle", "Chipotle"],
+  ["extra-bbq-chipotle", "BBQ con Chipotle"],
+] as const;
 
 function quantityLabel(
   name: string,
@@ -142,6 +168,17 @@ export async function prepareOrderItems(
         option,
       ]),
     );
+    const optionByKey = new Map(
+      availableOptions
+        .filter(
+          (option: any) =>
+            typeof option.key === "string",
+        )
+        .map((option: any) => [
+          option.key,
+          option,
+        ]),
+    );
 
     const quantityById = new Map(
       quantityEntries.map((entry) => [
@@ -164,6 +201,15 @@ export async function prepareOrderItems(
       ) {
         throw new BadRequestException(
           "Una cantidad de ingrediente no pertenece a este producto.",
+        );
+      }
+
+      if (
+        typeof option.key !== "string" ||
+        !QUANTIFIED_KEYS.has(option.key)
+      ) {
+        throw new BadRequestException(
+          `${option.name} solo admite selección Sí/No.`,
         );
       }
 
@@ -191,6 +237,44 @@ export async function prepareOrderItems(
       new Set(removedIds);
     const legacyExtraIdSet =
       new Set(extraIds);
+
+    const extraPortions = (
+      option: any | undefined,
+    ) => {
+      if (!option) return 0;
+
+      return (
+        quantityById.get(option.id) ??
+        (legacyExtraIdSet.has(option.id)
+          ? 1
+          : 0)
+      );
+    };
+
+    const includedPortions = (
+      option: any | undefined,
+    ) => {
+      if (!option) return 0;
+      if (removedIdSet.has(option.id)) {
+        return 0;
+      }
+
+      return quantityById.get(option.id) ?? 1;
+    };
+
+    const cheeseIncluded =
+      optionByKey.get("included-cheese");
+    if (
+      product.type === "COMBO" &&
+      cheeseIncluded &&
+      removedIdSet.has(
+        cheeseIncluded.id,
+      )
+    ) {
+      throw new BadRequestException(
+        "Queso debe tener mínimo 1 porción.",
+      );
+    }
 
     for (const includedOption of removableOptions) {
       if (
@@ -227,18 +311,15 @@ export async function prepareOrderItems(
     }
 
     for (const option of extraOptions) {
-      const extraPortions =
-        quantityById.get(option.id) ??
-        (legacyExtraIdSet.has(option.id)
-          ? 1
-          : 0);
+      const portions =
+        extraPortions(option);
 
-      if (extraPortions <= 0) {
+      if (portions <= 0) {
         continue;
       }
 
       if (option.key === "extra-meat") {
-        if (extraPortions > 4) {
+        if (portions > 4) {
           throw new BadRequestException(
             "La hamburguesa puede tener como máximo 5 porciones de carne.",
           );
@@ -249,6 +330,7 @@ export async function prepareOrderItems(
 
       if (
         typeof option.key === "string" &&
+        QUANTIFIED_KEYS.has(option.key) &&
         option.key.startsWith("extra-")
       ) {
         const ingredient =
@@ -261,18 +343,13 @@ export async function prepareOrderItems(
           );
 
         if (includedOption) {
-          const includedPortions =
-            removedIdSet.has(
-              includedOption.id,
-            )
-              ? 0
-              : quantityById.get(
-                  includedOption.id,
-                ) ?? 1;
+          const included =
+            includedPortions(
+              includedOption,
+            );
 
           if (
-            includedPortions +
-              extraPortions >
+            included + portions >
             5
           ) {
             throw new BadRequestException(
@@ -280,9 +357,7 @@ export async function prepareOrderItems(
             );
           }
 
-          if (
-            includedPortions > 1
-          ) {
+          if (included > 1) {
             throw new BadRequestException(
               `Las porciones adicionales de ${includedOption.name} deben enviarse como extra.`,
             );
@@ -359,10 +434,7 @@ export async function prepareOrderItems(
 
     for (const option of extraOptions) {
       const portions =
-        quantityById.get(option.id) ??
-        (legacyExtraIdSet.has(option.id)
-          ? 1
-          : 0);
+        extraPortions(option);
 
       if (portions <= 0) {
         continue;
@@ -405,6 +477,113 @@ export async function prepareOrderItems(
     }
 
     if (product.type === "COMBO") {
+      const pairTotal = (
+        includedKey: string,
+        extraKey: string,
+      ) =>
+        includedPortions(
+          optionByKey.get(includedKey),
+        ) +
+        extraPortions(
+          optionByKey.get(extraKey),
+        );
+
+      preparationSnapshot.quantities = [
+        `Carne ×${1 + extraPortions(
+          optionByKey.get("extra-meat"),
+        )}`,
+        `Queso ×${pairTotal(
+          "included-cheese",
+          "extra-cheese",
+        )}`,
+        `Tocino ×${pairTotal(
+          "included-bacon",
+          "extra-bacon",
+        )}`,
+        `Lechuga ×${pairTotal(
+          "included-lettuce",
+          "extra-lettuce",
+        )}`,
+        `Tomate ×${pairTotal(
+          "included-tomato",
+          "extra-tomato",
+        )}`,
+        `Cebolla ×${pairTotal(
+          "included-white-onion",
+          "extra-white-onion",
+        )}`,
+        `Pepinillos ×${extraPortions(
+          optionByKey.get("extra-pickles"),
+        )}`,
+      ];
+
+      preparationSnapshot.sauces =
+        SAUCE_KEYS.flatMap(
+          ([key, label]) => {
+            const option: any =
+              optionByKey.get(key);
+
+            if (!option) return [];
+
+            const isSelected =
+              option.kind === "REMOVABLE"
+                ? includedPortions(
+                    option,
+                  ) > 0
+                : extraPortions(
+                    option,
+                  ) > 0;
+
+            return [
+              `${label}: ${isSelected ? "Sí" : "No"}`,
+            ];
+          },
+        );
+
+      const summarizedKeys = new Set([
+        ...QUANTIFIED_KEYS,
+        ...SAUCE_KEYS.map(
+          ([key]) => key,
+        ),
+      ]);
+      const others: string[] = [];
+
+      for (const option of removableOptions) {
+        if (
+          typeof option.key === "string" &&
+          summarizedKeys.has(option.key)
+        ) {
+          continue;
+        }
+
+        others.push(
+          `${option.name}: ${removedIdSet.has(option.id) ? "No" : "Sí"}`,
+        );
+      }
+
+      for (const option of extraOptions) {
+        if (
+          typeof option.key === "string" &&
+          summarizedKeys.has(option.key)
+        ) {
+          continue;
+        }
+
+        const portions =
+          extraPortions(option);
+
+        if (portions <= 0) continue;
+
+        others.push(
+          quantityLabel(
+            option.name,
+            portions,
+          ),
+        );
+      }
+
+      preparationSnapshot.others =
+        others;
       comboQuantity += item.quantity;
     }
 
