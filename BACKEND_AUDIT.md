@@ -34,7 +34,7 @@ Leyenda:
 | Concurrencia | ✅ | SELECT ... FOR UPDATE para capacidad, inventario, pago y operaciones sensibles |
 | Idempotencia de órdenes | ✅ | requestKey único + requestHash; replay seguro y detección de reutilización distinta |
 | Idempotencia de pagos | ✅ | Payment.idempotencyKey único; confirmación mock idempotente |
-| Migraciones | 🟡 | Prisma migrations versionadas; falta política formal expand → migrate → contract para producción |
+| Migraciones | ✅ | Prisma migrations versionadas + política formal Expand → Migrate → Contract; producción usa migrate deploy, migraciones aplicadas son inmutables y PRs clasifican cambios de DB |
 
 ## P0 — API
 

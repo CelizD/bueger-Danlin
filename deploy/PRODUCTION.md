@@ -244,9 +244,20 @@ No uses:
 
 ```text
 prisma migrate dev
+prisma db push
 ```
 
 en producción.
+
+La política obligatoria para cambios de esquema/datos es:
+
+```text
+docs/DATABASE_MIGRATIONS.md
+```
+
+Toda evolución debe clasificarse como **Expand → Migrate → Contract**. Los cambios destructivos se realizan en una release Contract posterior, después de migrar datos y comprobar que la estructura anterior ya no se usa.
+
+Antes de ejecutar `migrate` en producción revisa el SQL pendiente y confirma un backup reciente. Para cambios de riesgo relevante, valida primero en staging.
 
 ## 8. Levantar aplicación
 

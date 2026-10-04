@@ -16,6 +16,7 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [x] PostgreSQL con SCRAM-SHA-256.
 - [x] Health/readiness endpoints.
 - [x] Prisma migrate deploy.
+- [x] Política formal de migraciones Expand → Migrate → Contract versionada en `docs/DATABASE_MIGRATIONS.md`.
 - [x] Nginx reverse proxy versionado.
 - [x] HTTPS obligatorio en API de producción.
 - [x] Secretos fuera de Git.
@@ -191,7 +192,7 @@ No abrir tráfico público hasta que:
 
 1. preflight pase;
 2. go-live-check pase;
-3. migraciones pasen;
+3. migraciones pasen y el cambio respete la política Expand → Migrate → Contract;
 4. API/Web estén healthy;
 5. TLS real esté activo;
 6. el proveedor de pagos real esté validado;
