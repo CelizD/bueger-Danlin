@@ -115,7 +115,7 @@ services:
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_SECURITY: ${MAIL_SECURITY:-starttls}
       MAIL_USERNAME: ${MAIL_USERNAME:-}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_PASSWORD_FILE: /run/secrets/mail-password
       MAIL_FROM: ${MAIL_FROM:-}
       MAIL_REPLY_TO: ${MAIL_REPLY_TO:-}
       MAIL_REJECT_UNAUTHORIZED: ${MAIL_REJECT_UNAUTHORIZED:-true}
@@ -128,17 +128,17 @@ services:
       OTEL_PROPAGATE_HOSTS: ${OTEL_PROPAGATE_HOSTS:-}
       JSON_BODY_LIMIT: ${JSON_BODY_LIMIT:-256kb}
       URLENCODED_BODY_LIMIT: ${URLENCODED_BODY_LIMIT:-64kb}
-      DATABASE_URL: postgresql://${POSTGRES_RUNTIME_USER:?POSTGRES_RUNTIME_USER is required}:${POSTGRES_RUNTIME_PASSWORD:?POSTGRES_RUNTIME_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}?schema=public
+      DATABASE_URL_FILE: /run/secrets/database-url
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379
       PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:?PAYMENT_PROVIDER is required}
       ENABLE_REAL_PAYMENTS: ${ENABLE_REAL_PAYMENTS:-false}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
-      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-}
-      MERCADOPAGO_WEBHOOK_SECRET: ${MERCADOPAGO_WEBHOOK_SECRET:-}
-      QR_TOKEN_SECRET: ${QR_TOKEN_SECRET:?QR_TOKEN_SECRET is required}
-      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?AUTH_JWT_SECRET is required}
-      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:?MFA_ENCRYPTION_KEY is required}
+      MERCADOPAGO_ACCESS_TOKEN_FILE: /run/secrets/mercadopago-access-token
+      MERCADOPAGO_WEBHOOK_SECRET_FILE: /run/secrets/mercadopago-webhook-secret
+      QR_TOKEN_SECRET_FILE: /run/secrets/qr-token-secret
+      AUTH_JWT_SECRET_FILE: /run/secrets/auth-jwt-secret
+      MFA_ENCRYPTION_KEY_FILE: /run/secrets/mfa-encryption-key
       TELEGRAM_NOTIFICATIONS_ENABLED: ${TELEGRAM_NOTIFICATIONS_ENABLED:-false}
       TELEGRAM_NOTIFY_NEW_ORDER: ${TELEGRAM_NOTIFY_NEW_ORDER:-true}
       TELEGRAM_NOTIFY_PAYMENT: ${TELEGRAM_NOTIFY_PAYMENT:-true}
@@ -151,6 +151,13 @@ services:
       TELEGRAM_BOT_TOKEN_FILE: /run/secrets/telegram-bot-token
       TELEGRAM_CHAT_ID_FILE: /run/secrets/telegram-chat-id
     volumes:
+      - ${DATABASE_URL_FILE:?DATABASE_URL_FILE is required}:/run/secrets/database-url:ro
+      - ${AUTH_JWT_SECRET_FILE:?AUTH_JWT_SECRET_FILE is required}:/run/secrets/auth-jwt-secret:ro
+      - ${QR_TOKEN_SECRET_FILE:?QR_TOKEN_SECRET_FILE is required}:/run/secrets/qr-token-secret:ro
+      - ${MFA_ENCRYPTION_KEY_FILE:?MFA_ENCRYPTION_KEY_FILE is required}:/run/secrets/mfa-encryption-key:ro
+      - ${MERCADOPAGO_ACCESS_TOKEN_FILE:-/dev/null}:/run/secrets/mercadopago-access-token:ro
+      - ${MERCADOPAGO_WEBHOOK_SECRET_FILE:-/dev/null}:/run/secrets/mercadopago-webhook-secret:ro
+      - ${MAIL_PASSWORD_FILE:-/dev/null}:/run/secrets/mail-password:ro
       - ${TELEGRAM_BOT_TOKEN_FILE:-/dev/null}:/run/secrets/telegram-bot-token:ro
       - ${TELEGRAM_CHAT_ID_FILE:-/dev/null}:/run/secrets/telegram-chat-id:ro
     ports:
@@ -213,13 +220,13 @@ services:
         condition: service_completed_successfully
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_RUNTIME_USER:?POSTGRES_RUNTIME_USER is required}:${POSTGRES_RUNTIME_PASSWORD:?POSTGRES_RUNTIME_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}?schema=public
+      DATABASE_URL_FILE: /run/secrets/database-url
       EMAIL_NOTIFICATIONS_ENABLED: ${EMAIL_NOTIFICATIONS_ENABLED:-false}
       MAIL_HOST: ${MAIL_HOST:-}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_SECURITY: ${MAIL_SECURITY:-starttls}
       MAIL_USERNAME: ${MAIL_USERNAME:-}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_PASSWORD_FILE: /run/secrets/mail-password
       MAIL_FROM: ${MAIL_FROM:-}
       MAIL_REPLY_TO: ${MAIL_REPLY_TO:-}
       MAIL_REJECT_UNAUTHORIZED: ${MAIL_REJECT_UNAUTHORIZED:-true}
@@ -229,6 +236,9 @@ services:
       BUSINESS_ADDRESS: ${BUSINESS_ADDRESS:?BUSINESS_ADDRESS is required}
       SUPPORT_PHONE: ${SUPPORT_PHONE:?SUPPORT_PHONE is required}
       SUPPORT_EMAIL: ${SUPPORT_EMAIL:?SUPPORT_EMAIL is required}
+    volumes:
+      - ${DATABASE_URL_FILE:?DATABASE_URL_FILE is required}:/run/secrets/database-url:ro
+      - ${MAIL_PASSWORD_FILE:-/dev/null}:/run/secrets/mail-password:ro
     networks:
       - data
     security_opt:
@@ -254,9 +264,11 @@ services:
         condition: service_completed_successfully
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_RUNTIME_USER:?POSTGRES_RUNTIME_USER is required}:${POSTGRES_RUNTIME_PASSWORD:?POSTGRES_RUNTIME_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}?schema=public
+      DATABASE_URL_FILE: /run/secrets/database-url
       RETENTION_CLEANUP_ENABLED: ${RETENTION_CLEANUP_ENABLED:-false}
       RETENTION_BATCH_SIZE: ${RETENTION_BATCH_SIZE:-200}
+    volumes:
+      - ${DATABASE_URL_FILE:?DATABASE_URL_FILE is required}:/run/secrets/database-url:ro
     networks:
       - data
     security_opt:
@@ -284,13 +296,14 @@ services:
         condition: service_completed_successfully
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_RUNTIME_USER:?POSTGRES_RUNTIME_USER is required}:${POSTGRES_RUNTIME_PASSWORD:?POSTGRES_RUNTIME_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}?schema=public
+      DATABASE_URL_FILE: /run/secrets/database-url
       TELEGRAM_NOTIFICATIONS_ENABLED: ${TELEGRAM_NOTIFICATIONS_ENABLED:-false}
       TELEGRAM_NOTIFY_GROUP_COMPLETED: ${TELEGRAM_NOTIFY_GROUP_COMPLETED:-true}
       TELEGRAM_NOTIFY_GROUP_CLOSED: ${TELEGRAM_NOTIFY_GROUP_CLOSED:-true}
       TELEGRAM_BOT_TOKEN_FILE: /run/secrets/telegram-bot-token
       TELEGRAM_CHAT_ID_FILE: /run/secrets/telegram-chat-id
     volumes:
+      - ${DATABASE_URL_FILE:?DATABASE_URL_FILE is required}:/run/secrets/database-url:ro
       - ${TELEGRAM_BOT_TOKEN_FILE:-/dev/null}:/run/secrets/telegram-bot-token:ro
       - ${TELEGRAM_CHAT_ID_FILE:-/dev/null}:/run/secrets/telegram-chat-id:ro
     networks:
