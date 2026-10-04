@@ -9,6 +9,7 @@ import { baconVisualProfile } from "./burger-preview-bacon";
 import { lettuceVisualProfile } from "./burger-preview-lettuce";
 import { tomatoVisualProfile } from "./burger-preview-tomato";
 import { whiteOnionVisualProfile } from "./burger-preview-white-onion";
+import { picklesVisualProfile } from "./burger-preview-pickles";
 import type {
   BurgerSelection,
   ModifierOption,
@@ -534,6 +535,27 @@ export function BurgerPreview({
       }),
     );
 
+  const picklesProfile =
+    picklesVisualProfile(picklesCount);
+
+  const picklesLayers = Array.from(
+    { length: picklesCount },
+    (_, index): Layer => ({
+      key: `pickles-${index + 1}`,
+      spriteId: "pickles",
+      active: true,
+      y:
+        picklesY +
+        picklesProfile.yOffset -
+        index * picklesProfile.step,
+      z: 68 + index,
+      scale:
+        picklesProfile.scale -
+        index * 0.006,
+      x: picklesProfile.x,
+    }),
+  );
+
   const tomatoProfile =
     tomatoVisualProfile(tomatoCount);
 
@@ -620,17 +642,7 @@ export function BurgerPreview({
       scale: 0.86,
     }),
     ...whiteOnionLayers,
-    ...repeatedLayers({
-      key: "pickles",
-      asset: {
-        spriteId: "pickles",
-      },
-      count: picklesCount,
-      y: picklesY,
-      step: 7,
-      z: 68,
-      scale: 0.82,
-    }),
+    ...picklesLayers,
     ...tomatoLayers,
     ...lettuceLayers,
     {
@@ -718,7 +730,11 @@ export function BurgerPreview({
                                   "white-onion-",
                                 )
                               ? "white-onion"
-                              : undefined
+                              : layer.key.startsWith(
+                                    "pickles-",
+                                  )
+                                ? "pickles"
+                                : undefined
                 }
                 key={layer.key}
                 style={style}
@@ -766,7 +782,11 @@ export function BurgerPreview({
                                 "white-onion-",
                               )
                             ? "white-onion"
-                            : undefined
+                            : layer.key.startsWith(
+                                  "pickles-",
+                                )
+                              ? "pickles"
+                              : undefined
               }
               key={layer.key}
               src={layer.src}
