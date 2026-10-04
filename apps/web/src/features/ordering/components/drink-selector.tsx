@@ -35,7 +35,7 @@ export function DrinkSelector({
             alt={name}
           />
         )}
-        <div>
+        <div className="drink-copy">
           <strong>{name}</strong>
           <span>
             {money.format(priceCents / 100)} c/u
