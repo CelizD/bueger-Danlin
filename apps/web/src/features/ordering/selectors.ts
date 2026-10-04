@@ -62,7 +62,7 @@ export function calculatePreviewTotal(
     const extras = extraOptions.reduce(
       (extraSum, option) => {
         const quantified =
-          burger.extraQuantities[
+          burger.extraQuantities?.[
             option.id
           ] ?? 0;
         const legacy =
