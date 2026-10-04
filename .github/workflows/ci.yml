@@ -96,6 +96,9 @@ jobs:
       - name: Apply migrations
         run: pnpm db:migrate:deploy
 
+      - name: Verify numeric domain constraints
+        run: pnpm db:verify-domain-constraints
+
       - name: Typecheck
         run: pnpm lint
 
