@@ -41,6 +41,10 @@ export class CatalogController {
       "x-content-type-options",
       "nosniff",
     );
+    response.setHeader(
+      "cross-origin-resource-policy",
+      "cross-origin",
+    );
 
     return new StreamableFile(image.data);
   }
