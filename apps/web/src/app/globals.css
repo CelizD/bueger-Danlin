@@ -6572,7 +6572,7 @@ textarea:focus-visible,
   place-items: center;
   align-content: center;
   gap: 8px;
-  color: #898176;
+  color: #625c53;
 }
 
 .product-media-placeholder span {
@@ -6587,7 +6587,7 @@ textarea:focus-visible,
 }
 
 .product-media-info span {
-  color: #81796e;
+  color: #625c53;
   font-size: 9px;
   font-weight: 850;
   letter-spacing: 0.08em;
