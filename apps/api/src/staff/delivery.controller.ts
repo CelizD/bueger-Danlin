@@ -22,7 +22,7 @@ import { StaffOrdersService } from "./staff-orders.service.js";
 @ApiCookieAuth("burger_staff_session")
 @Controller("staff/delivery")
 @UseGuards(StaffAuthGuard, RolesGuard)
-@StaffRoles("ADMIN", "DELIVERY")
+@StaffRoles("DELIVERY")
 export class DeliveryController {
   constructor(private readonly staffOrders: StaffOrdersService) {}
 
