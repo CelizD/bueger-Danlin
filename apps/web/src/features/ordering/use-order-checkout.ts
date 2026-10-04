@@ -137,7 +137,8 @@ export function useOrderCheckout({
             burger.extraIds,
           extraModifierQuantities:
             Object.entries(
-              burger.extraQuantities,
+              burger.extraQuantities ??
+                {},
             )
               .filter(
                 ([, quantity]) =>
