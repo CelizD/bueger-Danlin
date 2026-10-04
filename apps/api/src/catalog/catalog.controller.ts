@@ -1,4 +1,10 @@
-import { Controller, Get } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Param,
+  Res,
+  StreamableFile,
+} from "@nestjs/common";
 import { CatalogService } from "./catalog.service.js";
 
 @Controller("catalog")
@@ -8,5 +14,34 @@ export class CatalogController {
   @Get()
   list() {
     return this.catalogService.listActiveProducts();
+  }
+
+  @Get("products/:id/image")
+  async productImage(
+    @Param("id") id: string,
+    @Res({ passthrough: true })
+    response: any,
+  ) {
+    const image =
+      await this.catalogService.productImage(id);
+
+    response.setHeader(
+      "content-type",
+      image.mimeType,
+    );
+    response.setHeader(
+      "content-length",
+      String(image.data.length),
+    );
+    response.setHeader(
+      "cache-control",
+      "public, max-age=31536000, immutable",
+    );
+    response.setHeader(
+      "x-content-type-options",
+      "nosniff",
+    );
+
+    return new StreamableFile(image.data);
   }
 }
