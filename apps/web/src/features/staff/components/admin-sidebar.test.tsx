@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { AdminSidebar } from "./admin-sidebar";
 
 describe("AdminSidebar", () => {
-  it("muestra solo navegación administrativa al rol ADMIN", () => {
+  it("muestra navegación administrativa y operativa al rol ADMIN", () => {
     const html = renderToStaticMarkup(
       <AdminSidebar
         user={{
@@ -17,8 +17,8 @@ describe("AdminSidebar", () => {
 
     expect(html).toContain("Panel del día");
     expect(html).toContain("Pedidos");
-    expect(html).not.toContain(">Cocina<");
-    expect(html).not.toContain(">Entrega<");
+    expect(html).toContain(">Cocina<");
+    expect(html).toContain(">Entrega<");
     expect(html).toContain("Sábados");
     expect(html).toContain("Inventario");
     expect(html).toContain("Privacidad ARCO");
