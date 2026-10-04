@@ -1,5 +1,5 @@
 import "dotenv/config";
-import pg from "pg";
+import { Client } from "pg";
 
 const expectedConstraints = [
   "ck_user_failed_login_attempts_nonneg",
@@ -46,7 +46,7 @@ async function main() {
     throw new Error("DATABASE_URL is required");
   }
 
-  const client = new pg.Client({ connectionString });
+  const client = new Client({ connectionString });
   await client.connect();
 
   try {
@@ -60,7 +60,7 @@ async function main() {
         WHERE contype = 'c'
           AND conname = ANY($1::text[])
       `,
-      [expectedConstraints],
+      [[...expectedConstraints]],
     );
 
     const found = new Map(
