@@ -53,7 +53,7 @@ const navItems = [
   {
     id: "sabados",
     href: "/admin/sabados",
-    label: "Sábados",
+    label: "Agenda",
     icon: CalendarDays,
   },
   {
