@@ -249,6 +249,8 @@ export function OrderingForm({
         >
           <BurgerBuilder
             burgers={burgers}
+            comboName={combo?.name ?? "Hamburguesa + papas"}
+            comboImagePath={combo?.imagePath}
             comboPriceCents={
               combo?.priceCents ?? 0
             }
@@ -275,6 +277,8 @@ export function OrderingForm({
           />
 
           <DrinkSelector
+            name={coke?.name ?? "Coca-Cola lata"}
+            imagePath={coke?.imagePath}
             quantity={cokes}
             priceCents={
               coke?.priceCents ?? 3000
