@@ -217,10 +217,10 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     secondBurger.getByTestId("burger-preview");
 
   const firstLettuce = firstPreview.locator(
-    'img[src="/burger-preview/lechuga.svg"]',
+    '[data-preview-layer="lettuce-1"]',
   );
   const firstMeat = firstPreview.locator(
-    'img[src="/burger-preview/carne.svg"]',
+    '[data-preview-layer="meat-1"]',
   );
 
   await expect(firstLettuce).toHaveCount(1);
@@ -235,13 +235,13 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await expect(firstLettuce).toHaveCount(0);
 
   const firstCheese = firstPreview.locator(
-    'img[src="/burger-preview/queso.svg"]',
+    '[data-preview-layer="cheese-1"]',
   );
-  const firstBacon = firstPreview.locator(
-    'img[src="/burger-preview/dobletocino.svg"]',
+  const firstBaconTwo = firstPreview.locator(
+    '[data-preview-layer="bacon-2"]',
   );
   const firstOnion = firstPreview.locator(
-    'img[src="/burger-preview/cebolla.svg"]',
+    '[data-preview-layer^="white-onion-"]',
   );
 
   await firstBurger
@@ -275,10 +275,10 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     .click();
 
   const firstPickles = firstPreview.locator(
-    'img[src="/burger-preview/pepinillos.svg"]',
+    '[data-preview-layer^="pickles-"]',
   );
   const firstMayonnaise = firstPreview.locator(
-    'img[src="/burger-preview/mayonesa.svg"]',
+    'use[href="/burger-preview/ingredients-sprite.svg#ketchup-mustard-mayonnaise"]',
   );
 
   await firstBurger
@@ -287,18 +287,43 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     })
     .click();
 
+  const firstMeatFour = firstPreview.locator(
+    '[data-preview-layer="meat-4"]',
+  );
+  const firstCheeseFour = firstPreview.locator(
+    '[data-preview-layer="cheese-4"]',
+  );
+
   await expect(firstPickles).toHaveCount(2);
   await expect(firstMayonnaise).toHaveCount(1);
-  await expect(firstMeat).toHaveCount(4);
-  await expect(firstCheese).toHaveCount(4);
-  await expect(firstBacon).toHaveCount(2);
+  await expect(firstMeat).toHaveCount(0);
+  await expect(firstCheese).toHaveCount(0);
+  await expect(firstMeatFour).toHaveCount(1);
+  await expect(firstCheeseFour).toHaveCount(1);
+  await expect(firstBaconTwo).toHaveCount(1);
+
+  await expect
+    .poll(async () =>
+      firstMeatFour
+        .locator("use")
+        .evaluate((element) => {
+          try {
+            return (
+              element as SVGGraphicsElement
+            ).getBBox().width;
+          } catch {
+            return 0;
+          }
+        }),
+    )
+    .toBeGreaterThan(0);
   await expect(firstOnion).toHaveCount(3);
   await expect(firstBurger).toContainText(
     "$265",
   );
 
   const secondTomato = secondPreview.locator(
-    'img[src="/burger-preview/tomate.svg"]',
+    '[data-preview-layer="tomato-1"]',
   );
 
   await expect(secondTomato).toHaveCount(1);
@@ -312,7 +337,7 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await expect(secondTomato).toHaveCount(0);
 
   const secondCheese = secondPreview.locator(
-    'img[src="/burger-preview/queso.svg"]',
+    '[data-preview-layer="cheese-1"]',
   );
 
   await expect(secondCheese).toHaveCount(1);
@@ -323,7 +348,12 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     })
     .click();
 
-  await expect(secondCheese).toHaveCount(3);
+  await expect(secondCheese).toHaveCount(0);
+  await expect(
+    secondPreview.locator(
+      '[data-preview-layer="cheese-3"]',
+    ),
+  ).toHaveCount(1);
 
   await page
     .getByRole("button", { name: "Agregar Coca-Cola" })
