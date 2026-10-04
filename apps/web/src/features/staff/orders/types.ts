@@ -16,6 +16,14 @@ export type OrderItem = {
   unitPriceCents: number;
   quantity: number;
   lineTotalCents: number;
+  preparationSnapshot?: {
+    included: string[];
+    removed: string[];
+    extras: string[];
+    quantities?: string[];
+    sauces?: string[];
+    others?: string[];
+  } | null;
   modifiers: OrderModifier[];
 };
 
