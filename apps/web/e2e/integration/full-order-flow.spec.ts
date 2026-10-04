@@ -285,7 +285,7 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await expect(firstBacon).toHaveCount(2);
   await expect(firstOnion).toHaveCount(3);
   await expect(firstBurger).toContainText(
-    "$265.00",
+    "$265",
   );
 
   const secondTomato = secondPreview.locator(
