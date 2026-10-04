@@ -38,11 +38,7 @@ export async function fetchDeliveryOrders(): Promise<
 
   const meData = await me.json();
 
-  if (
-    !["ADMIN", "DELIVERY"].includes(
-      meData.user.role,
-    )
-  ) {
+  if (meData.user.role !== "DELIVERY") {
     return { authorized: false };
   }
 
