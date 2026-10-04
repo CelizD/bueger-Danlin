@@ -1,4 +1,8 @@
 import { money } from "@/features/ordering/formatters";
+import {
+  burgerModifierQuantity,
+  type ModifierQuantityUpdate,
+} from "@/features/ordering/builder";
 import { apiUrl } from "@/lib/api/browser";
 import { BurgerPreview } from "./burger-preview";
 import type {
@@ -17,20 +21,12 @@ type BurgerBuilderProps = {
   inventory: InventoryAvailability | null;
   maxCombosAvailable: number;
   onAddBurger: () => void;
-  onRemoveBurger: (localId: string) => void;
-  onToggleRemoved: (
-    burgerId: string,
-    optionId: string,
+  onRemoveBurger: (
+    localId: string,
   ) => void;
-  onToggleExtra: (
+  onSetModifierQuantities: (
     burgerId: string,
-    optionId: string,
-  ) => void;
-  onSetIngredientQuantity: (
-    burgerId: string,
-    includedOptionId: string | null,
-    extraOptionId: string,
-    quantity: number,
+    updates: ModifierQuantityUpdate[],
   ) => void;
 };
 
@@ -38,72 +34,55 @@ const QUANTITY_VALUES = [
   0, 1, 2, 3, 4, 5,
 ] as const;
 
-function selectedExtraQuantity(
-  burger: BurgerSelection,
-  optionId: string,
+function optionByKey(
+  options: ModifierOption[],
+  key: string,
 ) {
-  return Math.max(
-    burger.extraQuantities?.[optionId] ?? 0,
-    burger.extraIds.includes(optionId)
-      ? 1
-      : 0,
+  return options.find(
+    (option) => option.key === key,
   );
 }
 
-function companionExtraKey(
-  includedKey: string | undefined,
+function companionExtra(
+  option: ModifierOption,
+  extraOptions: ModifierOption[],
 ) {
-  if (!includedKey?.startsWith("included-")) {
-    return null;
+  if (
+    !option.key?.startsWith(
+      "included-",
+    )
+  ) {
+    return undefined;
   }
 
-  return (
-    "extra-" +
-    includedKey.slice(
+  return optionByKey(
+    extraOptions,
+    `extra-${option.key.slice(
       "included-".length,
-    )
+    )}`,
   );
 }
 
-function quantityHint(
-  priceDeltaCents: number,
-) {
-  if (priceDeltaCents <= 0) {
-    return "Porciones adicionales sin costo";
-  }
-
-  return (
-    "Porción adicional +" +
-    money.format(
-      priceDeltaCents / 100,
-    )
-  );
-}
-
-function IngredientQuantity({
+function QuantityPicker({
   name,
   value,
   min,
-  extraPriceCents,
-  disabled,
+  hint,
   onChange,
 }: {
   name: string;
   value: number;
   min: 0 | 1;
-  extraPriceCents: number;
-  disabled?: boolean;
-  onChange: (quantity: number) => void;
+  hint: string;
+  onChange: (
+    quantity: number,
+  ) => void;
 }) {
   return (
     <div className="ingredient-quantity-row">
       <div className="ingredient-quantity-copy">
         <strong>{name}</strong>
-        <small>
-          {quantityHint(
-            extraPriceCents,
-          )}
-        </small>
+        <small>{hint}</small>
       </div>
 
       <div
@@ -112,7 +91,8 @@ function IngredientQuantity({
         aria-label={`Cantidad de ${name}`}
       >
         {QUANTITY_VALUES.filter(
-          (quantity) => quantity >= min,
+          (quantity) =>
+            quantity >= min,
         ).map((quantity) => (
           <button
             key={quantity}
@@ -125,17 +105,38 @@ function IngredientQuantity({
             aria-pressed={
               value === quantity
             }
-            disabled={disabled}
+            aria-label={
+              quantity === 0
+                ? `${name}: sin ingrediente`
+                : `${name}: ${quantity} porción${quantity === 1 ? "" : "es"}`
+            }
             onClick={() =>
               onChange(quantity)
             }
           >
-            {quantity}
+            {quantity === 0
+              ? "Sin"
+              : quantity}
           </button>
         ))}
       </div>
     </div>
   );
+}
+
+function extraHint(
+  option: ModifierOption | undefined,
+) {
+  if (!option) {
+    return "Incluido · hasta 5 porciones";
+  }
+
+  return option.priceDeltaCents > 0
+    ? `Incluye 1 · adicional +${money.format(
+        option.priceDeltaCents /
+          100,
+      )} c/u`
+    : "Incluye 1 · adicionales sin costo";
 }
 
 export function BurgerBuilder({
@@ -145,47 +146,45 @@ export function BurgerBuilder({
   comboPriceCents,
   removableOptions,
   extraOptions,
-  inventory,
+  inventory: _inventory,
   maxCombosAvailable,
   onAddBurger,
   onRemoveBurger,
-  onToggleRemoved,
-  onToggleExtra,
-  onSetIngredientQuantity,
+  onSetModifierQuantities,
 }: BurgerBuilderProps) {
-  const extraByKey = new Map(
-    extraOptions
-      .filter((option) => option.key)
-      .map((option) => [
-        option.key!,
-        option,
-      ]),
+  const meatExtra = optionByKey(
+    extraOptions,
+    "extra-meat",
   );
 
-  const meatExtra =
-    extraByKey.get("extra-meat");
+  const pairedExtraIds = new Set(
+    removableOptions
+      .map((option) =>
+        companionExtra(
+          option,
+          extraOptions,
+        ),
+      )
+      .filter(
+        (
+          option,
+        ): option is ModifierOption =>
+          Boolean(option),
+      )
+      .map((option) => option.id),
+  );
 
-  const quantityControlledExtraKeys =
-    new Set<string>(["extra-meat"]);
-
-  for (const option of removableOptions) {
-    const key = companionExtraKey(
-      option.key,
+  if (meatExtra) {
+    pairedExtraIds.add(
+      meatExtra.id,
     );
-
-    if (key) {
-      quantityControlledExtraKeys.add(
-        key,
-      );
-    }
   }
 
   const standaloneExtras =
     extraOptions.filter(
       (option) =>
-        !option.key ||
-        !quantityControlledExtraKeys.has(
-          option.key,
+        !pairedExtraIds.has(
+          option.id,
         ),
     );
 
@@ -275,35 +274,47 @@ export function BurgerBuilder({
                       Cantidad de ingredientes
                     </p>
                     <p className="option-help">
-                      Elige de 0 a 5
-                      porciones. La carne
-                      siempre lleva al menos
-                      una.
+                      Elige hasta 5 porciones
+                      por ingrediente. La
+                      carne siempre lleva al
+                      menos una.
                     </p>
 
                     <div className="ingredient-quantity-list">
                       {meatExtra && (
-                        <IngredientQuantity
+                        <QuantityPicker
                           name="Carne"
                           value={
                             1 +
-                            selectedExtraQuantity(
+                            burgerModifierQuantity(
                               burger,
-                              meatExtra.id,
+                              meatExtra,
                             )
                           }
                           min={1}
-                          extraPriceCents={
-                            meatExtra.priceDeltaCents
+                          hint={
+                            meatExtra.priceDeltaCents >
+                            0
+                              ? `Incluye 1 · adicional +${money.format(
+                                  meatExtra.priceDeltaCents /
+                                    100,
+                                )} c/u`
+                              : "Incluye 1"
                           }
                           onChange={(
                             quantity,
                           ) =>
-                            onSetIngredientQuantity(
+                            onSetModifierQuantities(
                               burger.localId,
-                              null,
-                              meatExtra.id,
-                              quantity,
+                              [
+                                {
+                                  option:
+                                    meatExtra,
+                                  quantity:
+                                    quantity -
+                                    1,
+                                },
+                              ],
                             )
                           }
                         />
@@ -311,205 +322,149 @@ export function BurgerBuilder({
 
                       {removableOptions.map(
                         (option) => {
-                          const extraKey =
-                            companionExtraKey(
-                              option.key,
+                          const extra =
+                            companionExtra(
+                              option,
+                              extraOptions,
                             );
-                          const companion =
-                            extraKey
-                              ? extraByKey.get(
-                                  extraKey,
-                                )
-                              : undefined;
-                          const included =
-                            !burger.removedIds.includes(
-                              option.id,
-                            );
-                          const value =
-                            Number(
-                              included,
-                            ) +
-                            (companion
-                              ? selectedExtraQuantity(
-                                  burger,
-                                  companion.id,
-                                )
-                              : 0);
-                          const unavailable =
-                            inventory
-                              ?.modifierLimits[
-                              option.id
-                            ] === 0 &&
-                            value === 0;
 
-                          if (!companion) {
+                          if (extra) {
+                            const included =
+                              burgerModifierQuantity(
+                                burger,
+                                option,
+                              ) >
+                              0;
+                            const value =
+                              (included
+                                ? 1
+                                : 0) +
+                              burgerModifierQuantity(
+                                burger,
+                                extra,
+                              );
+
                             return (
-                              <div
-                                className="ingredient-quantity-row"
+                              <QuantityPicker
                                 key={
                                   option.id
                                 }
-                              >
-                                <div className="ingredient-quantity-copy">
-                                  <strong>
-                                    {
-                                      option.name
-                                    }
-                                  </strong>
-                                  <small>
-                                    Una porción
-                                    incluida
-                                  </small>
-                                </div>
-                                <div
-                                  className="ingredient-quantity-buttons"
-                                  role="group"
-                                  aria-label={`Cantidad de ${option.name}`}
-                                >
-                                  {[0, 1].map(
-                                    (
-                                      quantity,
-                                    ) => (
-                                      <button
-                                        key={
-                                          quantity
-                                        }
-                                        type="button"
-                                        className={
-                                          value ===
-                                          quantity
-                                            ? "ingredient-quantity-button is-selected"
-                                            : "ingredient-quantity-button"
-                                        }
-                                        aria-pressed={
-                                          value ===
-                                          quantity
-                                        }
-                                        disabled={
-                                          unavailable &&
+                                name={
+                                  option.name
+                                }
+                                value={
+                                  value
+                                }
+                                min={0}
+                                hint={extraHint(
+                                  extra,
+                                )}
+                                onChange={(
+                                  quantity,
+                                ) =>
+                                  onSetModifierQuantities(
+                                    burger.localId,
+                                    [
+                                      {
+                                        option,
+                                        quantity:
                                           quantity >
-                                            0
-                                        }
-                                        onClick={() => {
-                                          if (
-                                            quantity !==
-                                            value
-                                          ) {
-                                            onToggleRemoved(
-                                              burger.localId,
-                                              option.id,
-                                            );
-                                          }
-                                        }}
-                                      >
-                                        {
-                                          quantity
-                                        }
-                                      </button>
-                                    ),
-                                  )}
-                                </div>
-                              </div>
+                                          0
+                                            ? 1
+                                            : 0,
+                                      },
+                                      {
+                                        option:
+                                          extra,
+                                        quantity:
+                                          Math.max(
+                                            0,
+                                            quantity -
+                                              1,
+                                          ),
+                                      },
+                                    ],
+                                  )
+                                }
+                              />
                             );
                           }
 
                           return (
-                            <IngredientQuantity
+                            <QuantityPicker
                               key={
                                 option.id
                               }
                               name={
                                 option.name
                               }
-                              value={value}
+                              value={burgerModifierQuantity(
+                                burger,
+                                option,
+                              )}
                               min={0}
-                              extraPriceCents={
-                                companion.priceDeltaCents
-                              }
-                              disabled={
-                                unavailable
-                              }
+                              hint={extraHint(
+                                undefined,
+                              )}
                               onChange={(
                                 quantity,
                               ) =>
-                                onSetIngredientQuantity(
+                                onSetModifierQuantities(
                                   burger.localId,
-                                  option.id,
-                                  companion.id,
-                                  quantity,
+                                  [
+                                    {
+                                      option,
+                                      quantity,
+                                    },
+                                  ],
                                 )
                               }
                             />
                           );
                         },
                       )}
-                    </div>
-                  </div>
 
-                  {standaloneExtras.length >
-                    0 && (
-                    <div className="option-block">
-                      <p className="option-title">
-                        Otros extras
-                      </p>
-                      <div className="option-grid">
-                        {standaloneExtras.map(
-                          (option) => {
-                            const selected =
-                              burger.extraIds.includes(
-                                option.id,
-                              );
-                            const unavailable =
-                              inventory
-                                ?.modifierLimits[
-                                option.id
-                              ] === 0 &&
-                              !selected;
-
-                            return (
-                              <label
-                                className="check-row extra-row"
-                                key={
-                                  option.id
-                                }
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={
-                                    selected
-                                  }
-                                  disabled={
-                                    unavailable
-                                  }
-                                  onChange={() =>
-                                    onToggleExtra(
-                                      burger.localId,
-                                      option.id,
-                                    )
-                                  }
-                                />
-                                <span>
-                                  {
-                                    option.name
-                                  }
-                                  {unavailable
-                                    ? " · Agotado"
-                                    : ""}
-                                </span>
-                                <strong>
-                                  +
-                                  {money.format(
+                      {standaloneExtras.map(
+                        (option) => (
+                          <QuantityPicker
+                            key={
+                              option.id
+                            }
+                            name={
+                              option.name
+                            }
+                            value={burgerModifierQuantity(
+                              burger,
+                              option,
+                            )}
+                            min={0}
+                            hint={
+                              option.priceDeltaCents >
+                              0
+                                ? `+${money.format(
                                     option.priceDeltaCents /
                                       100,
-                                  )}
-                                </strong>
-                              </label>
-                            );
-                          },
-                        )}
-                      </div>
+                                  )} por porción`
+                                : "Hasta 5 porciones"
+                            }
+                            onChange={(
+                              quantity,
+                            ) =>
+                              onSetModifierQuantities(
+                                burger.localId,
+                                [
+                                  {
+                                    option,
+                                    quantity,
+                                  },
+                                ],
+                              )
+                            }
+                          />
+                        ),
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </article>
