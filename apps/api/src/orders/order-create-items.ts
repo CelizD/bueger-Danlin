@@ -192,6 +192,40 @@ export async function prepareOrderItems(
     const legacyExtraIdSet =
       new Set(extraIds);
 
+    for (const includedOption of removableOptions) {
+      if (
+        typeof includedOption.key !== "string" ||
+        !includedOption.key.startsWith("included-")
+      ) {
+        continue;
+      }
+
+      const ingredient =
+        includedOption.key.slice(
+          "included-".length,
+        );
+      const companion =
+        extraOptions.find(
+          (candidate: any) =>
+            candidate.key ===
+            `extra-${ingredient}`,
+        );
+
+      if (
+        companion &&
+        !removedIdSet.has(
+          includedOption.id,
+        ) &&
+        (quantityById.get(
+          includedOption.id,
+        ) ?? 1) > 1
+      ) {
+        throw new BadRequestException(
+          `Las porciones adicionales de ${includedOption.name} deben enviarse como extra.`,
+        );
+      }
+    }
+
     for (const option of extraOptions) {
       const extraPortions =
         quantityById.get(option.id) ??
