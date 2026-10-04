@@ -168,7 +168,7 @@ export async function prepareOrderItems(
         option,
       ]),
     );
-    const optionByKey = new Map(
+    const optionByKey = new Map<string, any>(
       availableOptions
         .filter(
           (option: any) =>
