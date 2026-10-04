@@ -135,24 +135,18 @@ export function useOrderCheckout({
             burger.removedIds,
           extraModifierOptionIds:
             burger.extraIds,
-          extraModifierQuantities:
+          modifierQuantities:
             Object.entries(
-              burger.extraQuantities ??
-                {},
-            )
-              .filter(
-                ([, quantity]) =>
-                  quantity > 0,
-              )
-              .map(
-                ([
-                  optionId,
-                  quantity,
-                ]) => ({
-                  optionId,
-                  quantity,
-                }),
-              ),
+              burger.modifierQuantities,
+            ).map(
+              ([
+                modifierOptionId,
+                quantity,
+              ]) => ({
+                modifierOptionId,
+                quantity,
+              }),
+            ),
         }),
       );
 
@@ -162,7 +156,7 @@ export function useOrderCheckout({
           quantity: cokes,
           removedModifierOptionIds: [],
           extraModifierOptionIds: [],
-          extraModifierQuantities: [],
+          modifierQuantities: [],
         });
       }
 
