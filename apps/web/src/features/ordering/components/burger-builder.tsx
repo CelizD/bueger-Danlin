@@ -108,7 +108,7 @@ function QuantityPicker({
             aria-label={
               quantity === 0
                 ? `${name}: sin ingrediente`
-                : `${name}: ${quantity} porción${quantity === 1 ? "" : "es"}`
+                : `${name}: ${quantity} ${quantity === 1 ? "porción" : "porciones"}`
             }
             onClick={() =>
               onChange(quantity)
