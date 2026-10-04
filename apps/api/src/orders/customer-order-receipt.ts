@@ -42,6 +42,7 @@ export type ReceiptOrder = {
       optionName: string;
       removed: boolean;
       priceDeltaCents: number;
+      quantity: number;
     }>;
   }>;
 };
@@ -291,14 +292,29 @@ function buildLines(
     });
 
     for (const modifier of item.modifiers) {
+      const quantity =
+        modifier.removed
+          ? 1
+          : Math.max(
+              1,
+              modifier.quantity,
+            );
+      const deltaTotal =
+        modifier.priceDeltaCents *
+        quantity;
       const delta =
-        modifier.priceDeltaCents !== 0
+        deltaTotal !== 0
           ? " (" +
             money(
-              modifier.priceDeltaCents,
+              deltaTotal,
               order.currency,
             ) +
             ")"
+          : "";
+      const quantityLabel =
+        !modifier.removed &&
+        quantity > 1
+          ? " x" + quantity
           : "";
 
       lines.push({
@@ -308,6 +324,7 @@ function buildLines(
             ? "Sin "
             : "+ ") +
           modifier.optionName +
+          quantityLabel +
           delta,
         size: 9,
       });
