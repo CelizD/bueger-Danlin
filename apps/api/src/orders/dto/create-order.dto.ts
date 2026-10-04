@@ -41,7 +41,7 @@ export class CreateOrderModifierQuantityDto {
   modifierOptionId!: string;
 
   @IsInt()
-  @Min(0)
+  @Min(1)
   @Max(5)
   quantity!: number;
 }
@@ -73,7 +73,7 @@ export class CreateOrderItemDto {
   @ArrayMaxSize(40)
   @ValidateNested({ each: true })
   @Type(() => CreateOrderModifierQuantityDto)
-  modifierQuantities: CreateOrderModifierQuantityDto[] = [];
+  modifierQuantities?: CreateOrderModifierQuantityDto[];
 }
 
 export class CreateOrderDto {
