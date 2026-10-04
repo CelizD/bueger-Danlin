@@ -3,9 +3,10 @@ lockfileVersion: '9.0'
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
-  overrides:
-    deepmerge-ts: 8.0.2
-    mysql2: 3.24.4
+
+overrides:
+  deepmerge-ts: 8.0.2
+  mysql2: 3.24.4
 
 importers:
 
