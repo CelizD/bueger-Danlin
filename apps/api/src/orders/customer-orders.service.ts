@@ -11,7 +11,10 @@ import { cancelCustomerOrder } from "./customer-order-cancellation.js";
 import { processCustomerRefund } from "./customer-order-refund-processing.js";
 import { hasRefundRequest } from "./customer-order-refund.js";
 import { assertOrderVerificationToken } from "./customer-order-security.js";
-import { buildCustomerOrderReceiptPdf } from "./customer-order-receipt.js";
+import {
+  buildCustomerOrderReceiptPdf,
+  type ReceiptPreparationSnapshot,
+} from "./customer-order-receipt.js";
 
 const TERMINAL_STATUSES = [
   "DELIVERED",
@@ -192,7 +195,7 @@ export class CustomerOrdersService {
         quantity: item.quantity,
         lineTotalCents: item.lineTotalCents,
         preparationSnapshot:
-          item.preparationSnapshot,
+          item.preparationSnapshot as ReceiptPreparationSnapshot | null,
         modifiers: item.modifiers.map((modifier) => ({
           id: modifier.id,
           optionName: modifier.optionName,
