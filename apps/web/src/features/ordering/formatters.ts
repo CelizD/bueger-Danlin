@@ -27,6 +27,6 @@ export function newBurger(
     localId: crypto.randomUUID(),
     removedIds,
     extraIds: [],
-    extraQuantities: {},
+    modifierQuantities: {},
   };
 }
