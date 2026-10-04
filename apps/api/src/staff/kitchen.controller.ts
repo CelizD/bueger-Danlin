@@ -18,7 +18,7 @@ import { StaffOrdersService } from "./staff-orders.service.js";
 @ApiCookieAuth("burger_staff_session")
 @Controller("staff/kitchen")
 @UseGuards(StaffAuthGuard, RolesGuard)
-@StaffRoles("ADMIN", "KITCHEN")
+@StaffRoles("KITCHEN")
 export class KitchenController {
   constructor(private readonly staffOrders: StaffOrdersService) {}
 

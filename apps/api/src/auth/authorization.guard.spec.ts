@@ -44,18 +44,26 @@ describe("AdminGuard", () => {
 });
 
 describe("RolesGuard", () => {
-  it("permite únicamente los roles declarados", () => {
-    const reflector = {
-      getAllAndOverride: vi.fn().mockReturnValue(["ADMIN", "KITCHEN"]),
-    } as unknown as Reflector;
-    const guard = new RolesGuard(reflector);
+  it.each([
+    ["KITCHEN", "KITCHEN", ["ADMIN", "DELIVERY"]],
+    ["DELIVERY", "DELIVERY", ["ADMIN", "KITCHEN"]],
+  ] as const)(
+    "permite solo %s en su área operativa",
+    (_area, allowedRole, deniedRoles) => {
+      const reflector = {
+        getAllAndOverride: vi.fn().mockReturnValue([allowedRole]),
+      } as unknown as Reflector;
+      const guard = new RolesGuard(reflector);
 
-    expect(guard.canActivate(contextWithRole("ADMIN"))).toBe(true);
-    expect(guard.canActivate(contextWithRole("KITCHEN"))).toBe(true);
-    expect(() => guard.canActivate(contextWithRole("DELIVERY"))).toThrow(
-      ForbiddenException,
-    );
-  });
+      expect(guard.canActivate(contextWithRole(allowedRole))).toBe(true);
+
+      for (const deniedRole of deniedRoles) {
+        expect(() =>
+          guard.canActivate(contextWithRole(deniedRole)),
+        ).toThrow(ForbiddenException);
+      }
+    },
+  );
 
   it("deja pasar cuando una ruta no declara roles", () => {
     const reflector = {
