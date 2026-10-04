@@ -20,6 +20,8 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [x] Nginx reverse proxy versionado.
 - [x] HTTPS obligatorio en API de producción.
 - [x] Secretos fuera de Git.
+- [x] API preparada para secretos mediante `*_FILE` y mounts read-only.
+- [x] Go-live bloquea `SECRETS_BACKEND=unconfigured`.
 - [x] Backup PostgreSQL cifrado con age.
 - [x] SHA-256 del backup.
 - [x] Restore drill aislado.
@@ -48,6 +50,10 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 ### Infraestructura
 
 - [ ] Contratar VPS.
+- [ ] Elegir y desplegar Vault, Secret Manager o flujo KMS-backed para secretos de producción.
+- [ ] Configurar `SECRETS_BACKEND` con el backend real.
+- [ ] Materializar y probar los archivos descritos en `deploy/SECRETS.md`.
+- [ ] Migrar también credenciales de infraestructura restantes (PostgreSQL bootstrap/migrate, Redis, S3 y Grafana) al backend elegido.
 - [ ] Crear usuario de deploy no-root.
 - [ ] SSH solo con claves.
 - [ ] Deshabilitar login SSH de root.
@@ -92,7 +98,7 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [x] Comprobante PDF adjunto implementado.
 - [x] SMTP TLS/STARTTLS y validación de certificado implementados.
 - [x] Timer/servicio para procesar correos pendientes preparado.
-- [ ] Configurar `MAIL_HOST`, `MAIL_PORT`, `MAIL_SECURITY`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` y reply-to reales.
+- [ ] Configurar `MAIL_HOST`, `MAIL_PORT`, `MAIL_SECURITY`, `MAIL_USERNAME`, `MAIL_PASSWORD_FILE`, `MAIL_FROM` y reply-to reales.
 - [ ] Enviar una compra de prueba y confirmar recepción del correo + PDF.
 - [ ] Confirmar reintento controlado ante fallo SMTP.
 - [ ] Cambiar `EMAIL_NOTIFICATIONS_ENABLED=true` únicamente después de probar SMTP real.

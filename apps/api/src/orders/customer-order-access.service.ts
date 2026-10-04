@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../database/prisma.service.js";
+import { readSetting } from "../config/secret-setting.js";
 import { createOrderVerificationToken } from "./order-create-security.js";
 
 const COOKIE_PREFIX = "burger_order_access_";
@@ -114,7 +115,7 @@ export class CustomerOrderAccessService {
     private readonly prisma: PrismaService,
   ) {
     const secret =
-      process.env.QR_TOKEN_SECRET;
+      readSetting("QR_TOKEN_SECRET");
 
     if (!secret) {
       throw new Error(

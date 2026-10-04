@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readSetting } from "./secret-setting.js";
 
 const weakValues = new Set([
   "",
@@ -13,24 +13,8 @@ const productionPaymentProviders = new Set([
   "mercadopago",
 ]);
 
-function setting(name: string) {
-  const direct = process.env[name]?.trim();
-
-  if (direct) return direct;
-
-  const file = process.env[`${name}_FILE`]?.trim();
-
-  if (!file) return "";
-
-  try {
-    return readFileSync(file, "utf8").trim();
-  } catch {
-    return "";
-  }
-}
-
 function requireStrongSecret(name: string, minLength: number) {
-  const value = process.env[name]?.trim() ?? "";
+  const value = readSetting(name) ?? "";
 
   if (value.length < minLength || weakValues.has(value.toLowerCase())) {
     throw new Error(
@@ -62,7 +46,7 @@ export function validateProductionEnvironment() {
   const authSecret = requireStrongSecret("AUTH_JWT_SECRET", 48);
   const qrSecret = requireStrongSecret("QR_TOKEN_SECRET", 48);
   const mfaEncryptionKey =
-    process.env.MFA_ENCRYPTION_KEY?.trim() ?? "";
+    readSetting("MFA_ENCRYPTION_KEY") ?? "";
 
   let decodedMfaKey: Buffer;
 
@@ -85,7 +69,7 @@ export function validateProductionEnvironment() {
     throw new Error("AUTH_JWT_SECRET and QR_TOKEN_SECRET must be different");
   }
 
-  const databaseUrl = process.env.DATABASE_URL?.trim();
+  const databaseUrl = readSetting("DATABASE_URL");
 
   if (!databaseUrl || databaseUrl.includes("burger_local")) {
     throw new Error(
@@ -105,7 +89,7 @@ export function validateProductionEnvironment() {
   }
 
   if (telegramSetting === "true") {
-    const telegramBotToken = setting("TELEGRAM_BOT_TOKEN");
+    const telegramBotToken = readSetting("TELEGRAM_BOT_TOKEN") ?? "";
 
     if (
       telegramBotToken.length < 20 ||
@@ -116,7 +100,7 @@ export function validateProductionEnvironment() {
       );
     }
 
-    const telegramChatId = setting("TELEGRAM_CHAT_ID");
+    const telegramChatId = readSetting("TELEGRAM_CHAT_ID") ?? "";
 
     if (!/^-?\d+$/.test(telegramChatId)) {
       throw new Error(

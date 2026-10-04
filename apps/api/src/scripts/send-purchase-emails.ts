@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { readSetting } from "../config/secret-setting.js";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client.js";
 import type { PrismaService } from "../database/prisma.service.js";
@@ -7,7 +8,7 @@ import { SmtpMailTransport } from "../notifications/smtp-mail.transport.js";
 
 async function main() {
   const connectionString =
-    process.env.DATABASE_URL;
+    readSetting("DATABASE_URL");
 
   if (!connectionString) {
     throw new Error(

@@ -25,9 +25,10 @@ API_URL="$(get_env NEXT_PUBLIC_API_URL)"
 PAYMENT_PROVIDER="$(get_env PAYMENT_PROVIDER)"
 REAL_PAYMENTS="$(get_env ENABLE_REAL_PAYMENTS)"
 OFFSITE_ENABLED="$(get_env OFFSITE_BACKUP_ENABLED)"
-AUTH_SECRET="$(get_env AUTH_JWT_SECRET)"
-QR_SECRET="$(get_env QR_TOKEN_SECRET)"
-MFA_KEY="$(get_env MFA_ENCRYPTION_KEY)"
+SECRETS_BACKEND="$(get_env SECRETS_BACKEND)"
+AUTH_SECRET_FILE="$(get_env AUTH_JWT_SECRET_FILE)"
+QR_SECRET_FILE="$(get_env QR_TOKEN_SECRET_FILE)"
+MFA_KEY_FILE="$(get_env MFA_ENCRYPTION_KEY_FILE)"
 POSTGRES_ADMIN_USER="$(get_env POSTGRES_ADMIN_USER)"
 POSTGRES_RUNTIME_USER="$(get_env POSTGRES_RUNTIME_USER)"
 PRIVACY_RESPONSIBLE="$(get_env PRIVACY_RESPONSIBLE)"
@@ -44,7 +45,7 @@ MAIL_HOST="$(get_env MAIL_HOST)"
 MAIL_PORT="$(get_env MAIL_PORT)"
 MAIL_SECURITY="$(get_env MAIL_SECURITY)"
 MAIL_USERNAME="$(get_env MAIL_USERNAME)"
-MAIL_PASSWORD="$(get_env MAIL_PASSWORD)"
+MAIL_PASSWORD_FILE="$(get_env MAIL_PASSWORD_FILE)"
 MAIL_FROM="$(get_env MAIL_FROM)"
 MAIL_REPLY_TO="$(get_env MAIL_REPLY_TO)"
 MAIL_REJECT_UNAUTHORIZED="$(get_env MAIL_REJECT_UNAUTHORIZED)"
@@ -77,13 +78,16 @@ case "${OFFSITE_ENABLED}" in
   *) fail "OFFSITE_BACKUP_ENABLED must be true before go-live" ;;
 esac
 
-[ "${#AUTH_SECRET}" -ge 48 ] || fail "AUTH_JWT_SECRET is missing or too short"
-[ "${#QR_SECRET}" -ge 48 ] || fail "QR_TOKEN_SECRET is missing or too short"
-[ "${AUTH_SECRET}" != "${QR_SECRET}" ] || fail "AUTH_JWT_SECRET and QR_TOKEN_SECRET must differ"
-pass "JWT/QR secrets satisfy minimum length and separation"
+case "${SECRETS_BACKEND}" in
+  vault|cloud-secret-manager|kms-backed-files) pass "external secret backend configured" ;;
+  *) fail "SECRETS_BACKEND must be vault, cloud-secret-manager or kms-backed-files before go-live" ;;
+esac
 
-[ -n "${MFA_KEY}" ] || fail "MFA_ENCRYPTION_KEY is missing"
-pass "MFA encryption key is configured"
+[ -f "${AUTH_SECRET_FILE}" ] || fail "AUTH_JWT_SECRET_FILE must point to a readable secret file"
+[ -f "${QR_SECRET_FILE}" ] || fail "QR_TOKEN_SECRET_FILE must point to a readable secret file"
+[ "${AUTH_SECRET_FILE}" != "${QR_SECRET_FILE}" ] || fail "AUTH_JWT_SECRET_FILE and QR_TOKEN_SECRET_FILE must differ"
+[ -f "${MFA_KEY_FILE}" ] || fail "MFA_ENCRYPTION_KEY_FILE must point to a readable secret file"
+pass "JWT, QR and MFA secrets are file-backed; API startup validates their contents"
 
 [ -n "${PRIVACY_RESPONSIBLE}" ] || fail "PRIVACY_RESPONSIBLE is required"
 [ "${#PRIVACY_ADDRESS}" -ge 10 ] || fail "PRIVACY_ADDRESS must contain a real contact address"
@@ -123,7 +127,7 @@ case "${MAIL_SECURITY}" in
 esac
 
 [ -n "${MAIL_USERNAME}" ] || fail "MAIL_USERNAME is required"
-[ -n "${MAIL_PASSWORD}" ] || fail "MAIL_PASSWORD is required"
+[ -f "${MAIL_PASSWORD_FILE}" ] || fail "MAIL_PASSWORD_FILE must point to a readable secret file"
 case "${MAIL_FROM}" in
   *@*.*) ;;
   *) fail "MAIL_FROM must contain a valid sender email" ;;
@@ -147,8 +151,8 @@ done
 pass "database admin/runtime identities are separated"
 pass "database, Redis, backup encryption, and offsite storage settings are present"
 
-[ -n "$(get_env MERCADOPAGO_ACCESS_TOKEN)" ] || fail "MERCADOPAGO_ACCESS_TOKEN is required"
-[ -n "$(get_env MERCADOPAGO_WEBHOOK_SECRET)" ] || fail "MERCADOPAGO_WEBHOOK_SECRET is required"
+[ -f "$(get_env MERCADOPAGO_ACCESS_TOKEN_FILE)" ] || fail "MERCADOPAGO_ACCESS_TOKEN_FILE must point to a readable secret file"
+[ -f "$(get_env MERCADOPAGO_WEBHOOK_SECRET_FILE)" ] || fail "MERCADOPAGO_WEBHOOK_SECRET_FILE must point to a readable secret file"
 pass "Mercado Pago secrets are present"
 
 echo "Go-live environment gate passed."

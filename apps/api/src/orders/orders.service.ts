@@ -5,6 +5,7 @@ import {
 import { setTimeout as delay } from "node:timers/promises";
 import { PrismaService } from "../database/prisma.service.js";
 import { InventoryService } from "../inventory/inventory.service.js";
+import { readSetting } from "../config/secret-setting.js";
 import { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
 import { CreateOrderDto } from "./dto/create-order.dto.js";
 import { presentCreatedOrder } from "./order-create-presenter.js";
@@ -28,7 +29,7 @@ export class OrdersService {
     private readonly inventory: InventoryService,
     private readonly telegram?: TelegramNotificationService,
   ) {
-    const secret = process.env.QR_TOKEN_SECRET;
+    const secret = readSetting("QR_TOKEN_SECRET");
 
     if (!secret) {
       throw new Error("QR_TOKEN_SECRET is required");

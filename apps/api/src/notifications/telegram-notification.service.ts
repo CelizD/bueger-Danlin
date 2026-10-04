@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { readFileSync } from "node:fs";
+import { readSetting } from "../config/secret-setting.js";
 
 type OrderNotice = {
   orderCode: string;
@@ -39,23 +39,6 @@ function enabled(name: string, fallback = true) {
   if (value === undefined) return fallback;
 
   return value.trim().toLowerCase() === "true";
-}
-
-function setting(name: string) {
-  const direct = process.env[name]?.trim();
-
-  if (direct) return direct;
-
-  const file = process.env[`${name}_FILE`]?.trim();
-
-  if (!file) return undefined;
-
-  try {
-    const value = readFileSync(file, "utf8").trim();
-    return value || undefined;
-  } catch {
-    return undefined;
-  }
 }
 
 function money(cents: number, currency: string) {
@@ -224,8 +207,8 @@ export class TelegramNotificationService {
       return false;
     }
 
-    const token = setting("TELEGRAM_BOT_TOKEN");
-    const chatId = setting("TELEGRAM_CHAT_ID");
+    const token = readSetting("TELEGRAM_BOT_TOKEN");
+    const chatId = readSetting("TELEGRAM_CHAT_ID");
 
     if (!token || !chatId) {
       this.logger.warn(
