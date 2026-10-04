@@ -289,6 +289,9 @@ describe("ordering components", () => {
       "/burger-preview/panarriba.svg",
     );
     expect(html).toContain(
+      "/burger-preview/tocino.svg",
+    );
+    expect(html).toContain(
       "/burger-preview/pepinillos.svg",
     );
     expect(html).toContain(
