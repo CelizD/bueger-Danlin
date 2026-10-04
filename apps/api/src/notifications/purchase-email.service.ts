@@ -5,6 +5,7 @@ import {
 import { PrismaService } from "../database/prisma.service.js";
 import type {
   ReceiptOrder,
+  ReceiptPreparationSnapshot,
 } from "../orders/customer-order-receipt.js";
 import {
   buildPurchaseConfirmationEmail,
@@ -449,6 +450,8 @@ export class PurchaseEmailService {
         productName: string;
         quantity: number;
         lineTotalCents: number;
+        preparationSnapshot:
+          ReceiptPreparationSnapshot | null;
         modifiers: Array<{
           optionName: string;
           removed: boolean;
@@ -594,6 +597,8 @@ export class PurchaseEmailService {
               item.quantity,
             lineTotalCents:
               item.lineTotalCents,
+            preparationSnapshot:
+              item.preparationSnapshot as ReceiptPreparationSnapshot | null,
             modifiers:
               item.modifiers.map(
                 (modifier) => ({
