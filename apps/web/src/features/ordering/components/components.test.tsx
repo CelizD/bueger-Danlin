@@ -530,6 +530,51 @@ describe("ordering components", () => {
     );
   });
 
+  it("apila cinco porciones de pepinillos con la misma imagen y crecimiento compacto", () => {
+    const html = renderToStaticMarkup(
+      <BurgerBuilder
+        comboName="Hamburguesa + papas"
+        burgers={[
+          {
+            localId: "burger-pickles-five",
+            removedIds: [],
+            extraIds: ["pickles"],
+            modifierQuantities: {
+              pickles: 5,
+            },
+          },
+        ]}
+        comboPriceCents={13_000}
+        removableOptions={removable}
+        extraOptions={extras}
+        inventory={null}
+        maxCombosAvailable={5}
+        onAddBurger={vi.fn()}
+        onRemoveBurger={vi.fn()}
+        onSetModifierQuantities={vi.fn()}
+      />,
+    );
+
+    expect(
+      html.match(
+        /data-preview-layer="pickles-[1-5]"/g,
+      ),
+    ).toHaveLength(5);
+    expect(
+      html.match(
+        /data-preview-ingredient="pickles"/g,
+      ),
+    ).toHaveLength(5);
+    expect(
+      html.match(
+        /ingredients-sprite\.svg#pickles/g,
+      ),
+    ).toHaveLength(5);
+    expect(html).toContain(
+      'data-preview-layer="pickles-5"',
+    );
+  });
+
   it("compacta el preview sin reservar espacio para ingredientes en cero", () => {
     const compactHtml = renderToStaticMarkup(
       <BurgerBuilder
