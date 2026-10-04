@@ -50,14 +50,14 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | MFA administradores | ✅ | TOTP obligatorio, AES-256-GCM, recovery codes, anti-reuse y tests |
 | Cookies seguras | ✅ | HttpOnly; Secure + SameSite=Strict en producción |
 | Argon2id | ✅ | 19 MiB, 2 iteraciones, paralelismo 1 |
-| Benchmark Argon2id en hardware prod | 🟡 | Comando reproducible `pnpm security:benchmark-argon2` implementado; falta ejecutarlo y registrar p50/p95 en el VPS objetivo |
+| Benchmark Argon2id en hardware prod | 🟡 | Comando reproducible implementado + umbral/evidencia definidos en `deploy/REAL_INFRA_VALIDATION.md`; falta ejecutarlo en el VPS objetivo |
 | Password blocklist | ✅ | Política centralizada rechaza contraseñas comunes/triviales al crear/restablecer personal y en el admin seed; no realiza consultas externas de breach data |
 | JWT algoritmo/issuer/audience explícitos | ✅ | Configurados y validados en AuthModule |
 | RBAC / least privilege | ✅ | ADMIN, KITCHEN, DELIVERY + guards server-side |
 | Secrets fuera del repo | ✅ | .env ignorado; Gitleaks verde en CI |
 | Secret Manager / Vault | 🔴 | Producción todavía depende de variables/archivo de entorno |
 | KMS para claves sensibles | 🔴 | No implementado; MFA usa clave separada en entorno |
-| TLS 1.2/1.3 | 🟡 | Nginx/configuración preparada; falta desplegar dominio/certificados reales |
+| TLS 1.2/1.3 | 🟡 | Nginx preparado + `validate-public-endpoints.sh` verifica TLS 1.2/1.3, certificado y hostname; falta dominio/certificado real |
 | DB no pública | ✅ | Compose de producción sin host ports; red interna |
 | Redis no público | ✅ | Sin host ports, red interna y password |
 | Cifrado en reposo | 🟡 | Backups cifrados; cifrado del volumen/infra depende del proveedor final |
@@ -68,7 +68,7 @@ Los principales riesgos pendientes ya no están en el flujo básico del producto
 | Rate limits por endpoints caros | ✅ | Login/MFA y rutas públicas sensibles de pedidos/pagos tienen límites específicos además del límite global; ajustar valores con métricas reales de carga |
 | CORS explícito | ✅ | allowlist de APP_ORIGIN |
 | CSRF | ✅ | Origin + Fetch Metadata + SameSite para mutaciones de staff |
-| HTTPS obligatorio | 🟡 | FORCE_HTTPS listo; requiere reverse proxy/TLS real |
+| HTTPS obligatorio | 🟡 | FORCE_HTTPS listo; gate externo verifica redirect, HSTS y headers, pero requiere reverse proxy/TLS real |
 | Error handling central | ✅ | HttpExceptionFilter, formato uniforme y 5xx sanitizados |
 | Límites de payload | ✅ | JSON 256kb y urlencoded 64kb por defecto |
 | OpenAPI / inventario de API | ✅ | Swagger UI + docs-json; deshabilitado en prod salvo opt-in |
