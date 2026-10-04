@@ -39,6 +39,14 @@ export type CustomerOrder = {
     productName: string;
     quantity: number;
     lineTotalCents: number;
+    preparationSnapshot?: {
+      included: string[];
+      removed: string[];
+      extras: string[];
+      quantities?: string[];
+      sauces?: string[];
+      others?: string[];
+    } | null;
     modifiers: Array<{
       id: string;
       optionName: string;
