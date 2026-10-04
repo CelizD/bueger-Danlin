@@ -2,7 +2,7 @@
 
 Plataforma web de preventa de hamburguesas con pedidos programados para sábado, control de capacidad, inventario, cocina, entrega por QR y panel administrativo.
 
-> **Estado del MVP al 30 de septiembre de 2026:** código funcional completo y validado por CI/Security. Los pendientes reales antes de abrir tráfico son infraestructura, credenciales/proveedores y validación operativa en producción. Consulta `docs/MVP_FINAL_STATUS.md`.
+> **Estado del MVP al 3 de octubre de 2026:** código funcional completo y validado por CI/Security. Los pendientes reales antes de abrir tráfico son infraestructura, credenciales/proveedores y validación operativa en producción. Consulta `docs/MVP_FINAL_STATUS.md`.
 
 ## Estado actual
 
@@ -83,10 +83,11 @@ Ruta:
 
 `/admin/cocina`
 
-Roles permitidos:
+Rol permitido:
 
-- `ADMIN`
 - `KITCHEN`
+
+`ADMIN` no puede entrar a Cocina; la separación se aplica tanto en frontend como en API.
 
 Flujo:
 
@@ -98,10 +99,11 @@ Ruta:
 
 `/admin/entrega`
 
-Roles permitidos:
+Rol permitido:
 
-- `ADMIN`
 - `DELIVERY`
+
+`ADMIN` no puede entrar a Entrega; la separación se aplica tanto en frontend como en API.
 
 El QR usa el formato:
 
@@ -111,16 +113,19 @@ El API valida el token contra el hash almacenado. Un QR reutilizado no genera un
 
 ### Administración
 
-Rutas principales:
+Rutas administrativas para `ADMIN`:
 
 - `/admin/dashboard`
 - `/admin/pedidos`
 - `/admin/sabados`
 - `/admin/inventario`
 - `/admin/personal`
-- `/admin/cocina`
-- `/admin/entrega`
 - `/admin/arco`
+
+Áreas operativas separadas:
+
+- `/admin/cocina` → solo `KITCHEN`;
+- `/admin/entrega` → solo `DELIVERY`.
 
 Incluye:
 
@@ -325,14 +330,20 @@ pnpm --filter @burger/web test:e2e
 La suite integrada levanta:
 
 - PostgreSQL de test;
+- Mailpit real para SMTP;
 - NestJS real;
 - Next.js real;
 - Chromium real;
 - seed determinista.
 
-Valida:
+Valida, entre otros casos:
 
-`cliente -> pedido -> pago MOCK -> cocina -> READY -> QR -> entrega -> DELIVERED`
+- `cliente -> pedido -> pago MOCK -> cocina -> READY -> QR -> entrega -> DELIVERED`;
+- inventario y devolución exacta al cancelar/reembolsar;
+- entrega grupal con varios pedidos hasta `5 de 5`;
+- comprobante PDF real;
+- correo de confirmación + PDF mediante Mailpit;
+- separación estricta `ADMIN / KITCHEN / DELIVERY`.
 
 El seed integrado se niega a ejecutarse si:
 

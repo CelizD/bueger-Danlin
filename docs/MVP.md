@@ -1,6 +1,6 @@
 # Reglas del MVP
 
-Fecha de corte: **30 de septiembre de 2026**
+Fecha de corte: **3 de octubre de 2026**
 
 > Estado: reglas funcionales del MVP cerradas en código. Para el estado técnico completo y los pendientes reales de producción consulta `docs/MVP_FINAL_STATUS.md`.
 
@@ -109,7 +109,8 @@ Permitida antes del cierre. Después del cierre no hay cancelación automática.
 - Existen reintentos y recuperación de trabajos atascados.
 - El correo adjunta el comprobante PDF de compra.
 - SMTP usa TLS/STARTTLS en producción y verificación de certificado.
-- `EMAIL_NOTIFICATIONS_ENABLED=false` debe permanecer en producción hasta configurar y probar SMTP.
+- El flujo SMTP completo está validado en CI con Mailpit, incluyendo asunto, destinatario, cuerpo y PDF adjunto.
+- `EMAIL_NOTIFICATIONS_ENABLED=false` debe permanecer en producción hasta configurar y probar SMTP real.
 
 
 ## Pagos tardíos
@@ -125,3 +126,10 @@ Permitida antes del cierre. Después del cierre no hay cancelación automática.
 - Dependabot quedó limpio al cierre del MVP.
 - Versiones de cierre relevantes: Next.js 16.3.5, class-validator 0.15.1 y @nestjs/throttler 6.7.0.
 - Upgrades major de TypeScript y Vitest se difirieron explícitamente para después del MVP.
+
+
+## Roles del personal
+- `ADMIN`: solo áreas administrativas: Dashboard, Pedidos, Sábados, Inventario, ARCO y Personal.
+- `KITCHEN`: solo Cocina.
+- `DELIVERY`: solo Entrega.
+- La separación se valida tanto en navegación como en API: un rol fuera de su área recibe redirección o `403` según corresponda.
