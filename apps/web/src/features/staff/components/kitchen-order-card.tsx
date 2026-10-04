@@ -25,7 +25,11 @@ function preparationFor(
       .map((modifier) => modifier.optionName),
     extras: item.modifiers
       .filter((modifier) => !modifier.removed)
-      .map((modifier) => modifier.optionName),
+      .map((modifier) =>
+        modifier.quantity > 1
+          ? `${modifier.optionName} × ${modifier.quantity}`
+          : modifier.optionName,
+      ),
   };
 }
 
@@ -193,6 +197,10 @@ export function KitchenOrderCard({
                           ? "Sin "
                           : "+ "}
                         {modifier.optionName}
+                        {!modifier.removed &&
+                          modifier.quantity > 1
+                          ? ` × ${modifier.quantity}`
+                          : ""}
                       </span>
                     ),
                   )}
