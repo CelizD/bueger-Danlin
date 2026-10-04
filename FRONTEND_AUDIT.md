@@ -25,7 +25,7 @@ No se consideran pendientes actuales los elementos que ya están implementados y
 | API browser boundary | ✅ | URL, request ID y errores HTTP centralizados en `src/lib/api/browser.ts` |
 | Design system | ✅ base | tokens semánticos, Button, TextField, Alert, StatusBadge, EmptyState y LoadingState |
 | Storybook | ✅ | Docs + addon a11y; build obligatorio en CI |
-| Responsive | 🟡 validación final | existen reglas responsive; conviene hacer smoke test manual final en móviles reales antes del lanzamiento |
+| Responsive | 🟡 validación final | reglas + E2E existen; el gate manual/dispositivo real está definido en `deploy/REAL_INFRA_VALIDATION.md` y se ejecuta en el entorno final |
 | Accesibilidad automática | ✅ | Playwright + axe cubren Home, Login y rutas administrativas críticas en CI |
 | WCAG 2.2 AA completa | 🟡 | automatización cubre errores serious/critical; todavía conviene revisión manual final de teclado, zoom, contraste y lector de pantalla |
 | Formularios críticos | ✅ base | labels, autocomplete y Testing Library en flujos principales |
@@ -38,7 +38,7 @@ No se consideran pendientes actuales los elementos que ya están implementados y
 | Secretos frontend | ✅ | secretos privados permanecen server-side |
 | SEO público | 🟡 producción | metadata + Open Graph listos; sitemap/canonical esperan dominio real |
 | Rutas privadas indexables | ✅ | admin y pedido usan noindex/nofollow + robots disallow |
-| Core Web Vitals | 🟡 producción | RUM implementado; falta p75 con tráfico real |
+| Core Web Vitals | 🟡 producción | RUM implementado; criterios p75, volumen mínimo y evidencia definidos en `deploy/REAL_INFRA_VALIDATION.md`; falta tráfico real |
 | Bundle budgets | ✅ | baseline real: 122.2 KB chunk máximo / 424.1 KB total gzip; CI limita a 145 KB / 490 KB |
 | Vitest | ✅ | pruebas de reglas, seguridad de cliente, errores, navegación y componentes |
 | Testing Library | ✅ | design system, datos del cliente, Inventario, Sábados y Personal |
@@ -228,9 +228,9 @@ No volver a tratarlos como backlog salvo que una regresión los rompa.
 
 ### Requieren producción o validación manual
 
-- [ ] smoke test manual final de accesibilidad/responsive;
-- [ ] validar CSP/HSTS sobre HTTPS real;
-- [ ] medir Core Web Vitals p75 con tráfico real;
+- [ ] smoke test manual final de accesibilidad/responsive según `deploy/REAL_INFRA_VALIDATION.md`;
+- [ ] validar CSP/HSTS/TLS sobre HTTPS real con `deploy/vps/validate-public-endpoints.sh`;
+- [ ] medir Core Web Vitals p75 con tráfico real según el volumen mínimo definido;
 - [ ] validar alertas/operación de observabilidad;
 - [ ] configurar sitemap + canonical con el dominio real de producción.
 

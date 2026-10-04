@@ -74,6 +74,9 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [ ] Emitir certificados TLS.
 - [ ] Probar renovación automática.
 - [ ] Validar HTTPS desde una red externa.
+- [ ] Ejecutar `WEB_ORIGIN=https://... API_ORIGIN=https://... sh deploy/vps/validate-public-endpoints.sh` y guardar evidencia.
+- [ ] Confirmar TLS 1.2 y TLS 1.3 sobre los dominios definitivos.
+- [ ] Confirmar HSTS/CSP/headers sobre HTTPS real.
 - [ ] Confirmar que 3000/4000/5432/6379 no estén públicos.
 
 ### Pagos
@@ -132,6 +135,10 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [ ] Confirmar que `/api/v1/metrics` no es público.
 - [ ] Definir canal de notificaciones y conectar Alertmanager o equivalente.
 - [ ] Medir consumo real de CPU/RAM/disco del stack.
+- [ ] Ejecutar `pnpm security:benchmark-argon2` en el VPS objetivo y registrar p50/p95.
+- [ ] Confirmar que p95 de hash/verify Argon2id queda bajo el umbral operativo definido en `deploy/REAL_INFRA_VALIDATION.md`.
+- [ ] Ejecutar smoke test responsive/accesibilidad/cámara en dispositivos reales.
+- [ ] Tras recibir tráfico real suficiente, calcular LCP/INP/CLS p75 y registrar PASS/FAIL/DATOS INSUFICIENTES.
 
 ### DAST / preproducción
 
@@ -203,7 +210,11 @@ No abrir tráfico público hasta que:
 5. TLS real esté activo;
 6. el proveedor de pagos real esté validado;
 7. exista backup local y offsite;
-8. un backup recuperado desde offsite haya pasado restore drill.
+8. un backup recuperado desde offsite haya pasado restore drill;
+9. TLS/HTTPS real haya pasado `validate-public-endpoints.sh`;
+10. benchmark Argon2id y smoke responsive real estén registrados.
+
+La evaluación final de Core Web Vitals p75 se completa después de acumular tráfico real suficiente y no debe falsearse con Lighthouse local.
 
 
 ## Aviso de privacidad

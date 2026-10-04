@@ -68,7 +68,7 @@ Leyenda:
 | Autorización por recurso | 🟡 | customer order token y staff roles existen; falta matriz automatizada de authz |
 | Bloqueo de login | ✅ | 5 fallos → 15 min persistente |
 | Password blocklist | 🔴 | No implementada |
-| Benchmark Argon2id | 🔴 | No documentado en hardware objetivo |
+| Benchmark Argon2id | 🟡 | Benchmark reproducible y criterios de evidencia definidos; falta ejecutarlo en el VPS objetivo |
 
 ## P0 — Seguridad/transporte
 
