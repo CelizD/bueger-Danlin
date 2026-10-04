@@ -227,29 +227,26 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await expect(firstMeat).toHaveCount(1);
 
   await firstBurger
-    .getByRole("group", {
-      name: "Cantidad de Lechuga",
+    .getByRole("button", {
+      name: "Lechuga: sin ingrediente",
     })
-    .getByRole("button", { name: "0" })
     .click();
 
   await expect(firstLettuce).toHaveCount(0);
 
   await firstBurger
-    .getByRole("group", {
-      name: "Cantidad de Queso",
+    .getByRole("button", {
+      name: "Queso: sin ingrediente",
     })
-    .getByRole("button", { name: "0" })
     .click();
 
   await firstBurger
-    .getByRole("group", {
-      name: "Cantidad de Carne",
+    .getByRole("button", {
+      name: "Carne: 4 porciones",
     })
-    .getByRole("button", { name: "2" })
     .click();
 
-  await expect(firstMeat).toHaveCount(2);
+  await expect(firstMeat).toHaveCount(4);
 
   const secondTomato = secondPreview.locator(
     'img[src="/burger-preview/tomate.svg"]',
@@ -258,10 +255,9 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await expect(secondTomato).toHaveCount(1);
 
   await secondBurger
-    .getByRole("group", {
-      name: "Cantidad de Tomate",
+    .getByRole("button", {
+      name: "Tomate: sin ingrediente",
     })
-    .getByRole("button", { name: "0" })
     .click();
 
   await expect(secondTomato).toHaveCount(0);
@@ -273,13 +269,12 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await expect(secondCheese).toHaveCount(1);
 
   await secondBurger
-    .getByRole("group", {
-      name: "Cantidad de Queso",
+    .getByRole("button", {
+      name: "Queso: 3 porciones",
     })
-    .getByRole("button", { name: "2" })
     .click();
 
-  await expect(secondCheese).toHaveCount(2);
+  await expect(secondCheese).toHaveCount(3);
 
   await page
     .getByRole("button", { name: "Agregar Coca-Cola" })
@@ -379,9 +374,9 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     return before! - after!;
   }
 
-  expect(stockDelta("meat")).toBe(3);
+  expect(stockDelta("meat")).toBe(5);
   expect(stockDelta("fries")).toBe(2);
-  expect(stockDelta("cheese")).toBe(2);
+  expect(stockDelta("cheese")).toBe(3);
   expect(stockDelta("bacon")).toBe(2);
   expect(stockDelta("coca-cola")).toBe(2);
 
@@ -491,7 +486,7 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   expect(paidReceipt.text).toContain("Estado del pago: Pagado");
   expect(paidReceipt.text).toContain("Combo Hamburguesa + Papas");
   expect(paidReceipt.text).toContain("Coca-Cola");
-  expect(paidReceipt.text).toContain("$360.00 MXN");
+  expect(paidReceipt.text).toContain("$430.00 MXN");
   expect(paidReceipt.text).toContain("Punto: Universidad");
   expect(paidReceipt.text).toContain("Punto de entrega E2E");
   expect(paidReceipt.text).toContain("%%EOF");
@@ -523,7 +518,7 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   );
   expect(purchaseEmail.Text).toContain(orderCode);
   expect(purchaseEmail.Text).toContain(
-    "Total pagado: $360.00",
+    "Total pagado: $430.00",
   );
   expect(purchaseEmail.Text).toContain(
     "Combo Hamburguesa + Papas",
@@ -580,7 +575,7 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   ).toBe("%PDF-1.4");
   expect(emailReceiptText).toContain(orderCode);
   expect(emailReceiptText).toContain(
-    "$360.00 MXN",
+    "$430.00 MXN",
   );
   expect(emailReceiptText).toContain(
     "Vendedor: Burger Danlin E2E",
@@ -633,13 +628,13 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   await expect(firstKitchenBurger).toContainText("NO PONER");
   await expect(firstKitchenBurger).toContainText("Sin Lechuga");
   await expect(firstKitchenBurger).toContainText("Sin Queso");
-  await expect(firstKitchenBurger).toContainText("+ Carne extra");
+  await expect(firstKitchenBurger).toContainText("+ Carne extra ×3");
   await expect(firstKitchenBurger).not.toContainText("Sin Tomate");
   await expect(firstKitchenBurger).not.toContainText("+ Queso extra");
 
   await expect(secondKitchenBurger).toContainText("Hamburguesa 2");
   await expect(secondKitchenBurger).toContainText("Sin Tomate");
-  await expect(secondKitchenBurger).toContainText("+ Queso extra");
+  await expect(secondKitchenBurger).toContainText("+ Queso extra ×2");
   await expect(secondKitchenBurger).not.toContainText("Sin Lechuga");
   await expect(secondKitchenBurger).not.toContainText("+ Carne extra");
   await expect(kitchenDrink).toContainText("Coca-Cola");
@@ -853,7 +848,7 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     "Estado del pago: Pagado",
   );
   expect(deliveredReceiptText).toContain(
-    "$360.00 MXN",
+    "$430.00 MXN",
   );
   expect(deliveredReceiptText).toContain(
     "Punto: Universidad",
