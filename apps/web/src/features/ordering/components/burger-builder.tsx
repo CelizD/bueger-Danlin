@@ -82,14 +82,16 @@ export function BurgerBuilder({
               )}
             </div>
 
-            <BurgerPreview
-              burger={burger}
-              removableOptions={removableOptions}
-              extraOptions={extraOptions}
-              label={`${comboName}, combo ${burgerIndex + 1}`}
-            />
+            <div className="burger-config-layout">
+              <BurgerPreview
+                burger={burger}
+                removableOptions={removableOptions}
+                extraOptions={extraOptions}
+                label={`${comboName}, combo ${burgerIndex + 1}`}
+              />
 
-            <div className="option-block">
+              <div className="burger-option-panel">
+                <div className="option-block">
               <p className="option-title">Ingredientes incluidos</p>
               <p className="option-help">Desmarca lo que no quieras.</p>
               <div className="option-grid">
@@ -118,7 +120,7 @@ export function BurgerBuilder({
               </div>
             </div>
 
-            <div className="option-block">
+                <div className="option-block">
               <p className="option-title">Extras</p>
               <div className="option-grid">
                 {extraOptions.map((option) => {
@@ -146,6 +148,8 @@ export function BurgerBuilder({
                     </label>
                   );
                 })}
+              </div>
+                </div>
               </div>
             </div>
           </article>
