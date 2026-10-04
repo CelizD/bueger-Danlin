@@ -451,7 +451,7 @@ export class PurchaseEmailService {
         quantity: number;
         lineTotalCents: number;
         preparationSnapshot:
-          ReceiptPreparationSnapshot | null;
+          unknown;
         modifiers: Array<{
           optionName: string;
           removed: boolean;
