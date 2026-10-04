@@ -4,6 +4,7 @@ import { AdminSidebar } from "@/features/staff/components/admin-sidebar";
 import { InventoryCreateForm } from "@/features/staff/components/inventory-create-form";
 import { InventoryItemList } from "@/features/staff/components/inventory-item-list";
 import { InventorySummary } from "@/features/staff/components/inventory-summary";
+import { ProductImageManager } from "@/features/staff/products/product-image-manager";
 import { useAdminInventory } from "@/features/staff/inventory/use-admin-inventory";
 import {
   Plus,
@@ -133,6 +134,8 @@ export default function InventoryPage() {
             onSubmit={createItem}
           />
         )}
+
+        <ProductImageManager />
 
         <InventoryItemList
           items={items}
