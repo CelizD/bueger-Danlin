@@ -127,6 +127,41 @@ describe("burger preview height system", () => {
     );
   });
 
+  it("mantiene el crecimiento de pepinillos compacto", () => {
+    const one =
+      calculateBurgerStackLayout({
+        hasSauce: true,
+        meat: 1,
+        cheese: 1,
+        bacon: 0,
+        caramelizedOnion: 0,
+        whiteOnion: 0,
+        pickles: 1,
+        tomato: 0,
+        lettuce: 0,
+      });
+
+    const five =
+      calculateBurgerStackLayout({
+        hasSauce: true,
+        meat: 1,
+        cheese: 1,
+        bacon: 0,
+        caramelizedOnion: 0,
+        whiteOnion: 0,
+        pickles: 5,
+        tomato: 0,
+        lettuce: 0,
+      });
+
+    expect(
+      one.picklesY - one.tomatoY,
+    ).toBe(9);
+    expect(
+      five.picklesY - five.tomatoY,
+    ).toBe(25);
+  });
+
   it("compacta la carne cuando no hay salsa sin cambiar el resto de reglas", () => {
     const withSauce =
       calculateBurgerStackLayout({
