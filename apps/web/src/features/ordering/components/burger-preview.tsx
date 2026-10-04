@@ -239,6 +239,33 @@ export function BurgerPreview({
           z: 42,
         });
 
+  const baconY =
+    2 -
+    (meatCount - 1) * 10 -
+    Math.max(0, cheeseCount - 1) * 4;
+
+  const baconLayers =
+    baconCount === 2
+      ? [
+          {
+            key: "double-bacon",
+            src: `${ASSET_ROOT}/dobletocino.svg`,
+            active: true,
+            y: baconY,
+            z: 52,
+            scale: 0.92,
+          },
+        ]
+      : repeatedLayers({
+          key: "bacon",
+          src: `${ASSET_ROOT}/tocino.svg`,
+          count: baconCount,
+          y: baconY,
+          step: 11,
+          z: 52,
+          scale: 0.92,
+        });
+
   const layers: Layer[] = [
     {
       key: "bottom-bun",
@@ -315,23 +342,7 @@ export function BurgerPreview({
     }),
     ...meatLayers,
     ...cheeseLayers,
-    ...repeatedLayers({
-      key: "bacon",
-      src: `${ASSET_ROOT}/dobletocino.svg`,
-      count: baconCount,
-      y:
-        2 -
-        (meatCount - 1) *
-          10 -
-        Math.max(
-          0,
-          cheeseCount - 1,
-        ) *
-          4,
-      step: 11,
-      z: 52,
-      scale: 0.92,
-    }),
+    ...baconLayers,
     ...repeatedLayers({
       key: "white-onion",
       src: `${ASSET_ROOT}/cebolla.svg`,
