@@ -78,6 +78,7 @@ function QuantityPicker({
                 : "ingredient-quantity-button"
             }
             aria-pressed={value === quantity}
+            disabled={quantity > max}
             aria-label={
               quantity === 0
                 ? `${name}: sin ingrediente`
