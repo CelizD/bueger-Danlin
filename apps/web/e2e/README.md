@@ -74,7 +74,7 @@ Axe se ejecuta en CI sobre estados reales de:
 - Dashboard;
 - Pedidos;
 - Inventario;
-- Sábados;
+- Agenda;
 - Personal;
 - ARCO;
 - Cocina;
