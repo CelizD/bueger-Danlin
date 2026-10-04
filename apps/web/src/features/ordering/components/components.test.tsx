@@ -301,7 +301,7 @@ describe("ordering components", () => {
       "/burger-preview/bbqchipotle.svg",
     );
     expect(html).toMatch(
-      /aria-label="Lechuga: 1 porción"[^>]*disabled/,
+      /<button(?=[^>]*aria-label="Lechuga: 1 porción")(?=[^>]*disabled)[^>]*>/,
     );
   });
 
