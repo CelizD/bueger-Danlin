@@ -43,7 +43,7 @@ function selectedExtraQuantity(
   optionId: string,
 ) {
   return Math.max(
-    burger.extraQuantities[optionId] ?? 0,
+    burger.extraQuantities?.[optionId] ?? 0,
     burger.extraIds.includes(optionId)
       ? 1
       : 0,
