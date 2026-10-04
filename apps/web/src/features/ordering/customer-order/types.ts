@@ -44,6 +44,7 @@ export type CustomerOrder = {
       optionName: string;
       removed: boolean;
       priceDeltaCents: number;
+      quantity: number;
     }>;
   }>;
 };
