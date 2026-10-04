@@ -19,7 +19,7 @@ import type {
   ModifierOption,
   PickupEvent,
 } from "../types";
-import type { ModifierQuantityUpdate } from "../builder";
+import type { ModifierQuantityUpdate } from "../modifier-quantities";
 import type { FormEvent } from "react";
 
 type Props = {
