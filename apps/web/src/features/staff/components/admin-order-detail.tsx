@@ -191,6 +191,10 @@ export function AdminOrderDetail({
                         ? "Sin "
                         : "+ "}
                       {modifier.optionName}
+                      {!modifier.removed &&
+                        modifier.quantity > 1
+                        ? ` × ${modifier.quantity}`
+                        : ""}
                     </span>
                   ),
                 )}
