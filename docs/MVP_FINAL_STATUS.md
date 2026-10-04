@@ -1,6 +1,6 @@
 # Estado final del MVP — Burger Danlin
 
-Fecha de corte: **30 de septiembre de 2026**
+Fecha de corte: **3 de octubre de 2026**
 
 Este documento es la fuente resumida de verdad para el estado funcional del MVP. Los documentos de auditoría más antiguos deben leerse como snapshots históricos y no como lista vigente de pendientes.
 
@@ -11,6 +11,8 @@ Este documento es la fuente resumida de verdad para el estado funcional del MVP.
 El flujo principal está implementado y validado en CI:
 
 `cliente → pedido → pago → cocina → READY → QR → entrega → DELIVERED`
+
+La cobertura integrada también valida inventario, cancelación/reembolso MOCK, entrega grupal con varios pedidos, comprobante PDF, correo SMTP mediante Mailpit y separación estricta de roles.
 
 El repositorio también cubre cancelación, reembolso, pagos tardíos, entrega grupal, comprobante PDF, correo de confirmación, privacidad, derechos ARCO, consentimiento para menores, administración, observabilidad preparada, backups y retención técnica.
 
@@ -107,10 +109,11 @@ Flujo:
 
 `PAID/CONFIRMED → PREPARING → READY`
 
-Roles:
+Rol:
 
-- `ADMIN`
 - `KITCHEN`
+
+`ADMIN` queda excluido de Cocina tanto en frontend como en API.
 
 ### Entrega
 
@@ -122,23 +125,27 @@ QR:
 
 El token se valida contra un hash en servidor. Un QR reutilizado no produce una segunda entrega.
 
-Roles:
+Rol:
 
-- `ADMIN`
 - `DELIVERY`
+
+`ADMIN` queda excluido de Entrega tanto en frontend como en API.
 
 ## 7. Administración
 
-Rutas principales:
+Rutas administrativas para `ADMIN`:
 
 - `/admin/dashboard`
 - `/admin/pedidos`
 - `/admin/sabados`
 - `/admin/inventario`
 - `/admin/personal`
-- `/admin/cocina`
-- `/admin/entrega`
 - `/admin/arco`
+
+Áreas operativas aisladas:
+
+- `/admin/cocina` → solo `KITCHEN`;
+- `/admin/entrega` → solo `DELIVERY`.
 
 Incluye:
 
@@ -147,9 +154,9 @@ Incluye:
 - sábados/puntos de entrega;
 - configuración de entrega grupal;
 - inventario;
-- personal y roles;
-- cocina;
-- entrega QR;
+- personal y asignación de roles;
+- separación estricta de permisos entre ADMIN, KITCHEN y DELIVERY;
+- cocina y entrega QR como áreas operativas independientes;
 - pagos tardíos y resolución/reembolso;
 - solicitudes ARCO;
 - AuditLog.
@@ -217,9 +224,11 @@ Implementado:
 - SMTP con STARTTLS/TLS;
 - comprobante PDF adjunto;
 - auditoría del envío;
-- timer/servicio preparado.
+- timer/servicio preparado;
+- envío SMTP end-to-end validado en CI con Mailpit;
+- asunto, destinatario, cuerpo y comprobante PDF adjunto verificados automáticamente.
 
-Producción requiere configurar y probar SMTP antes de habilitar:
+Producción requiere configurar y probar un SMTP real antes de habilitar:
 
 `EMAIL_NOTIFICATIONS_ENABLED=true`
 
@@ -231,7 +240,7 @@ Implementado y cubierto por el pipeline actual:
 - MFA obligatorio para ADMIN;
 - TOTP + recovery codes;
 - sesiones revocables server-side;
-- RBAC;
+- RBAC estricto: ADMIN solo administración, KITCHEN solo Cocina y DELIVERY solo Entrega;
 - CSRF;
 - CORS;
 - CSP;
@@ -272,7 +281,7 @@ Dependabot quedó limpio al cierre del MVP:
 6. build;
 7. seed E2E;
 8. Playwright;
-9. E2E integrado.
+9. E2E integrado con PostgreSQL, Mailpit, API, Web y Chromium reales.
 
 `.github/workflows/security.yml` valida:
 
@@ -284,7 +293,7 @@ Dependabot quedó limpio al cierre del MVP:
 - Trivy Web;
 - Trivy Backup.
 
-Estado de cierre del MVP: **CI verde + Security verde**.
+Estado de cierre del MVP: **CI verde + Security verde + Bundle Budget verde**.
 
 ## 13. Infraestructura preparada en repo
 
