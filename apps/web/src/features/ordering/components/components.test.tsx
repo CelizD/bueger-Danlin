@@ -289,19 +289,85 @@ describe("ordering components", () => {
       "/burger-preview/panarriba.svg",
     );
     expect(html).toContain(
-      "/burger-preview/pepinillos.svg",
+      "/burger-preview/ingredients-sprite.svg#pickles",
     );
     expect(html).toContain(
-      "/burger-preview/mayonesa.svg",
+      "/burger-preview/ingredients-sprite.svg#ketchup-mustard-mayonnaise",
     );
     expect(html).toContain(
-      "/burger-preview/chipotle.svg",
+      "/burger-preview/ingredients-sprite.svg#chipotle",
     );
     expect(html).toContain(
-      "/burger-preview/bbqchipotle.svg",
+      "/burger-preview/ingredients-sprite.svg#bbq-chipotle",
     );
     expect(html).toMatch(
       /<button(?=[^>]*aria-label="Lechuga: 1 porción")(?=[^>]*disabled)[^>]*>/,
+    );
+  });
+
+  it("usa los SVG subidos para cantidades múltiples y combinaciones de salsas", () => {
+    const html = renderToStaticMarkup(
+      <BurgerBuilder
+        comboName="Hamburguesa + papas"
+        burgers={[
+          {
+            localId: "burger-assets",
+            removedIds: [],
+            extraIds: [
+              "meat-extra",
+              "cheese-extra",
+              "bacon-extra",
+              "lettuce-extra",
+              "pickles",
+              "mayonnaise",
+              "chipotle",
+              "bbq-chipotle",
+            ],
+            modifierQuantities: {
+              "meat-extra": 3,
+              "cheese-extra": 3,
+              "bacon-extra": 1,
+              "lettuce-extra": 3,
+              pickles: 2,
+            },
+          },
+        ]}
+        comboPriceCents={13_000}
+        removableOptions={removable}
+        extraOptions={extras}
+        inventory={null}
+        maxCombosAvailable={5}
+        onAddBurger={vi.fn()}
+        onRemoveBurger={vi.fn()}
+        onSetModifierQuantities={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain(
+      "/burger-preview/ingredients-sprite.svg#meat-4",
+    );
+    expect(html).toContain(
+      "/burger-preview/ingredients-sprite.svg#cheese-4",
+    );
+    expect(html).toContain(
+      "/burger-preview/ingredients-sprite.svg#bacon-2",
+    );
+    expect(html).toContain(
+      "/burger-preview/ingredients-sprite.svg#lettuce-4",
+    );
+    expect(
+      html.match(
+        /ingredients-sprite\.svg#pickles/g,
+      ),
+    ).toHaveLength(2);
+    expect(html).toContain(
+      "/burger-preview/ingredients-sprite.svg#ketchup-mustard-mayonnaise",
+    );
+    expect(html).toContain(
+      "/burger-preview/ingredients-sprite.svg#chipotle",
+    );
+    expect(html).toContain(
+      "/burger-preview/ingredients-sprite.svg#bbq-chipotle",
     );
   });
 
