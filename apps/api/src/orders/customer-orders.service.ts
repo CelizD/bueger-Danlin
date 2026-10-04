@@ -191,6 +191,8 @@ export class CustomerOrdersService {
         productName: item.productName,
         quantity: item.quantity,
         lineTotalCents: item.lineTotalCents,
+        preparationSnapshot:
+          item.preparationSnapshot,
         modifiers: item.modifiers.map((modifier) => ({
           id: modifier.id,
           optionName: modifier.optionName,
