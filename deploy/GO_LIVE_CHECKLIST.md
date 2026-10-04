@@ -98,7 +98,7 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [x] Comprobante PDF adjunto implementado.
 - [x] SMTP TLS/STARTTLS y validación de certificado implementados.
 - [x] Timer/servicio para procesar correos pendientes preparado.
-- [ ] Configurar `MAIL_HOST`, `MAIL_PORT`, `MAIL_SECURITY`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` y reply-to reales.
+- [ ] Configurar `MAIL_HOST`, `MAIL_PORT`, `MAIL_SECURITY`, `MAIL_USERNAME`, `MAIL_PASSWORD_FILE`, `MAIL_FROM` y reply-to reales.
 - [ ] Enviar una compra de prueba y confirmar recepción del correo + PDF.
 - [ ] Confirmar reintento controlado ante fallo SMTP.
 - [ ] Cambiar `EMAIL_NOTIFICATIONS_ENABLED=true` únicamente después de probar SMTP real.
