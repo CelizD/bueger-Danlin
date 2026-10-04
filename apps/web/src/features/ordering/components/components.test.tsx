@@ -197,7 +197,7 @@ describe("ordering components", () => {
     expect(html).toContain('aria-live="polite"');
   });
 
-  it("representa ingredientes y extras agotados como controles deshabilitados", () => {
+  it("muestra selectores de cantidad de 0 a 5 para ingredientes", () => {
     const html = renderToStaticMarkup(
       <BurgerBuilder
         comboName="Hamburguesa + papas"
@@ -206,6 +206,7 @@ describe("ordering components", () => {
             localId: "burger-1",
             removedIds: ["lettuce"],
             extraIds: [],
+            modifierQuantities: {},
           },
         ]}
         comboPriceCents={13_000}
@@ -215,16 +216,31 @@ describe("ordering components", () => {
         maxCombosAvailable={1}
         onAddBurger={vi.fn()}
         onRemoveBurger={vi.fn()}
-        onToggleRemoved={vi.fn()}
-        onToggleExtra={vi.fn()}
+        onSetModifierQuantities={vi.fn()}
       />,
     );
 
-    expect(html).toContain("Lechuga · Agotado");
-    expect(html).toContain("Tocino extra · Agotado");
-    expect(html).toContain("Vista previa en vivo");
-    expect(html).toContain("/burger-preview/panarriba.svg");
-    expect((html.match(/disabled/g) ?? []).length).toBeGreaterThanOrEqual(3);
+    expect(html).toContain(
+      "Cantidad de ingredientes",
+    );
+    expect(html).toContain(
+      'aria-label="Cantidad de Lechuga"',
+    );
+    expect(html).toContain(
+      'aria-label="Lechuga: sin ingrediente"',
+    );
+    expect(html).toContain(
+      'aria-label="Lechuga: 5 porciones"',
+    );
+    expect(html).toContain(
+      'aria-label="Cantidad de Tocino extra"',
+    );
+    expect(html).toContain(
+      "Vista previa en vivo",
+    );
+    expect(html).toContain(
+      "/burger-preview/panarriba.svg",
+    );
   });
 
   it("muestra puntos, progreso grupal y envío gratis", () => {
@@ -263,8 +279,7 @@ describe("ordering components", () => {
         maxCombosAvailable={1}
         onAddBurger={vi.fn()}
         onRemoveBurger={vi.fn()}
-        onToggleRemoved={vi.fn()}
-        onToggleExtra={vi.fn()}
+        onSetModifierQuantities={vi.fn()}
       />,
     );
 
