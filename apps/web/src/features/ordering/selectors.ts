@@ -61,28 +61,13 @@ export function calculatePreviewTotal(
 
   const burgersTotal = burgers.reduce((sum, burger) => {
     const extras = extraOptions.reduce(
-      (extraSum, option) => {
-        const quantified =
-          burger.extraQuantities?.[
-            option.id
-          ] ?? 0;
-        const legacy =
-          burger.extraIds.includes(
-            option.id,
-          )
-            ? 1
-            : 0;
-        const quantity = Math.max(
-          quantified,
-          legacy,
-        );
-
-        return (
-          extraSum +
-          option.priceDeltaCents *
-            quantity
-        );
-      },
+      (extraSum, option) =>
+        extraSum +
+        option.priceDeltaCents *
+          burgerModifierQuantity(
+            burger,
+            option,
+          ),
       0,
     );
 
