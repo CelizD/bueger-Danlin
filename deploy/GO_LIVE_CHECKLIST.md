@@ -41,7 +41,7 @@ Este checklist separa lo que puede prepararse ahora de lo que solo puede verific
 - [x] Endpoint de métricas bloqueado desde Nginx público.
 - [x] Runbooks de incidentes versionados para cuenta comprometida, secretos, DB, supply chain y DDoS/caída.
 - [x] Workflow DAST manual con OWASP ZAP preparado y restringido a staging.
-- [x] RBAC estricto validado: ADMIN solo administración, KITCHEN solo Cocina y DELIVERY solo Entrega.
+- [x] RBAC estricto validado: ADMIN controla administración + Cocina/Entrega; KITCHEN solo Cocina y DELIVERY solo Entrega.
 - [x] SMTP end-to-end validado en CI con Mailpit, incluyendo comprobante PDF adjunto.
 - [x] Flujo integrado validado: pedido, inventario, pago MOCK, cancelación/refund, entrega grupal, Cocina, QR, Entrega y comprobante.
 
