@@ -1,5 +1,5 @@
 -- Expand burger ingredient quantities without changing existing orders.
--- Additional portions of vegetables/sauces are free until business pricing changes.
+-- Zero-price options preserve the current catalog price: no new charge is introduced.
 WITH extras_group AS (
   SELECT "id"
   FROM "ModifierGroup"
@@ -25,13 +25,15 @@ FROM (
   UNION ALL
   SELECT 'qty-extra-tomato-v1', 'extra-tomato', "id", 'Tomate extra', 'EXTRA'::"ModifierKind", 0, false, true, 11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM extras_group
   UNION ALL
-  SELECT 'qty-extra-caramelized-onion-v1', 'extra-caramelized-onion', "id", 'Cebolla caramelizada extra', 'EXTRA'::"ModifierKind", 0, false, true, 12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM extras_group
+  SELECT 'qty-extra-white-onion-v1', 'extra-white-onion', "id", 'Cebolla extra', 'EXTRA'::"ModifierKind", 0, false, true, 12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM extras_group
   UNION ALL
-  SELECT 'qty-extra-white-onion-v1', 'extra-white-onion', "id", 'Cebolla blanca extra', 'EXTRA'::"ModifierKind", 0, false, true, 13, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM extras_group
+  SELECT 'qty-extra-pickles-v1', 'extra-pickles', "id", 'Pepinillos', 'EXTRA'::"ModifierKind", 0, false, true, 13, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM extras_group
   UNION ALL
-  SELECT 'qty-extra-ketchup-v1', 'extra-ketchup', "id", 'Ketchup extra', 'EXTRA'::"ModifierKind", 0, false, true, 14, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM extras_group
+  SELECT 'sauce-mayonnaise-v1', 'extra-mayonnaise', "id", 'Mayonesa', 'EXTRA'::"ModifierKind", 0, false, true, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM extras_group
   UNION ALL
-  SELECT 'qty-extra-mustard-v1', 'extra-mustard', "id", 'Mostaza extra', 'EXTRA'::"ModifierKind", 0, false, true, 15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM extras_group
+  SELECT 'sauce-chipotle-v1', 'extra-chipotle', "id", 'Chipotle', 'EXTRA'::"ModifierKind", 0, false, true, 21, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM extras_group
+  UNION ALL
+  SELECT 'sauce-bbq-chipotle-v1', 'extra-bbq-chipotle', "id", 'BBQ con Chipotle', 'EXTRA'::"ModifierKind", 0, false, true, 22, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM extras_group
 ) AS incoming(
   "id",
   "key",
