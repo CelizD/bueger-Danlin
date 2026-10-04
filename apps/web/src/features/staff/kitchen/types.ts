@@ -11,6 +11,9 @@ export type KitchenPreparationSnapshot = {
   included: string[];
   removed: string[];
   extras: string[];
+  quantities?: string[];
+  sauces?: string[];
+  others?: string[];
 };
 
 export type KitchenOrder = {
