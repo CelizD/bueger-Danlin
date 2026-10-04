@@ -1,20 +1,37 @@
 import {
   appendBurger,
   burgersForPickupSelection,
-  setIngredientQuantityBurger,
-  toggleExtraBurger,
-  toggleRemovedBurger,
+  setBurgerModifierQuantities,
 } from "./builder";
 import type {
   BurgerSelection,
   CatalogProduct,
   InventoryAvailability,
+  ModifierOption,
 } from "./types";
 import {
   describe,
   expect,
   it,
 } from "vitest";
+
+const lettuce: ModifierOption = {
+  id: "lettuce",
+  key: "included-lettuce",
+  name: "Lechuga",
+  kind: "REMOVABLE",
+  priceDeltaCents: 0,
+  defaultSelected: true,
+};
+
+const meatExtra: ModifierOption = {
+  id: "meat-extra",
+  key: "extra-meat",
+  name: "Carne extra",
+  kind: "EXTRA",
+  priceDeltaCents: 3_000,
+  defaultSelected: false,
+};
 
 const combo: CatalogProduct = {
   id: "combo-1",
@@ -30,20 +47,8 @@ const combo: CatalogProduct = {
         name: "Mods",
         active: true,
         options: [
-          {
-            id: "lettuce",
-            name: "Lechuga",
-            kind: "REMOVABLE",
-            priceDeltaCents: 0,
-            defaultSelected: true,
-          },
-          {
-            id: "cheese",
-            name: "Queso",
-            kind: "EXTRA",
-            priceDeltaCents: 1_000,
-            defaultSelected: false,
-          },
+          lettuce,
+          meatExtra,
         ],
       },
     },
@@ -56,8 +61,8 @@ const inventory: InventoryAvailability = {
     "combo-1": 5,
   },
   modifierLimits: {
-    lettuce: 1,
-    cheese: 1,
+    lettuce: 5,
+    "meat-extra": 4,
   },
 };
 
@@ -65,7 +70,8 @@ const burgers: BurgerSelection[] = [
   {
     localId: "b1",
     removedIds: [],
-    extraIds: ["cheese"],
+    extraIds: [],
+    modifierQuantities: {},
   },
 ];
 
@@ -79,6 +85,8 @@ describe("ordering builder rules", () => {
             localId: "b2",
             removedIds: [],
             extraIds: [],
+            modifierQuantities:
+              {},
           },
         ],
         1,
@@ -88,55 +96,93 @@ describe("ordering builder rules", () => {
     ).toHaveLength(1);
   });
 
-  it("bloquea incluir un ingrediente cuando su inventario ya está ocupado", () => {
+  it("guarda de 0 a 5 porciones de ingredientes", () => {
     const result =
-      toggleRemovedBurger(
+      setBurgerModifierQuantities(
+        burgers,
+        "b1",
         [
           {
-            localId: "b1",
-            removedIds: [],
-            extraIds: [],
+            option: lettuce,
+            quantity: 3,
           },
           {
-            localId: "b2",
-            removedIds: ["lettuce"],
-            extraIds: [],
+            option: meatExtra,
+            quantity: 4,
           },
         ],
-        "b2",
-        "lettuce",
         inventory,
       );
 
-    expect(result.error).toBe(
-      "Ese ingrediente ya no tiene inventario disponible.",
-    );
+    expect(result.error).toBeNull();
+    expect(
+      result.burgers[0]
+        ?.modifierQuantities,
+    ).toEqual({
+      lettuce: 3,
+      "meat-extra": 4,
+    });
+    expect(
+      result.burgers[0]?.extraIds,
+    ).toContain("meat-extra");
+    expect(
+      result.burgers[0]?.removedIds,
+    ).not.toContain("lettuce");
   });
 
-  it("bloquea un extra cuando se alcanzó su límite", () => {
+  it("convierte cantidad cero de un ingrediente incluido en removido", () => {
     const result =
-      toggleExtraBurger(
+      setBurgerModifierQuantities(
         burgers,
-        "b2",
-        "cheese",
+        "b1",
+        [
+          {
+            option: lettuce,
+            quantity: 0,
+          },
+        ],
+        inventory,
+      );
+
+    expect(result.error).toBeNull();
+    expect(
+      result.burgers[0]?.removedIds,
+    ).toContain("lettuce");
+  });
+
+  it("bloquea cantidades que exceden inventario", () => {
+    const result =
+      setBurgerModifierQuantities(
+        burgers,
+        "b1",
+        [
+          {
+            option: meatExtra,
+            quantity: 5,
+          },
+        ],
         inventory,
       );
 
     expect(result.error).toBe(
-      "Ese extra ya no tiene inventario disponible.",
+      "No hay suficientes porciones de ese ingrediente en inventario.",
     );
   });
 
   it("crea el siguiente combo removiendo ingredientes sin capacidad", () => {
+    const exhaustedInventory: InventoryAvailability =
+      {
+        ...inventory,
+        modifierLimits: {
+          ...inventory.modifierLimits,
+          lettuce: 1,
+        },
+      };
+
     const next = appendBurger(
       burgers,
-      combo.modifierGroups[0]!
-        .modifierGroup.options.filter(
-          (option) =>
-            option.kind ===
-            "REMOVABLE",
-        ),
-      inventory,
+      [lettuce],
+      exhaustedInventory,
     );
 
     expect(next).toHaveLength(2);
@@ -144,40 +190,4 @@ describe("ordering builder rules", () => {
       next[1]?.removedIds,
     ).toContain("lettuce");
   });
-
-  it("permite seleccionar hasta cinco porciones de un ingrediente", () => {
-    const result =
-      setIngredientQuantityBurger(
-        [
-          {
-            localId: "b1",
-            removedIds: [],
-            extraIds: [],
-            extraQuantities: {},
-          },
-        ],
-        "b1",
-        "lettuce",
-        "cheese",
-        5,
-        {
-          ...inventory,
-          modifierLimits: {
-            lettuce: 5,
-            cheese: 4,
-          },
-        },
-      );
-
-    expect(result.error).toBeNull();
-    expect(
-      result.burgers[0]
-        ?.extraQuantities?.cheese,
-    ).toBe(4);
-    expect(
-      result.burgers[0]
-        ?.removedIds,
-    ).not.toContain("lettuce");
-  });
-
 });
