@@ -19,6 +19,7 @@ import type {
   ModifierOption,
   PickupEvent,
 } from "../types";
+import type { ModifierQuantityUpdate } from "../builder";
 import type { FormEvent } from "react";
 
 type Props = {
@@ -52,19 +53,9 @@ type Props = {
   onRemoveBurger: (
     localId: string,
   ) => void;
-  onToggleRemoved: (
+  onSetModifierQuantities: (
     burgerId: string,
-    optionId: string,
-  ) => void;
-  onToggleExtra: (
-    burgerId: string,
-    optionId: string,
-  ) => void;
-  onSetIngredientQuantity: (
-    burgerId: string,
-    includedOptionId: string | null,
-    extraOptionId: string,
-    quantity: number,
+    updates: ModifierQuantityUpdate[],
   ) => void;
   onCokesChange: (
     quantity: number,
@@ -120,9 +111,7 @@ export function OrderingForm({
   onSelectPickup,
   onAddBurger,
   onRemoveBurger,
-  onToggleRemoved,
-  onToggleExtra,
-  onSetIngredientQuantity,
+  onSetModifierQuantities,
   onCokesChange,
   onNameChange,
   onPhoneChange,
@@ -275,14 +264,8 @@ export function OrderingForm({
             onRemoveBurger={
               onRemoveBurger
             }
-            onToggleRemoved={
-              onToggleRemoved
-            }
-            onToggleExtra={
-              onToggleExtra
-            }
-            onSetIngredientQuantity={
-              onSetIngredientQuantity
+            onSetModifierQuantities={
+              onSetModifierQuantities
             }
           />
 
