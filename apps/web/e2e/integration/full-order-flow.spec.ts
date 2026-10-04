@@ -222,57 +222,64 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
   const firstMeat = firstPreview.locator(
     'img[src="/burger-preview/carne.svg"]',
   );
-  const firstDoubleMeat = firstPreview.locator(
-    'img[src="/burger-preview/doblecarne.svg"]',
-  );
 
-  await expect(firstLettuce).toHaveClass(/is-active/);
-  await expect(firstMeat).toHaveClass(/is-active/);
-  await expect(firstDoubleMeat).not.toHaveClass(/is-active/);
+  await expect(firstLettuce).toHaveCount(1);
+  await expect(firstMeat).toHaveCount(1);
 
   await firstBurger
-    .getByRole("checkbox", { name: /^Lechuga/ })
-    .uncheck();
+    .getByRole("group", {
+      name: "Cantidad de Lechuga",
+    })
+    .getByRole("button", { name: "0" })
+    .click();
 
-  await expect(firstLettuce).not.toHaveClass(/is-active/);
-  await firstBurger
-    .getByRole("checkbox", { name: /^Queso$/ })
-    .uncheck();
-  await firstBurger
-    .getByRole("checkbox", { name: /^Carne extra/ })
-    .check();
+  await expect(firstLettuce).toHaveCount(0);
 
-  await expect(firstMeat).not.toHaveClass(/is-active/);
-  await expect(firstDoubleMeat).toHaveClass(/is-active/);
+  await firstBurger
+    .getByRole("group", {
+      name: "Cantidad de Queso",
+    })
+    .getByRole("button", { name: "0" })
+    .click();
+
+  await firstBurger
+    .getByRole("group", {
+      name: "Cantidad de Carne",
+    })
+    .getByRole("button", { name: "2" })
+    .click();
+
+  await expect(firstMeat).toHaveCount(2);
 
   const secondTomato = secondPreview.locator(
     'img[src="/burger-preview/tomate.svg"]',
   );
 
-  await expect(secondTomato).toHaveClass(/is-active/);
+  await expect(secondTomato).toHaveCount(1);
 
   await secondBurger
-    .getByRole("checkbox", { name: /^Tomate/ })
-    .uncheck();
+    .getByRole("group", {
+      name: "Cantidad de Tomate",
+    })
+    .getByRole("button", { name: "0" })
+    .click();
 
-  await expect(secondTomato).not.toHaveClass(/is-active/);
+  await expect(secondTomato).toHaveCount(0);
 
   const secondCheese = secondPreview.locator(
     'img[src="/burger-preview/queso.svg"]',
   );
-  const secondDoubleCheese = secondPreview.locator(
-    'img[src="/burger-preview/doblequeso.svg"]',
-  );
 
-  await expect(secondCheese).toHaveClass(/is-active/);
-  await expect(secondDoubleCheese).not.toHaveClass(/is-active/);
+  await expect(secondCheese).toHaveCount(1);
 
   await secondBurger
-    .getByRole("checkbox", { name: /^Queso extra/ })
-    .check();
+    .getByRole("group", {
+      name: "Cantidad de Queso",
+    })
+    .getByRole("button", { name: "2" })
+    .click();
 
-  await expect(secondCheese).not.toHaveClass(/is-active/);
-  await expect(secondDoubleCheese).toHaveClass(/is-active/);
+  await expect(secondCheese).toHaveCount(2);
 
   await page
     .getByRole("button", { name: "Agregar Coca-Cola" })
