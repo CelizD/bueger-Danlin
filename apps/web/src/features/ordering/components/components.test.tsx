@@ -490,6 +490,46 @@ describe("ordering components", () => {
     ).not.toBeNull();
   });
 
+  it("apila cinco porciones de cebolla blanca usando la misma imagen y sin desplazamiento lateral", () => {
+    const html = renderToStaticMarkup(
+      <BurgerBuilder
+        comboName="Hamburguesa + papas"
+        burgers={[
+          {
+            localId: "burger-white-onion-five",
+            removedIds: [],
+            extraIds: ["onion-extra"],
+            modifierQuantities: {
+              "onion-extra": 4,
+            },
+          },
+        ]}
+        comboPriceCents={13_000}
+        removableOptions={removable}
+        extraOptions={extras}
+        inventory={null}
+        maxCombosAvailable={5}
+        onAddBurger={vi.fn()}
+        onRemoveBurger={vi.fn()}
+        onSetModifierQuantities={vi.fn()}
+      />,
+    );
+
+    expect(
+      html.match(
+        /data-preview-layer="white-onion-[1-5]"[^>]*src="\/burger-preview\/cebolla\.svg"/g,
+      ),
+    ).toHaveLength(5);
+    expect(
+      html.match(
+        /data-preview-ingredient="white-onion"/g,
+      ),
+    ).toHaveLength(5);
+    expect(html).toContain(
+      'data-preview-layer="white-onion-5"',
+    );
+  });
+
   it("compacta el preview sin reservar espacio para ingredientes en cero", () => {
     const compactHtml = renderToStaticMarkup(
       <BurgerBuilder
