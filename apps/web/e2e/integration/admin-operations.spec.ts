@@ -220,6 +220,36 @@ test("admin real cubre MFA, inventario, agenda, personal y ARCO", async ({
   ).toBeVisible();
   await assertNoBlockingA11y(page, "Inventario");
 
+  const cocaColaProductCard = page
+    .locator(".product-media-card")
+    .filter({ hasText: "Coca-Cola lata" });
+
+  await expect(cocaColaProductCard).toBeVisible();
+
+  await cocaColaProductCard
+    .locator('input[type="file"]')
+    .setInputFiles({
+      name: "coca-cola.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZcK0AAAAASUVORK5CYII=",
+        "base64",
+      ),
+    });
+
+  await expect(
+    page.getByText(
+      "Imagen de Coca-Cola lata actualizada.",
+    ),
+  ).toBeVisible();
+
+  await expect(
+    page
+      .locator(".product-media-card")
+      .filter({ hasText: "Coca-Cola lata" })
+      .locator("img"),
+  ).toBeVisible();
+
   await page
     .getByRole("button", { name: "Nuevo artículo" })
     .click();
