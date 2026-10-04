@@ -76,7 +76,7 @@ Leyenda:
 |---|---|---|
 | TLS obligatorio | 🟡 | FORCE_HTTPS + ejemplo Nginx; falta desplegar certificados reales |
 | Secrets fuera de Git | ✅ | .env ignorado, placeholders solamente en .env.example |
-| Secret manager producción | 🔴 | Variables de entorno todavía; falta Vault/secret manager |
+| Secret manager producción | 🟡 | API preparada para secretos file-backed + gate exige backend externo; falta desplegar Vault/Secret Manager/KMS real y migrar credenciales de infraestructura restantes |
 | Headers de seguridad | ✅ | Helmet + headers Next |
 | Cookies Secure | ✅ | producción |
 | Logs sin secretos/bodies | ✅ | middleware HTTP no registra cuerpos ni cookies |
