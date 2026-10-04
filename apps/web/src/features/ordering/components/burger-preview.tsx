@@ -1,3 +1,6 @@
+import {
+  burgerModifierQuantity,
+} from "@/features/ordering/modifier-quantities";
 import type { CSSProperties } from "react";
 import type {
   BurgerSelection,
@@ -38,53 +41,195 @@ function optionByKey(
   );
 }
 
+function repeatedLayers({
+  key,
+  src,
+  count,
+  y,
+  step,
+  z,
+  scale = 1,
+  x = 0,
+}: {
+  key: string;
+  src: string;
+  count: number;
+  y: number;
+  step: number;
+  z: number;
+  scale?: number;
+  x?: number;
+}) {
+  return Array.from(
+    { length: Math.max(0, count) },
+    (_, index): Layer => ({
+      key: `${key}-${index + 1}`,
+      src,
+      active: true,
+      y: y - index * step,
+      z: z + index,
+      scale:
+        scale -
+        Math.min(index, 4) * 0.015,
+      x:
+        x +
+        (index % 2 === 0
+          ? -1
+          : 1) *
+          Math.min(index, 3) *
+          2,
+    }),
+  );
+}
+
 export function BurgerPreview({
   burger,
   removableOptions,
   extraOptions,
   label,
 }: BurgerPreviewProps) {
-  const included = (key: string) => {
+  const quantity = (
+    options: ModifierOption[],
+    key: string,
+  ) => {
     const option = optionByKey(
-      removableOptions,
+      options,
       key,
     );
 
-    return Boolean(
-      option &&
-        !burger.removedIds.includes(
-          option.id,
-        ),
-    );
+    return option
+      ? burgerModifierQuantity(
+          burger,
+          option,
+        )
+      : 0;
   };
 
-  const extra = (key: string) => {
-    const option = optionByKey(
+  const extraQuantity = (
+    key: string,
+  ) =>
+    quantity(
       extraOptions,
       key,
     );
 
-    return Boolean(
-      option &&
-        burger.extraIds.includes(
-          option.id,
-        ),
+  const removableQuantity = (
+    key: string,
+  ) =>
+    quantity(
+      removableOptions,
+      key,
     );
-  };
 
-  const extraMeat = extra("extra-meat");
+  const meatCount =
+    1 + extraQuantity("extra-meat");
+
   const cheeseCount =
-    Number(included("included-cheese")) +
-    Number(extra("extra-cheese"));
+    Math.min(
+      1,
+      removableQuantity(
+        "included-cheese",
+      ),
+    ) +
+    extraQuantity("extra-cheese");
+
   const baconCount =
-    Number(included("included-bacon")) +
-    Number(extra("extra-bacon"));
-  const ketchup = included(
-    "included-ketchup",
-  );
-  const mustard = included(
-    "included-mustard",
-  );
+    Math.min(
+      1,
+      removableQuantity(
+        "included-bacon",
+      ),
+    ) +
+    extraQuantity("extra-bacon");
+
+  const lettuceCount =
+    Math.min(
+      1,
+      removableQuantity(
+        "included-lettuce",
+      ),
+    ) +
+    extraQuantity("extra-lettuce");
+  const tomatoCount =
+    Math.min(
+      1,
+      removableQuantity(
+        "included-tomato",
+      ),
+    ) +
+    extraQuantity("extra-tomato");
+  const whiteOnionCount =
+    Math.min(
+      1,
+      removableQuantity(
+        "included-white-onion",
+      ),
+    ) +
+    extraQuantity("extra-white-onion");
+  const caramelizedOnionCount =
+    removableQuantity(
+      "included-caramelized-onion",
+    );
+  const ketchupCount =
+    removableQuantity(
+      "included-ketchup",
+    );
+  const mustardCount =
+    removableQuantity(
+      "included-mustard",
+    );
+
+  const sharedSauceCount =
+    Math.min(
+      ketchupCount,
+      mustardCount,
+    );
+
+  const meatLayers =
+    meatCount === 2
+      ? [
+          {
+            key: "double-meat",
+            src: `${ASSET_ROOT}/doblecarne.svg`,
+            active: true,
+            y: 80,
+            z: 32,
+          },
+        ]
+      : repeatedLayers({
+          key: "meat",
+          src: `${ASSET_ROOT}/carne.svg`,
+          count: meatCount,
+          y: 82,
+          step: 23,
+          z: 32,
+        });
+
+  const cheeseLayers =
+    cheeseCount === 2
+      ? [
+          {
+            key: "double-cheese",
+            src: `${ASSET_ROOT}/doblequeso.svg`,
+            active: true,
+            y:
+              44 -
+              (meatCount - 1) *
+                10,
+            z: 44,
+          },
+        ]
+      : repeatedLayers({
+          key: "cheese",
+          src: `${ASSET_ROOT}/queso.svg`,
+          count: cheeseCount,
+          y:
+            44 -
+            (meatCount - 1) *
+              10,
+          step: 9,
+          z: 42,
+        });
 
   const layers: Layer[] = [
     {
@@ -94,121 +239,105 @@ export function BurgerPreview({
       y: 150,
       z: 10,
     },
-    {
+    ...repeatedLayers({
       key: "ketchup-mustard",
       src: `${ASSET_ROOT}/ketchupmostaza.svg`,
-      active: ketchup && mustard,
+      count: sharedSauceCount,
       y: 118,
+      step: 6,
       z: 20,
       scale: 0.72,
-    },
-    {
+    }),
+    ...repeatedLayers({
       key: "ketchup",
       src: `${ASSET_ROOT}/ketchup.svg`,
-      active: ketchup && !mustard,
-      y: 118,
-      z: 20,
+      count:
+        ketchupCount -
+        sharedSauceCount,
+      y:
+        112 -
+        sharedSauceCount * 4,
+      step: 5,
+      z: 24,
       scale: 0.68,
-    },
-    {
+      x: -4,
+    }),
+    ...repeatedLayers({
       key: "mustard",
       src: `${ASSET_ROOT}/mostasa.svg`,
-      active: mustard && !ketchup,
-      y: 118,
-      z: 20,
+      count:
+        mustardCount -
+        sharedSauceCount,
+      y:
+        108 -
+        sharedSauceCount * 4,
+      step: 5,
+      z: 27,
       scale: 0.68,
-    },
-    {
-      key: "meat",
-      src: `${ASSET_ROOT}/carne.svg`,
-      active: !extraMeat,
-      y: 82,
-      z: 30,
-    },
-    {
-      key: "double-meat",
-      src: `${ASSET_ROOT}/doblecarne.svg`,
-      active: extraMeat,
-      y: 80,
-      z: 30,
-    },
-    {
-      key: "cheese",
-      src: `${ASSET_ROOT}/queso.svg`,
-      active: cheeseCount === 1,
-      y: 42,
-      z: 40,
-    },
-    {
-      key: "double-cheese",
-      src: `${ASSET_ROOT}/doblequeso.svg`,
-      active: cheeseCount >= 2,
-      y: 42,
-      z: 40,
-    },
-    {
+      x: 4,
+    }),
+    ...meatLayers,
+    ...cheeseLayers,
+    ...repeatedLayers({
       key: "bacon",
       src: `${ASSET_ROOT}/dobletocino.svg`,
-      active: baconCount >= 1,
-      y: 3,
-      z: 50,
+      count: baconCount,
+      y:
+        2 -
+        (meatCount - 1) *
+          10 -
+        Math.max(
+          0,
+          cheeseCount - 1,
+        ) *
+          4,
+      step: 11,
+      z: 52,
       scale: 0.92,
-    },
-    {
-      key: "extra-bacon",
-      src: `${ASSET_ROOT}/dobletocino.svg`,
-      active: baconCount >= 2,
-      y: -17,
-      z: 51,
-      scale: 0.82,
-      x: 7,
-    },
-    {
+    }),
+    ...repeatedLayers({
       key: "white-onion",
       src: `${ASSET_ROOT}/cebolla.svg`,
-      active: included(
-        "included-white-onion",
-      ),
+      count: whiteOnionCount,
       y: -48,
-      z: 60,
+      step: 9,
+      z: 62,
       scale: 0.9,
-    },
-    {
+    }),
+    ...repeatedLayers({
       key: "caramelized-onion",
       src: `${ASSET_ROOT}/cebollaacaramelizada.svg`,
-      active: included(
-        "included-caramelized-onion",
-      ),
-      y: -75,
-      z: 61,
+      count:
+        caramelizedOnionCount,
+      y: -72,
+      step: 8,
+      z: 67,
       scale: 0.86,
-    },
-    {
+    }),
+    ...repeatedLayers({
       key: "tomato",
       src: `${ASSET_ROOT}/tomate.svg`,
-      active: included(
-        "included-tomato",
-      ),
-      y: -88,
-      z: 65,
+      count: tomatoCount,
+      y: -91,
+      step: 9,
+      z: 72,
       scale: 0.94,
-    },
-    {
+    }),
+    ...repeatedLayers({
       key: "lettuce",
       src: `${ASSET_ROOT}/lechuga.svg`,
-      active: included(
-        "included-lettuce",
-      ),
-      y: -112,
-      z: 70,
+      count: lettuceCount,
+      y: -115,
+      step: 10,
+      z: 77,
       scale: 1.02,
-    },
+    }),
     {
       key: "top-bun",
       src: `${ASSET_ROOT}/panarriba.svg`,
       active: true,
-      y: -150,
-      z: 80,
+      y: -155,
+      z: 90,
     },
   ];
 
@@ -216,7 +345,9 @@ export function BurgerPreview({
     <div className="burger-preview-wrap">
       <div className="burger-preview-head">
         <div>
-          <span>Vista previa en vivo</span>
+          <span>
+            Vista previa en vivo
+          </span>
           <strong>
             Se arma mientras eliges
           </strong>
@@ -236,11 +367,14 @@ export function BurgerPreview({
 
         {layers.map((layer) => {
           const style: LayerStyle = {
-            "--burger-y": `${layer.y}px`,
-            "--burger-scale": String(
-              layer.scale ?? 1,
-            ),
-            "--burger-x": `${layer.x ?? 0}px`,
+            "--burger-y":
+              `${layer.y}px`,
+            "--burger-scale":
+              String(
+                layer.scale ?? 1,
+              ),
+            "--burger-x":
+              `${layer.x ?? 0}px`,
             zIndex: layer.z,
           };
 
@@ -260,7 +394,6 @@ export function BurgerPreview({
           );
         })}
       </div>
-
     </div>
   );
 }

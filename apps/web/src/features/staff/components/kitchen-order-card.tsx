@@ -25,7 +25,11 @@ function preparationFor(
       .map((modifier) => modifier.optionName),
     extras: item.modifiers
       .filter((modifier) => !modifier.removed)
-      .map((modifier) => modifier.optionName),
+      .map((modifier) =>
+        modifier.quantity > 1
+          ? `${modifier.optionName} × ${modifier.quantity}`
+          : modifier.optionName,
+      ),
   };
 }
 
@@ -71,10 +75,38 @@ function KitchenComboPreparation({
   const hasDetails =
     preparation.included.length > 0 ||
     preparation.removed.length > 0 ||
-    preparation.extras.length > 0;
+    preparation.extras.length > 0 ||
+    (preparation.quantities?.length ?? 0) > 0 ||
+    (preparation.sauces?.length ?? 0) > 0 ||
+    (preparation.others?.length ?? 0) > 0;
 
   if (!hasDetails) {
     return <small>Completa</small>;
+  }
+
+  if (preparation.quantities) {
+    return (
+      <div className="kitchen-preparation">
+        <PreparationGroup
+          title="Cantidades"
+          values={preparation.quantities}
+          variant="included"
+          prefix=""
+        />
+        <PreparationGroup
+          title="Aderezos"
+          values={preparation.sauces ?? []}
+          variant="included"
+          prefix=""
+        />
+        <PreparationGroup
+          title="Otros"
+          values={preparation.others ?? []}
+          variant="extra"
+          prefix=""
+        />
+      </div>
+    );
   }
 
   return (
@@ -193,6 +225,10 @@ export function KitchenOrderCard({
                           ? "Sin "
                           : "+ "}
                         {modifier.optionName}
+                        {!modifier.removed &&
+                          modifier.quantity > 1
+                          ? ` × ${modifier.quantity}`
+                          : ""}
                       </span>
                     ),
                   )}

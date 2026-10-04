@@ -1,3 +1,4 @@
+import { BURGER_MAX_INGREDIENT_QUANTITY } from "@burger/types";
 import { Type } from "class-transformer";
 import {
   ArrayMaxSize,
@@ -35,6 +36,17 @@ export class CreateOrderCustomerDto {
   email?: string;
 }
 
+export class CreateOrderModifierQuantityDto {
+  @IsString()
+  @MinLength(1)
+  modifierOptionId!: string;
+
+  @IsInt()
+  @Min(1)
+  @Max(BURGER_MAX_INGREDIENT_QUANTITY)
+  quantity!: number;
+}
+
 export class CreateOrderItemDto {
   @IsString()
   @MinLength(1)
@@ -56,6 +68,13 @@ export class CreateOrderItemDto {
   @ArrayMaxSize(20)
   @IsString({ each: true })
   extraModifierOptionIds: string[] = [];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(40)
+  @ValidateNested({ each: true })
+  @Type(() => CreateOrderModifierQuantityDto)
+  modifierQuantities?: CreateOrderModifierQuantityDto[];
 }
 
 export class CreateOrderDto {

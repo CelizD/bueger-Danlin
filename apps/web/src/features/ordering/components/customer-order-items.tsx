@@ -38,8 +38,29 @@ export function CustomerOrderItems({
               </span>
             </div>
 
-            {item.modifiers.length >
-              0 && (
+            {item.preparationSnapshot
+              ?.quantities ? (
+              <div className="customer-order-modifiers">
+                {[
+                  ...item.preparationSnapshot
+                    .quantities,
+                  ...(item
+                    .preparationSnapshot
+                    .sauces ?? []),
+                  ...(item
+                    .preparationSnapshot
+                    .others ?? []),
+                ].map((value) => (
+                  <span
+                    key={value}
+                    className="extra"
+                  >
+                    {value}
+                  </span>
+                ))}
+              </div>
+            ) : item.modifiers.length >
+              0 ? (
               <div className="customer-order-modifiers">
                 {item.modifiers.map(
                   (modifier) => (
@@ -59,11 +80,15 @@ export function CustomerOrderItems({
                       {
                         modifier.optionName
                       }
+                      {!modifier.removed &&
+                        modifier.quantity > 1
+                        ? ` × ${modifier.quantity}`
+                        : ""}
                     </span>
                   ),
                 )}
               </div>
-            )}
+            ) : null}
           </article>
         ))}
       </div>

@@ -4,9 +4,11 @@ import { loadOrderingData } from "./api";
 import {
   appendBurger,
   burgersForPickupSelection,
-  toggleExtraBurger,
-  toggleRemovedBurger,
+  setBurgerModifierQuantities,
 } from "./builder";
+import type {
+  ModifierQuantityUpdate,
+} from "./modifier-quantities";
 import { newBurger } from "./formatters";
 import {
   availableComboLimit,
@@ -30,22 +32,20 @@ import {
 export function useOrderingSession(
   setError: (message: string) => void,
 ) {
-  const [catalog, setCatalog] = useState<
-    CatalogProduct[]
-  >([]);
-  const [events, setEvents] = useState<
-    PickupEvent[]
-  >([]);
+  const [catalog, setCatalog] =
+    useState<CatalogProduct[]>([]);
+  const [events, setEvents] =
+    useState<PickupEvent[]>([]);
   const [event, setEvent] =
     useState<PickupEvent | null>(null);
   const [inventory, setInventory] =
     useState<InventoryAvailability | null>(
       null,
     );
-  const [burgers, setBurgers] = useState<
-    BurgerSelection[]
-  >([]);
-  const [cokes, setCokes] = useState(0);
+  const [burgers, setBurgers] =
+    useState<BurgerSelection[]>([]);
+  const [cokes, setCokes] =
+    useState(0);
   const [
     groupDeliveryAccepted,
     setGroupDeliveryAccepted,
@@ -239,15 +239,15 @@ export function useOrderingSession(
     );
   }
 
-  function toggleRemoved(
+  function setModifierQuantities(
     burgerId: string,
-    optionId: string,
+    updates: ModifierQuantityUpdate[],
   ) {
     const result =
-      toggleRemovedBurger(
+      setBurgerModifierQuantities(
         burgers,
         burgerId,
-        optionId,
+        updates,
         inventory,
       );
 
@@ -256,26 +256,7 @@ export function useOrderingSession(
       return;
     }
 
-    setBurgers(result.burgers);
-  }
-
-  function toggleExtra(
-    burgerId: string,
-    optionId: string,
-  ) {
-    const result =
-      toggleExtraBurger(
-        burgers,
-        burgerId,
-        optionId,
-        inventory,
-      );
-
-    if (result.error) {
-      setError(result.error);
-      return;
-    }
-
+    setError("");
     setBurgers(result.burgers);
   }
 
@@ -327,8 +308,7 @@ export function useOrderingSession(
     setCokes,
     setGroupDeliveryAccepted,
     selectPickupEvent,
-    toggleRemoved,
-    toggleExtra,
+    setModifierQuantities,
     addBurger,
     removeBurger,
   };

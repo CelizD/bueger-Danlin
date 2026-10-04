@@ -13,26 +13,41 @@ import type {
 } from "../types";
 
 const removable: ModifierOption[] = [
-  {
-    id: "lettuce",
-    key: "included-lettuce",
-    name: "Lechuga",
-    kind: "REMOVABLE",
-    priceDeltaCents: 0,
-    defaultSelected: true,
-  },
-];
+  ["lettuce", "included-lettuce", "Lechuga"],
+  ["tomato", "included-tomato", "Tomate"],
+  ["onion", "included-white-onion", "Cebolla"],
+  ["cheese", "included-cheese", "Queso"],
+  ["bacon", "included-bacon", "Tocino"],
+  ["ketchup", "included-ketchup", "Ketchup"],
+  ["mustard", "included-mustard", "Mostaza"],
+].map(([id, key, name]) => ({
+  id: String(id),
+  key: String(key),
+  name: String(name),
+  kind: "REMOVABLE" as const,
+  priceDeltaCents: 0,
+  defaultSelected: true,
+}));
 
 const extras: ModifierOption[] = [
-  {
-    id: "bacon-extra",
-    key: "extra-bacon",
-    name: "Tocino extra",
-    kind: "EXTRA",
-    priceDeltaCents: 1_500,
-    defaultSelected: false,
-  },
-];
+  ["meat-extra", "extra-meat", "Carne extra", 3_000],
+  ["cheese-extra", "extra-cheese", "Queso extra", 1_000],
+  ["bacon-extra", "extra-bacon", "Tocino extra", 1_500],
+  ["lettuce-extra", "extra-lettuce", "Lechuga extra", 0],
+  ["tomato-extra", "extra-tomato", "Tomate extra", 0],
+  ["onion-extra", "extra-white-onion", "Cebolla extra", 0],
+  ["pickles", "extra-pickles", "Pepinillos", 0],
+  ["mayonnaise", "extra-mayonnaise", "Mayonesa", 0],
+  ["chipotle", "extra-chipotle", "Chipotle", 0],
+  ["bbq-chipotle", "extra-bbq-chipotle", "BBQ con Chipotle", 0],
+].map(([id, key, name, priceDeltaCents]) => ({
+  id: String(id),
+  key: String(key),
+  name: String(name),
+  kind: "EXTRA" as const,
+  priceDeltaCents: Number(priceDeltaCents),
+  defaultSelected: false,
+}));
 
 
 const pickupEvents: PickupEvent[] = [
@@ -197,7 +212,7 @@ describe("ordering components", () => {
     expect(html).toContain('aria-live="polite"');
   });
 
-  it("representa ingredientes y extras agotados como controles deshabilitados", () => {
+  it("muestra selectores de cantidad de 0 a 5 para ingredientes", () => {
     const html = renderToStaticMarkup(
       <BurgerBuilder
         comboName="Hamburguesa + papas"
@@ -206,6 +221,7 @@ describe("ordering components", () => {
             localId: "burger-1",
             removedIds: ["lettuce"],
             extraIds: [],
+            modifierQuantities: {},
           },
         ]}
         comboPriceCents={13_000}
@@ -215,16 +231,49 @@ describe("ordering components", () => {
         maxCombosAvailable={1}
         onAddBurger={vi.fn()}
         onRemoveBurger={vi.fn()}
-        onToggleRemoved={vi.fn()}
-        onToggleExtra={vi.fn()}
+        onSetModifierQuantities={vi.fn()}
       />,
     );
 
-    expect(html).toContain("Lechuga · Agotado");
-    expect(html).toContain("Tocino extra · Agotado");
-    expect(html).toContain("Vista previa en vivo");
-    expect(html).toContain("/burger-preview/panarriba.svg");
-    expect((html.match(/disabled/g) ?? []).length).toBeGreaterThanOrEqual(3);
+    expect(html).toContain(
+      "Cantidad de ingredientes",
+    );
+    expect(html).toContain(
+      'aria-label="Cantidad de Lechuga"',
+    );
+    expect(html).toContain(
+      'aria-label="Lechuga: sin ingrediente"',
+    );
+    expect(html).toContain(
+      'aria-label="Lechuga: 5 porciones"',
+    );
+    expect(html).toContain(
+      'aria-label="Cantidad de Queso"',
+    );
+    expect(html).toContain(
+      'aria-label="Queso: 1 porción"',
+    );
+    expect(html).not.toContain(
+      'aria-label="Queso: sin ingrediente"',
+    );
+    expect(html).toContain(
+      'aria-label="Cantidad de Tocino"',
+    );
+    expect(html).toContain(
+      'aria-label="Cantidad de Pepinillos"',
+    );
+    expect(html).toContain(
+      'aria-label="Mayonesa: Sí o No"',
+    );
+    expect(html).toContain(
+      'aria-label="BBQ con Chipotle: Sí o No"',
+    );
+    expect(html).toContain(
+      "Vista previa en vivo",
+    );
+    expect(html).toContain(
+      "/burger-preview/panarriba.svg",
+    );
   });
 
   it("muestra puntos, progreso grupal y envío gratis", () => {
@@ -263,8 +312,7 @@ describe("ordering components", () => {
         maxCombosAvailable={1}
         onAddBurger={vi.fn()}
         onRemoveBurger={vi.fn()}
-        onToggleRemoved={vi.fn()}
-        onToggleExtra={vi.fn()}
+        onSetModifierQuantities={vi.fn()}
       />,
     );
 

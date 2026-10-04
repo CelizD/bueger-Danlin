@@ -1,3 +1,5 @@
+import type { BurgerModifierQuantity } from "@burger/types";
+
 export type ModifierOption = {
   id: string;
   key?: string;
@@ -77,6 +79,7 @@ export type BurgerSelection = {
   localId: string;
   removedIds: string[];
   extraIds: string[];
+  modifierQuantities?: Record<string, number>;
 };
 
 export type CreatedOrder = {
@@ -138,5 +141,6 @@ export type CreateOrderInput = {
     quantity: number;
     removedModifierOptionIds: string[];
     extraModifierOptionIds: string[];
+    modifierQuantities?: BurgerModifierQuantity[];
   }>;
 };

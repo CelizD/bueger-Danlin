@@ -65,6 +65,7 @@ describe(
                     removed: false,
                     priceDeltaCents:
                       1_000,
+                    quantity: 1,
                   },
                   {
                     optionName:
@@ -72,6 +73,7 @@ describe(
                     removed: true,
                     priceDeltaCents:
                       0,
+                    quantity: 1,
                   },
                 ],
               },

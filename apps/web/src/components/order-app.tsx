@@ -147,11 +147,8 @@ export function OrderApp({
       onRemoveBurger={
         ordering.removeBurger
       }
-      onToggleRemoved={
-        ordering.toggleRemoved
-      }
-      onToggleExtra={
-        ordering.toggleExtra
+      onSetModifierQuantities={
+        ordering.setModifierQuantities
       }
       onCokesChange={
         ordering.setCokes

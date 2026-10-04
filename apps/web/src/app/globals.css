@@ -190,6 +190,104 @@ h2 {
   margin-top: 13px;
 }
 
+.ingredient-quantity-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.ingredient-quantity-row {
+  display: grid;
+  grid-template-columns:
+    minmax(150px, 1fr)
+    auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 72px;
+  padding: 12px;
+  border: 1px solid #e2ddd3;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.ingredient-quantity-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.ingredient-quantity-copy strong {
+  font-size: 14px;
+}
+
+.ingredient-quantity-copy small {
+  color: #6a645b;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.ingredient-quantity-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.ingredient-quantity-button {
+  min-width: 38px;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid #d6d0c5;
+  border-radius: 10px;
+  background: #f5f2ec;
+  color: #27241f;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.ingredient-quantity-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #9d8a73;
+}
+
+.ingredient-quantity-button.is-selected {
+  border-color: #2b2823;
+  background: #2b2823;
+  color: #fffaf1;
+}
+
+.ingredient-quantity-button:focus-visible {
+  outline: 3px solid rgba(126, 91, 54, 0.24);
+  outline-offset: 2px;
+}
+
+.ingredient-quantity-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+@media (max-width: 680px) {
+  .ingredient-quantity-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .ingredient-quantity-buttons {
+    justify-content: flex-start;
+  }
+
+  .ingredient-quantity-button {
+    flex: 1 1 38px;
+  }
+}
+
 .check-row {
   min-height: 46px;
   display: flex;

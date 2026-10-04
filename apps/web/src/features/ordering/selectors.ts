@@ -1,3 +1,4 @@
+import { burgerModifierQuantity } from "./modifier-quantities";
 import type {
   BurgerSelection,
   CatalogProduct,
@@ -12,8 +13,14 @@ export function modifierOptions(
 ) {
   return (
     product?.modifierGroups
-      .flatMap((group) => group.modifierGroup.options)
-      .filter((option) => option.kind === kind) ?? []
+      .flatMap(
+        (group) =>
+          group.modifierGroup.options,
+      )
+      .filter(
+        (option) =>
+          option.kind === kind,
+      ) ?? []
   );
 }
 
@@ -21,9 +28,15 @@ export function unavailableIncludedModifierIds(
   product: CatalogProduct | undefined,
   inventory: InventoryAvailability,
 ) {
-  return modifierOptions(product, "REMOVABLE")
+  return modifierOptions(
+    product,
+    "REMOVABLE",
+  )
     .filter(
-      (option) => inventory.modifierLimits[option.id] === 0,
+      (option) =>
+        inventory.modifierLimits[
+          option.id
+        ] === 0,
     )
     .map((option) => option.id);
 }
@@ -35,7 +48,9 @@ export function productInventoryLimit(
   if (!product) return 0;
 
   return (
-    inventory?.productLimits[product.id] ??
+    inventory?.productLimits[
+      product.id
+    ] ??
     Number.MAX_SAFE_INTEGER
   );
 }
@@ -46,7 +61,10 @@ export function availableComboLimit(
 ) {
   if (!event) return 0;
 
-  return Math.min(event.remainingCombos, productLimit);
+  return Math.min(
+    event.remainingCombos,
+    productLimit,
+  );
 }
 
 export function calculatePreviewTotal(
@@ -58,20 +76,36 @@ export function calculatePreviewTotal(
 ) {
   if (!combo) return 0;
 
-  const burgersTotal = burgers.reduce((sum, burger) => {
-    const extras = extraOptions
-      .filter((option) => burger.extraIds.includes(option.id))
-      .reduce(
-        (extraSum, option) =>
-          extraSum + option.priceDeltaCents,
-        0,
-      );
+  const burgersTotal =
+    burgers.reduce(
+      (sum, burger) => {
+        const extras =
+          extraOptions.reduce(
+            (
+              extraSum,
+              option,
+            ) =>
+              extraSum +
+              option.priceDeltaCents *
+                burgerModifierQuantity(
+                  burger,
+                  option,
+                ),
+            0,
+          );
 
-    return sum + combo.priceCents + extras;
-  }, 0);
+        return (
+          sum +
+          combo.priceCents +
+          extras
+        );
+      },
+      0,
+    );
 
   return (
     burgersTotal +
-    (drink?.priceCents ?? 0) * drinkQuantity
+    (drink?.priceCents ?? 0) *
+      drinkQuantity
   );
 }

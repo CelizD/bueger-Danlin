@@ -5,6 +5,15 @@ type ReceiptLine = {
   gapAfter?: number;
 };
 
+export type ReceiptPreparationSnapshot = {
+  included: string[];
+  removed: string[];
+  extras: string[];
+  quantities?: string[];
+  sauces?: string[];
+  others?: string[];
+};
+
 export type ReceiptOrder = {
   orderCode: string;
   status: string;
@@ -38,10 +47,12 @@ export type ReceiptOrder = {
     productName: string;
     quantity: number;
     lineTotalCents: number;
+    preparationSnapshot?: ReceiptPreparationSnapshot | null;
     modifiers: Array<{
       optionName: string;
       removed: boolean;
       priceDeltaCents: number;
+      quantity: number;
     }>;
   }>;
 };
@@ -290,27 +301,62 @@ function buildLines(
       bold: true,
     });
 
-    for (const modifier of item.modifiers) {
-      const delta =
-        modifier.priceDeltaCents !== 0
-          ? " (" +
-            money(
-              modifier.priceDeltaCents,
-              order.currency,
-            ) +
-            ")"
-          : "";
+    if (
+      item.preparationSnapshot
+        ?.quantities
+    ) {
+      for (const value of [
+        ...item.preparationSnapshot
+          .quantities,
+        ...(item.preparationSnapshot
+          .sauces ?? []),
+        ...(item.preparationSnapshot
+          .others ?? []),
+      ]) {
+        lines.push({
+          text: "   " + value,
+          size: 9,
+        });
+      }
+    } else {
+      for (const modifier of item.modifiers) {
+        const quantity =
+          modifier.removed
+            ? 1
+            : Math.max(
+                1,
+                modifier.quantity,
+              );
+        const deltaTotal =
+          modifier.priceDeltaCents *
+          quantity;
+        const delta =
+          deltaTotal !== 0
+            ? " (" +
+              money(
+                deltaTotal,
+                order.currency,
+              ) +
+              ")"
+            : "";
+        const quantityLabel =
+          !modifier.removed &&
+          quantity > 1
+            ? " x" + quantity
+            : "";
 
-      lines.push({
-        text:
-          "   " +
-          (modifier.removed
-            ? "Sin "
-            : "+ ") +
-          modifier.optionName +
-          delta,
-        size: 9,
-      });
+        lines.push({
+          text:
+            "   " +
+            (modifier.removed
+              ? "Sin "
+              : "+ ") +
+            modifier.optionName +
+            quantityLabel +
+            delta,
+          size: 9,
+        });
+      }
     }
   }
 

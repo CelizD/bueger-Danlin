@@ -154,6 +154,33 @@ describe("ordering selectors", () => {
     expect(total).toBe(36_000);
   });
 
+  it("multiplica el precio de extras por cantidad", () => {
+    const burgers: BurgerSelection[] = [
+      {
+        localId: "burger-quantity",
+        removedIds: [],
+        extraIds: ["meat-extra"],
+        modifierQuantities: {
+          "meat-extra": 3,
+        },
+      },
+    ];
+
+    const total =
+      calculatePreviewTotal(
+        burgers,
+        combo,
+        coke,
+        0,
+        modifierOptions(
+          combo,
+          "EXTRA",
+        ),
+      );
+
+    expect(total).toBe(22_000);
+  });
+
   it("devuelve cero si no existe producto combo", () => {
     expect(
       calculatePreviewTotal([], undefined, coke, 2, []),
@@ -163,4 +190,29 @@ describe("ordering selectors", () => {
   it("no permite capacidad sin evento abierto", () => {
     expect(availableComboLimit(null, 50)).toBe(0);
   });
+
+  it("multiplica extras cuantificados en el total previo", () => {
+    const burgers: BurgerSelection[] = [
+      {
+        localId: "burger-1",
+        removedIds: [],
+        extraIds: [],
+        modifierQuantities: {
+          "cheese-extra": 3,
+          "meat-extra": 2,
+        },
+      },
+    ];
+
+    const total = calculatePreviewTotal(
+      burgers,
+      combo,
+      coke,
+      0,
+      modifierOptions(combo, "EXTRA"),
+    );
+
+    expect(total).toBe(22_000);
+  });
+
 });

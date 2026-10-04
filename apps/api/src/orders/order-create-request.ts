@@ -21,6 +21,10 @@ export type NormalizedCreateOrderRequest = {
     quantity: number;
     removedModifierOptionIds: string[];
     extraModifierOptionIds: string[];
+    modifierQuantities?: Array<{
+      modifierOptionId: string;
+      quantity: number;
+    }>;
   }>;
 };
 
@@ -97,6 +101,24 @@ export function prepareCreateOrderRequest(
       extraModifierOptionIds: [
         ...(item.extraModifierOptionIds ?? []),
       ].sort(),
+      ...((item.modifierQuantities?.length ?? 0) > 0
+        ? {
+            modifierQuantities: [
+              ...(item.modifierQuantities ?? []),
+            ]
+              .map((entry) => ({
+                modifierOptionId:
+                  entry.modifierOptionId,
+                quantity:
+                  entry.quantity,
+              }))
+              .sort((left, right) =>
+                left.modifierOptionId.localeCompare(
+                  right.modifierOptionId,
+                ),
+              ),
+          }
+        : {}),
     })),
   };
 

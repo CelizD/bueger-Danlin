@@ -168,6 +168,13 @@ async function main() {
     { key: "extra-cheese", name: "Queso extra", priceDeltaCents: 1000 },
     { key: "extra-bacon", name: "Tocino extra", priceDeltaCents: 1500 },
     { key: "extra-fries", name: "Papas extra", priceDeltaCents: 2500 },
+    { key: "extra-lettuce", name: "Lechuga extra", priceDeltaCents: 0 },
+    { key: "extra-tomato", name: "Tomate extra", priceDeltaCents: 0 },
+    { key: "extra-white-onion", name: "Cebolla extra", priceDeltaCents: 0 },
+    { key: "extra-pickles", name: "Pepinillos", priceDeltaCents: 0 },
+    { key: "extra-mayonnaise", name: "Mayonesa", priceDeltaCents: 0 },
+    { key: "extra-chipotle", name: "Chipotle", priceDeltaCents: 0 },
+    { key: "extra-bbq-chipotle", name: "BBQ con Chipotle", priceDeltaCents: 0 },
   ] as const;
 
   for (const [index, option] of extraOptions.entries()) {
@@ -230,6 +237,10 @@ async function main() {
     { key: "meat", name: "Carne", unit: "porción", lowStockThreshold: 10 },
     { key: "cheese", name: "Queso", unit: "porción", lowStockThreshold: 10 },
     { key: "bacon", name: "Tocino", unit: "porción", lowStockThreshold: 10 },
+    { key: "lettuce", name: "Lechuga", unit: "porción", lowStockThreshold: 10 },
+    { key: "tomato", name: "Tomate", unit: "porción", lowStockThreshold: 10 },
+    { key: "onion", name: "Cebolla", unit: "porción", lowStockThreshold: 10 },
+    { key: "pickles", name: "Pepinillos", unit: "porción", lowStockThreshold: 10 },
     { key: "fries", name: "Papas", unit: "porción", lowStockThreshold: 10 },
   ] as const;
 
@@ -260,9 +271,16 @@ async function main() {
   const optionKeys = [
     "included-cheese",
     "included-bacon",
+    "included-lettuce",
+    "included-tomato",
+    "included-white-onion",
     "extra-meat",
     "extra-cheese",
     "extra-bacon",
+    "extra-lettuce",
+    "extra-tomato",
+    "extra-white-onion",
+    "extra-pickles",
     "extra-fries",
   ];
 
@@ -305,6 +323,48 @@ async function main() {
       inventoryKey: "bacon",
       productId: combo.id,
       modifierKey: "included-bacon",
+    },
+    {
+      key: "lettuce-included",
+      inventoryKey: "lettuce",
+      productId: combo.id,
+      modifierKey: "included-lettuce",
+    },
+    {
+      key: "lettuce-extra",
+      inventoryKey: "lettuce",
+      productId: combo.id,
+      modifierKey: "extra-lettuce",
+    },
+    {
+      key: "tomato-included",
+      inventoryKey: "tomato",
+      productId: combo.id,
+      modifierKey: "included-tomato",
+    },
+    {
+      key: "tomato-extra",
+      inventoryKey: "tomato",
+      productId: combo.id,
+      modifierKey: "extra-tomato",
+    },
+    {
+      key: "onion-included",
+      inventoryKey: "onion",
+      productId: combo.id,
+      modifierKey: "included-white-onion",
+    },
+    {
+      key: "onion-extra",
+      inventoryKey: "onion",
+      productId: combo.id,
+      modifierKey: "extra-white-onion",
+    },
+    {
+      key: "pickles-extra",
+      inventoryKey: "pickles",
+      productId: combo.id,
+      modifierKey: "extra-pickles",
     },
     {
       key: "meat-extra",

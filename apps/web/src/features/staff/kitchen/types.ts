@@ -3,6 +3,7 @@ export type { StaffSessionUser as StaffUser } from "../types";
 export type KitchenModifier = {
   id: string;
   optionName: string;
+  quantity: number;
   removed: boolean;
 };
 
@@ -10,6 +11,9 @@ export type KitchenPreparationSnapshot = {
   included: string[];
   removed: string[];
   extras: string[];
+  quantities?: string[];
+  sauces?: string[];
+  others?: string[];
 };
 
 export type KitchenOrder = {
