@@ -35,18 +35,6 @@ export class CreateOrderCustomerDto {
   email?: string;
 }
 
-
-export class CreateOrderModifierQuantityDto {
-  @IsString()
-  @MinLength(1)
-  optionId!: string;
-
-  @IsInt()
-  @Min(1)
-  @Max(4)
-  quantity!: number;
-}
-
 export class CreateOrderModifierQuantityDto {
   @IsString()
   @MinLength(1)
@@ -85,7 +73,7 @@ export class CreateOrderItemDto {
   @ArrayMaxSize(20)
   @ValidateNested({ each: true })
   @Type(() => CreateOrderModifierQuantityDto)
-  extraModifierQuantities: CreateOrderModifierQuantityDto[] = [];
+  modifierQuantities: CreateOrderModifierQuantityDto[] = [];
 }
 
 export class CreateOrderDto {
