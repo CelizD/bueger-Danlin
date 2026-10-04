@@ -411,6 +411,42 @@ describe("ordering components", () => {
     );
   });
 
+  it("usa el SVG específico de cinco porciones de lechuga y lo marca como capa de lechuga", () => {
+    const html = renderToStaticMarkup(
+      <BurgerBuilder
+        comboName="Hamburguesa + papas"
+        burgers={[
+          {
+            localId: "burger-lettuce-five",
+            removedIds: [],
+            extraIds: ["lettuce-extra"],
+            modifierQuantities: {
+              "lettuce-extra": 4,
+            },
+          },
+        ]}
+        comboPriceCents={13_000}
+        removableOptions={removable}
+        extraOptions={extras}
+        inventory={null}
+        maxCombosAvailable={5}
+        onAddBurger={vi.fn()}
+        onRemoveBurger={vi.fn()}
+        onSetModifierQuantities={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain(
+      "/burger-preview/ingredients-sprite.svg#lettuce-5",
+    );
+    expect(html).toContain(
+      'data-preview-layer="lettuce-5"',
+    );
+    expect(html).toContain(
+      'data-preview-ingredient="lettuce"',
+    );
+  });
+
   it("compacta el preview sin reservar espacio para ingredientes en cero", () => {
     const compactHtml = renderToStaticMarkup(
       <BurgerBuilder
