@@ -175,7 +175,29 @@ export function AdminOrderDetail({
               </span>
             </div>
 
-            {item.modifiers.length > 0 && (
+            {item.preparationSnapshot
+              ?.quantities ? (
+              <div className="admin-modifiers">
+                {[
+                  ...item.preparationSnapshot
+                    .quantities,
+                  ...(item
+                    .preparationSnapshot
+                    .sauces ?? []),
+                  ...(item
+                    .preparationSnapshot
+                    .others ?? []),
+                ].map((value) => (
+                  <span
+                    key={value}
+                    className="extra"
+                  >
+                    {value}
+                  </span>
+                ))}
+              </div>
+            ) : item.modifiers.length >
+              0 ? (
               <div className="admin-modifiers">
                 {item.modifiers.map(
                   (modifier) => (
@@ -199,16 +221,13 @@ export function AdminOrderDetail({
                   ),
                 )}
               </div>
-            )}
-
-            {item.modifiers.length === 0 &&
-              item.productName
+            ) : item.productName
                 .toLowerCase()
-                .includes("combo") && (
-                <small className="admin-complete-note">
-                  Hamburguesa completa
-                </small>
-              )}
+                .includes("combo") ? (
+              <small className="admin-complete-note">
+                Hamburguesa completa
+              </small>
+            ) : null}
           </div>
         ))}
       </div>
