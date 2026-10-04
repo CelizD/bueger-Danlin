@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
 } from "@nestjs/common";
+import { setTimeout as delay } from "node:timers/promises";
 import { PrismaService } from "../database/prisma.service.js";
 import { InventoryService } from "../inventory/inventory.service.js";
 import { TelegramNotificationService } from "../notifications/telegram-notification.service.js";
@@ -9,6 +10,14 @@ import { CreateOrderDto } from "./dto/create-order.dto.js";
 import { presentCreatedOrder } from "./order-create-presenter.js";
 import { prepareCreateOrderRequest } from "./order-create-request.js";
 import { createOrderTransaction } from "./order-create-transaction.js";
+
+const IDEMPOTENCY_REPLAY_RETRY_DELAYS_MS = [
+  0,
+  10,
+  25,
+  50,
+  100,
+] as const;
 
 @Injectable()
 export class OrdersService {
@@ -88,32 +97,51 @@ export class OrdersService {
         (error as { code?: string }).code;
 
       if (code === "P2002") {
-        const existing =
-          await this.prisma.order.findUnique({
-            where: { requestKey },
-            include: {
-              pickupEvent: true,
-            },
-          });
-
-        if (existing) {
-          if (
-            existing.requestHash !==
-            requestHash
-          ) {
-            throw new ConflictException(
-              "La misma Idempotency-Key ya fue usada con otro pedido.",
-            );
-          }
-
-          return presentCreatedOrder(
-            existing,
-            this.qrSecret,
-          );
-        }
+        return this.recoverConcurrentReplay(
+          requestKey,
+          requestHash,
+        );
       }
 
       throw error;
     }
+  }
+
+  private async recoverConcurrentReplay(
+    requestKey: string,
+    requestHash: string,
+  ) {
+    for (const delayMs of IDEMPOTENCY_REPLAY_RETRY_DELAYS_MS) {
+      if (delayMs > 0) {
+        await delay(delayMs);
+      }
+
+      const existing =
+        await this.prisma.order.findUnique({
+          where: { requestKey },
+          include: {
+            pickupEvent: true,
+          },
+        });
+
+      if (!existing) {
+        continue;
+      }
+
+      if (existing.requestHash !== requestHash) {
+        throw new ConflictException(
+          "La misma Idempotency-Key ya fue usada con otro pedido.",
+        );
+      }
+
+      return presentCreatedOrder(
+        existing,
+        this.qrSecret,
+      );
+    }
+
+    throw new ConflictException(
+      "El pedido concurrente todavía se está procesando. Reintenta con la misma Idempotency-Key.",
+    );
   }
 }
