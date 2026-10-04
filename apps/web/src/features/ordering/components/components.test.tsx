@@ -474,7 +474,7 @@ describe("ordering components", () => {
 
     expect(
       html.match(
-        /\/burger-preview\/tomate\.svg/g,
+        /data-preview-layer="tomato-[1-5]"[^>]*src="\/burger-preview\/tomate\.svg"/g,
       ),
     ).toHaveLength(5);
     expect(
