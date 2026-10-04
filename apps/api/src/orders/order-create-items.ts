@@ -21,6 +21,15 @@ export type PreparedOrderItem = {
   }>;
 };
 
+function quantityLabel(
+  name: string,
+  quantity: number,
+) {
+  return quantity > 1
+    ? `${name} ×${quantity}`
+    : name;
+}
+
 export async function prepareOrderItems(
   tx: any,
   items: CreateOrderDto["items"],
@@ -83,67 +92,49 @@ export async function prepareOrderItems(
       item.removedModifierOptionIds ?? [];
     const extraIds =
       item.extraModifierOptionIds ?? [];
-    const quantifiedExtras =
-      item.extraModifierQuantities ?? [];
+    const quantityEntries =
+      item.modifierQuantities ?? [];
 
     if (
-      new Set(removedIds).size !== removedIds.length
+      new Set(removedIds).size !==
+      removedIds.length
     ) {
       throw new BadRequestException(
         "Hay ingredientes removidos duplicados en un item.",
       );
     }
 
-    if (new Set(extraIds).size !== extraIds.length) {
+    if (
+      new Set(extraIds).size !==
+      extraIds.length
+    ) {
       throw new BadRequestException(
         "Hay extras duplicados en un item.",
       );
     }
 
-    const quantifiedIds =
-      quantifiedExtras.map(
-        (entry) => entry.optionId,
-      );
-
     if (
-      new Set(quantifiedIds).size !==
-      quantifiedIds.length
+      new Set(
+        quantityEntries.map(
+          (entry) => entry.modifierOptionId,
+        ),
+      ).size !== quantityEntries.length
     ) {
       throw new BadRequestException(
-        "Hay cantidades de extras duplicadas en un item.",
+        "Hay cantidades de ingredientes duplicadas en un item.",
       );
     }
 
-    if (
-      quantifiedIds.some((optionId) =>
-        extraIds.includes(optionId),
-      )
-    ) {
-      throw new BadRequestException(
-        "Un extra no puede enviarse a la vez como selección simple y con cantidad.",
-      );
-    }
-
-    if (
-      quantifiedExtras.some(
-        (entry) =>
-          !Number.isInteger(entry.quantity) ||
-          entry.quantity < 1 ||
-          entry.quantity > 4,
-      )
-    ) {
-      throw new BadRequestException(
-        "La cantidad de un extra debe estar entre 1 y 4.",
-      );
-    }
-
-    const availableOptions = product.modifierGroups
-      .filter(
-        (link: any) => link.modifierGroup.active,
-      )
-      .flatMap(
-        (link: any) => link.modifierGroup.options,
-      );
+    const availableOptions =
+      product.modifierGroups
+        .filter(
+          (link: any) =>
+            link.modifierGroup.active,
+        )
+        .flatMap(
+          (link: any) =>
+            link.modifierGroup.options,
+        );
 
     const optionById = new Map(
       availableOptions.map((option: any) => [
@@ -151,22 +142,109 @@ export async function prepareOrderItems(
         option,
       ]),
     );
-    const removableOptions = availableOptions.filter(
-      (option: any) => option.kind === "REMOVABLE",
-    );
-    const removedIdSet = new Set(removedIds);
-    const preparationSnapshot: PreparedOrderItem["preparationSnapshot"] = {
-      included: removableOptions
-        .filter((option: any) => !removedIdSet.has(option.id))
-        .map((option: any) => option.name),
-      removed: [],
-      extras: [],
-    };
 
-    const modifiers: PreparedOrderItem["modifiers"] = [];
+    const quantityById = new Map(
+      quantityEntries.map((entry) => [
+        entry.modifierOptionId,
+        entry.quantity,
+      ]),
+    );
+
+    for (const entry of quantityEntries) {
+      const option: any =
+        optionById.get(
+          entry.modifierOptionId,
+        );
+
+      if (
+        !option ||
+        !["REMOVABLE", "EXTRA"].includes(
+          option.kind,
+        )
+      ) {
+        throw new BadRequestException(
+          "Una cantidad de ingrediente no pertenece a este producto.",
+        );
+      }
+
+      if (
+        removedIds.includes(option.id) &&
+        option.kind === "REMOVABLE"
+      ) {
+        throw new BadRequestException(
+          "Un ingrediente no puede estar removido y tener cantidad al mismo tiempo.",
+        );
+      }
+    }
+
+    const removableOptions =
+      availableOptions.filter(
+        (option: any) =>
+          option.kind === "REMOVABLE",
+      );
+    const extraOptions =
+      availableOptions.filter(
+        (option: any) =>
+          option.kind === "EXTRA",
+      );
+    const removedIdSet =
+      new Set(removedIds);
+    const legacyExtraIdSet =
+      new Set(extraIds);
+
+    const preparationSnapshot:
+      PreparedOrderItem["preparationSnapshot"] =
+      {
+        included: [],
+        removed: [],
+        extras: [],
+      };
+
+    const modifiers:
+      PreparedOrderItem["modifiers"] = [];
+
+    for (const option of removableOptions) {
+      if (removedIdSet.has(option.id)) {
+        preparationSnapshot.removed.push(
+          option.name,
+        );
+
+        modifiers.push({
+          modifierOptionId: option.id,
+          optionName: option.name,
+          priceDeltaCents: 0,
+          quantity: item.quantity,
+          removed: true,
+        });
+
+        continue;
+      }
+
+      const portions =
+        quantityById.get(option.id) ?? 1;
+
+      preparationSnapshot.included.push(
+        quantityLabel(
+          option.name,
+          portions,
+        ),
+      );
+
+      if (portions > 1) {
+        modifiers.push({
+          modifierOptionId: option.id,
+          optionName: option.name,
+          priceDeltaCents: 0,
+          quantity:
+            portions * item.quantity,
+          removed: false,
+        });
+      }
+    }
 
     for (const optionId of removedIds) {
-      const option: any = optionById.get(optionId);
+      const option: any =
+        optionById.get(optionId);
 
       if (
         !option ||
@@ -176,46 +254,30 @@ export async function prepareOrderItems(
           "Uno de los ingredientes a quitar no pertenece a este producto.",
         );
       }
-
-      preparationSnapshot.removed.push(option.name);
-
-      modifiers.push({
-        modifierOptionId: option.id,
-        optionName: option.name,
-        priceDeltaCents: 0,
-        quantity: item.quantity,
-        removed: true,
-      });
     }
 
     let extrasCents = 0;
 
-    const selectedExtras = [
-      ...extraIds.map((optionId) => ({
-        optionId,
-        quantity: 1,
-      })),
-      ...quantifiedExtras,
-    ];
+    for (const option of extraOptions) {
+      const portions =
+        quantityById.get(option.id) ??
+        (legacyExtraIdSet.has(option.id)
+          ? 1
+          : 0);
 
-    for (const selected of selectedExtras) {
-      const option: any =
-        optionById.get(selected.optionId);
-
-      if (!option || option.kind !== "EXTRA") {
-        throw new BadRequestException(
-          "Uno de los extras no pertenece a este producto.",
-        );
+      if (portions <= 0) {
+        continue;
       }
 
       extrasCents +=
         option.priceDeltaCents *
-        selected.quantity;
+        portions;
 
       preparationSnapshot.extras.push(
-        selected.quantity > 1
-          ? `${option.name} × ${selected.quantity}`
-          : option.name,
+        quantityLabel(
+          option.name,
+          portions,
+        ),
       );
 
       modifiers.push({
@@ -224,10 +286,23 @@ export async function prepareOrderItems(
         priceDeltaCents:
           option.priceDeltaCents,
         quantity:
-          item.quantity *
-          selected.quantity,
+          portions * item.quantity,
         removed: false,
       });
+    }
+
+    for (const optionId of extraIds) {
+      const option: any =
+        optionById.get(optionId);
+
+      if (
+        !option ||
+        option.kind !== "EXTRA"
+      ) {
+        throw new BadRequestException(
+          "Uno de los extras no pertenece a este producto.",
+        );
+      }
     }
 
     if (product.type === "COMBO") {
@@ -243,7 +318,8 @@ export async function prepareOrderItems(
     preparedItems.push({
       productId: product.id,
       productName: product.name,
-      unitPriceCents: product.priceCents,
+      unitPriceCents:
+        product.priceCents,
       quantity: item.quantity,
       lineTotalCents,
       preparationSnapshot,
