@@ -243,21 +243,23 @@ export function useOrderingSession(
     burgerId: string,
     updates: ModifierQuantityUpdate[],
   ) {
-    const result =
-      setBurgerModifierQuantities(
-        burgers,
-        burgerId,
-        updates,
-        inventory,
-      );
+    setBurgers((current) => {
+      const result =
+        setBurgerModifierQuantities(
+          current,
+          burgerId,
+          updates,
+          inventory,
+        );
 
-    if (result.error) {
-      setError(result.error);
-      return;
-    }
+      if (result.error) {
+        setError(result.error);
+        return current;
+      }
 
-    setError("");
-    setBurgers(result.burgers);
+      setError("");
+      return result.burgers;
+    });
   }
 
   function addBurger() {
