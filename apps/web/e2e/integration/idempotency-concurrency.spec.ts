@@ -5,7 +5,7 @@ import {
 } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
-const API_URL = "http://localhost:4000/api/v1";
+const API_URL = "http://localhost:4000/api/v1/";
 const APP_ORIGIN = "http://localhost:3101";
 
 type InventorySnapshot = Record<string, number>;
@@ -14,7 +14,7 @@ async function inventorySnapshot(
   client: import("@playwright/test").APIRequestContext,
 ) {
   const response = await client.get(
-    "/inventory/availability",
+    "inventory/availability",
   );
 
   expect(response.status()).toBe(200);
@@ -74,8 +74,8 @@ test("dos POST simultáneos con la misma Idempotency-Key crean un solo pedido", 
       catalogResponse,
       eventsResponse,
     ] = await Promise.all([
-      clientA.get("/catalog"),
-      clientA.get("/pickup-events/open"),
+      clientA.get("catalog"),
+      clientA.get("pickup-events/open"),
     ]);
 
     expect(catalogResponse.status()).toBe(200);
@@ -126,14 +126,14 @@ test("dos POST simultáneos con la misma Idempotency-Key crean un solo pedido", 
 
     const [firstResponse, secondResponse] =
       await Promise.all([
-        clientA.post("/orders", {
+        clientA.post("orders", {
           headers: {
             "Idempotency-Key":
               idempotencyKey,
           },
           data: orderPayload,
         }),
-        clientB.post("/orders", {
+        clientB.post("orders", {
           headers: {
             "Idempotency-Key":
               idempotencyKey,
@@ -199,7 +199,7 @@ test("dos POST simultáneos con la misma Idempotency-Key crean un solo pedido", 
     ).toBe(1);
 
     const conflictingResponse =
-      await clientB.post("/orders", {
+      await clientB.post("orders", {
         headers: {
           "Idempotency-Key":
             idempotencyKey,
@@ -219,7 +219,7 @@ test("dos POST simultáneos con la misma Idempotency-Key crean un solo pedido", 
 
     const cancellation =
       await clientA.post(
-        `/orders/${encodeURIComponent(firstOrder.orderCode)}/cancel`,
+        `orders/${encodeURIComponent(firstOrder.orderCode)}/cancel`,
       );
 
     expect(cancellation.status()).toBe(201);
