@@ -73,7 +73,7 @@ export class CreateOrderItemDto {
   @ArrayMaxSize(20)
   @ValidateNested({ each: true })
   @Type(() => CreateOrderModifierQuantityDto)
-  modifierQuantities: CreateOrderModifierQuantityDto[] = [];
+  modifierQuantities?: CreateOrderModifierQuantityDto[];
 }
 
 export class CreateOrderDto {
