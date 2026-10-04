@@ -192,6 +192,71 @@ export async function prepareOrderItems(
     const legacyExtraIdSet =
       new Set(extraIds);
 
+    for (const option of extraOptions) {
+      const extraPortions =
+        quantityById.get(option.id) ??
+        (legacyExtraIdSet.has(option.id)
+          ? 1
+          : 0);
+
+      if (extraPortions <= 0) {
+        continue;
+      }
+
+      if (option.key === "extra-meat") {
+        if (extraPortions > 4) {
+          throw new BadRequestException(
+            "La hamburguesa puede tener como máximo 5 porciones de carne.",
+          );
+        }
+
+        continue;
+      }
+
+      if (
+        typeof option.key === "string" &&
+        option.key.startsWith("extra-")
+      ) {
+        const ingredient =
+          option.key.slice("extra-".length);
+        const includedOption =
+          removableOptions.find(
+            (candidate: any) =>
+              candidate.key ===
+              `included-${ingredient}`,
+          );
+
+        if (includedOption) {
+          const includedPortions =
+            removedIdSet.has(
+              includedOption.id,
+            )
+              ? 0
+              : quantityById.get(
+                  includedOption.id,
+                ) ?? 1;
+
+          if (
+            includedPortions +
+              extraPortions >
+            5
+          ) {
+            throw new BadRequestException(
+              `${includedOption.name} puede tener como máximo 5 porciones.`,
+            );
+          }
+
+          if (
+            includedPortions > 1
+          ) {
+            throw new BadRequestException(
+              `Las porciones adicionales de ${includedOption.name} deben enviarse como extra.`,
+            );
+          }
+        }
+      }
+    }
+
     const preparationSnapshot:
       PreparedOrderItem["preparationSnapshot"] =
       {
