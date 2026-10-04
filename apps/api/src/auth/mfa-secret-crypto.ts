@@ -1,4 +1,5 @@
 import { InternalServerErrorException } from "@nestjs/common";
+import { readSetting } from "../config/secret-setting.js";
 import {
   createCipheriv,
   createDecipheriv,
@@ -7,7 +8,7 @@ import {
 
 function mfaEncryptionKey() {
   const encoded =
-    process.env.MFA_ENCRYPTION_KEY?.trim() ??
+    readSetting("MFA_ENCRYPTION_KEY") ??
     "";
 
   try {
