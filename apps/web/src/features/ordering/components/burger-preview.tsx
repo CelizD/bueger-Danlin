@@ -11,6 +11,7 @@ import { tomatoVisualProfile } from "./burger-preview-tomato";
 import { whiteOnionVisualProfile } from "./burger-preview-white-onion";
 import { picklesVisualProfile } from "./burger-preview-pickles";
 import { caramelizedOnionVisualProfile } from "./burger-preview-caramelized-onion";
+import { buildSauceVisualLayers } from "./burger-preview-sauces";
 import type {
   BurgerSelection,
   ModifierOption,
@@ -152,55 +153,6 @@ function countAssetLayer({
   });
 }
 
-function sauceAsset(
-  ketchup: boolean,
-  mustard: boolean,
-  mayonnaise: boolean,
-): AssetRef | null {
-  if (
-    ketchup &&
-    mustard &&
-    mayonnaise
-  ) {
-    return {
-      spriteId:
-        "ketchup-mustard-mayonnaise",
-    };
-  }
-
-  if (ketchup && mustard) {
-    return {
-      spriteId: "ketchup-mustard",
-    };
-  }
-
-  if (ketchup && mayonnaise) {
-    return {
-      spriteId: "ketchup-mayonnaise",
-    };
-  }
-
-  if (mustard && mayonnaise) {
-    return {
-      spriteId: "mustard-mayonnaise",
-    };
-  }
-
-  if (ketchup) {
-    return { spriteId: "ketchup" };
-  }
-
-  if (mustard) {
-    return { spriteId: "mustard" };
-  }
-
-  if (mayonnaise) {
-    return { spriteId: "mayonnaise" };
-  }
-
-  return null;
-}
-
 export function BurgerPreview({
   burger,
   removableOptions,
@@ -317,16 +269,18 @@ export function BurgerPreview({
       "extra-bbq-chipotle",
     ) > 0;
 
-  const baseSauce = sauceAsset(
-    ketchupSelected,
-    mustardSelected,
-    mayonnaiseSelected,
-  );
+  const sauceSelection = {
+    ketchup: ketchupSelected,
+    mustard: mustardSelected,
+    mayonnaise: mayonnaiseSelected,
+    chipotle: chipotleSelected,
+    bbqChipotle: bbqChipotleSelected,
+  };
 
   const hasSauce =
-    Boolean(baseSauce) ||
-    chipotleSelected ||
-    bbqChipotleSelected;
+    Object.values(
+      sauceSelection,
+    ).some(Boolean);
 
   const {
     sauceY,
@@ -351,6 +305,22 @@ export function BurgerPreview({
     tomato: tomatoCount,
     lettuce: lettuceCount,
   });
+
+  const sauceLayers =
+    buildSauceVisualLayers(
+      sauceSelection,
+      sauceY,
+    ).map(
+      (layer, index): Layer => ({
+        key: layer.layerId,
+        spriteId: layer.spriteId,
+        active: true,
+        y: layer.y,
+        z: 20 + index * 2,
+        scale: layer.scale,
+        x: layer.x,
+      }),
+    );
 
   const meatProfile =
     meatVisualProfile(meatCount);
@@ -612,44 +582,7 @@ export function BurgerPreview({
       y: 150,
       z: 10,
     },
-    ...(baseSauce
-      ? [
-          {
-            key: "base-sauces",
-            ...baseSauce,
-            active: true,
-            y: sauceY,
-            z: 20,
-            scale: 0.72,
-          } satisfies Layer,
-        ]
-      : []),
-    ...(chipotleSelected
-      ? [
-          {
-            key: "chipotle",
-            spriteId: "chipotle",
-            active: true,
-            y: sauceY - 6,
-            z: 22,
-            scale: 0.69,
-            x: -4,
-          } satisfies Layer,
-        ]
-      : []),
-    ...(bbqChipotleSelected
-      ? [
-          {
-            key: "bbq-chipotle",
-            spriteId: "bbq-chipotle",
-            active: true,
-            y: sauceY - 12,
-            z: 24,
-            scale: 0.68,
-            x: 5,
-          } satisfies Layer,
-        ]
-      : []),
+    ...sauceLayers,
     ...meatLayers,
     ...cheeseLayers,
     ...baconLayers,
@@ -751,7 +684,14 @@ export function BurgerPreview({
                                       "caramelized-onion-",
                                     )
                                   ? "caramelized-onion"
-                                  : undefined
+                                  : layer.key ===
+                                        "base-sauces" ||
+                                      layer.key ===
+                                        "chipotle" ||
+                                      layer.key ===
+                                        "bbq-chipotle"
+                                    ? "sauce"
+                                    : undefined
                 }
                 key={layer.key}
                 style={style}
@@ -807,7 +747,14 @@ export function BurgerPreview({
                                     "caramelized-onion-",
                                   )
                                 ? "caramelized-onion"
-                                : undefined
+                                : layer.key ===
+                                      "base-sauces" ||
+                                    layer.key ===
+                                      "chipotle" ||
+                                    layer.key ===
+                                      "bbq-chipotle"
+                                  ? "sauce"
+                                  : undefined
               }
               key={layer.key}
               src={layer.src}
