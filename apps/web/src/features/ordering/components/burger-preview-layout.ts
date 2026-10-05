@@ -34,8 +34,8 @@ const HEIGHTS = {
   cheese: { base: 19, extra: 6 },
   bacon: { base: 17, extra: 7 },
   caramelizedOnion: {
-    base: 13,
-    extra: 6,
+    base: 11,
+    extra: 0,
   },
   whiteOnion: {
     base: 12,
