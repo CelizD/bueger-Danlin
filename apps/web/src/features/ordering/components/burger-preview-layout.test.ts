@@ -162,6 +162,42 @@ describe("burger preview height system", () => {
     ).toBe(25);
   });
 
+  it("no reserva altura para cebolla caramelizada apagada y usa una capa compacta al activarla", () => {
+    const off =
+      calculateBurgerStackLayout({
+        hasSauce: true,
+        meat: 1,
+        cheese: 1,
+        bacon: 1,
+        caramelizedOnion: 0,
+        whiteOnion: 1,
+        pickles: 0,
+        tomato: 0,
+        lettuce: 0,
+      });
+
+    const on =
+      calculateBurgerStackLayout({
+        hasSauce: true,
+        meat: 1,
+        cheese: 1,
+        bacon: 1,
+        caramelizedOnion: 1,
+        whiteOnion: 1,
+        pickles: 0,
+        tomato: 0,
+        lettuce: 0,
+      });
+
+    expect(
+      off.caramelizedOnionY,
+    ).toBe(off.whiteOnionY);
+    expect(
+      on.caramelizedOnionY -
+        on.whiteOnionY,
+    ).toBe(11);
+  });
+
   it("compacta la carne cuando no hay salsa sin cambiar el resto de reglas", () => {
     const withSauce =
       calculateBurgerStackLayout({
