@@ -6884,7 +6884,10 @@ textarea:focus-visible,
   inset: 0;
   display: block;
   width: 100%;
+  max-width: var(--burger-layer-max-width, 96%);
   height: 100%;
+  margin-inline: auto;
+  box-sizing: border-box;
   padding: 6%;
   object-fit: contain;
   opacity: 0;
@@ -6905,50 +6908,59 @@ textarea:focus-visible,
 }
 
 svg.burger-preview-layer {
-  overflow: visible;
+  overflow: hidden;
 }
 
 .burger-preview-layer[data-preview-ingredient="meat"] {
+  --burger-layer-max-width: 98%;
   padding-inline: 9%;
   transform-origin: 50% 50%;
 }
 
 .burger-preview-layer[data-preview-ingredient="cheese"] {
+  --burger-layer-max-width: 97%;
   padding-inline: 10%;
   transform-origin: 50% 50%;
 }
 
 .burger-preview-layer[data-preview-ingredient="bacon"] {
+  --burger-layer-max-width: 96%;
   padding-inline: 12%;
   transform-origin: 50% 50%;
 }
 
 .burger-preview-layer[data-preview-ingredient="lettuce"] {
+  --burger-layer-max-width: 98%;
   padding-inline: 8%;
   transform-origin: 50% 50%;
 }
 
 .burger-preview-layer[data-preview-ingredient="tomato"] {
+  --burger-layer-max-width: 96%;
   padding-inline: 11%;
   transform-origin: 50% 50%;
 }
 
 .burger-preview-layer[data-preview-ingredient="white-onion"] {
+  --burger-layer-max-width: 94%;
   padding-inline: 14%;
   transform-origin: 50% 50%;
 }
 
 .burger-preview-layer[data-preview-ingredient="pickles"] {
+  --burger-layer-max-width: 92%;
   padding-inline: 16%;
   transform-origin: 50% 50%;
 }
 
 .burger-preview-layer[data-preview-ingredient="caramelized-onion"] {
+  --burger-layer-max-width: 95%;
   padding-inline: 13%;
   transform-origin: 50% 50%;
 }
 
 .burger-preview-layer[data-preview-ingredient="sauce"] {
+  --burger-layer-max-width: 92%;
   padding-inline: 16%;
   transform-origin: 50% 50%;
 }

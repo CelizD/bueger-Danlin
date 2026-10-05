@@ -318,6 +318,54 @@ test("pedido real recorre cliente, cocina, QR y entrega", async ({
     )
     .toBeGreaterThan(0);
   await expect(firstOnion).toHaveCount(3);
+
+  const previewBounds =
+    await firstPreview.boundingBox();
+
+  expect(previewBounds).not.toBeNull();
+
+  const layerBounds =
+    await firstPreview
+      .locator("[data-preview-layer]")
+      .evaluateAll((elements) =>
+        elements.map((element) => {
+          const rect =
+            element.getBoundingClientRect();
+          const style =
+            window.getComputedStyle(element);
+
+          return {
+            left: rect.left,
+            right: rect.right,
+            width: rect.width,
+            maxWidth: style.maxWidth,
+            overflow: style.overflow,
+            tagName:
+              element.tagName.toLowerCase(),
+          };
+        }),
+      );
+
+  for (const layer of layerBounds) {
+    expect(layer.left).toBeGreaterThanOrEqual(
+      previewBounds!.x - 1,
+    );
+    expect(layer.right).toBeLessThanOrEqual(
+      previewBounds!.x +
+        previewBounds!.width +
+        1,
+    );
+    expect(layer.width).toBeLessThanOrEqual(
+      previewBounds!.width + 1,
+    );
+
+    if (layer.tagName === "svg") {
+      expect(layer.overflow).toBe(
+        "hidden",
+      );
+    }
+  }
+
   await expect(firstBurger).toContainText(
     "$265",
   );
