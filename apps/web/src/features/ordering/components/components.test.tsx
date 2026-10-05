@@ -371,6 +371,58 @@ describe("ordering components", () => {
     );
   });
 
+  it("compacta todas las salsas en tres capas y usa el SVG clásico combinado", () => {
+    const html = renderToStaticMarkup(
+      <BurgerBuilder
+        comboName="Hamburguesa + papas"
+        burgers={[
+          {
+            localId: "burger-all-sauces",
+            removedIds: [],
+            extraIds: [
+              "mayonnaise",
+              "chipotle",
+              "bbq-chipotle",
+            ],
+            modifierQuantities: {},
+          },
+        ]}
+        comboPriceCents={13_000}
+        removableOptions={removable}
+        extraOptions={extras}
+        inventory={null}
+        maxCombosAvailable={5}
+        onAddBurger={vi.fn()}
+        onRemoveBurger={vi.fn()}
+        onSetModifierQuantities={vi.fn()}
+      />,
+    );
+
+    expect(
+      html.match(
+        /data-preview-ingredient="sauce"/g,
+      ),
+    ).toHaveLength(3);
+    expect(html).toContain(
+      "/burger-preview/ingredients-sprite.svg#ketchup-mustard-mayonnaise",
+    );
+    expect(html).toContain(
+      "/burger-preview/ingredients-sprite.svg#chipotle",
+    );
+    expect(html).toContain(
+      "/burger-preview/ingredients-sprite.svg#bbq-chipotle",
+    );
+    expect(html).not.toContain(
+      "/burger-preview/ingredients-sprite.svg#ketchup\"",
+    );
+    expect(html).not.toContain(
+      "/burger-preview/ingredients-sprite.svg#mustard\"",
+    );
+    expect(html).not.toContain(
+      "/burger-preview/ingredients-sprite.svg#mayonnaise\"",
+    );
+  });
+
   it("apila cinco porciones de tocino con el SVG sencillo sin desplazamiento lateral", () => {
     const html = renderToStaticMarkup(
       <BurgerBuilder
