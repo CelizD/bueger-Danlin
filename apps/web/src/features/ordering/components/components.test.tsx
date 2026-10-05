@@ -575,6 +575,97 @@ describe("ordering components", () => {
     );
   });
 
+  it("muestra cebolla caramelizada entre tocino y cebolla blanca y no deja capa al quitarla", () => {
+    const caramelizedOption: ModifierOption = {
+      id: "caramelized-onion",
+      key: "included-caramelized-onion",
+      name: "Cebolla caramelizada",
+      kind: "REMOVABLE",
+      priceDeltaCents: 0,
+      defaultSelected: true,
+    };
+
+    const removableWithCaramelized = [
+      ...removable,
+      caramelizedOption,
+    ];
+
+    const activeHtml =
+      renderToStaticMarkup(
+        <BurgerBuilder
+          comboName="Hamburguesa + papas"
+          burgers={[
+            {
+              localId:
+                "burger-caramelized-onion",
+              removedIds: [],
+              extraIds: [],
+              modifierQuantities: {},
+            },
+          ]}
+          comboPriceCents={13_000}
+          removableOptions={
+            removableWithCaramelized
+          }
+          extraOptions={extras}
+          inventory={null}
+          maxCombosAvailable={5}
+          onAddBurger={vi.fn()}
+          onRemoveBurger={vi.fn()}
+          onSetModifierQuantities={
+            vi.fn()
+          }
+        />,
+      );
+
+    expect(activeHtml).toContain(
+      'data-preview-layer="caramelized-onion-1"',
+    );
+    expect(activeHtml).toContain(
+      'data-preview-ingredient="caramelized-onion"',
+    );
+    expect(activeHtml).toContain(
+      'src="/burger-preview/cebollaacaramelizada.svg"',
+    );
+
+    const removedHtml =
+      renderToStaticMarkup(
+        <BurgerBuilder
+          comboName="Hamburguesa + papas"
+          burgers={[
+            {
+              localId:
+                "burger-no-caramelized-onion",
+              removedIds: [
+                "caramelized-onion",
+              ],
+              extraIds: [],
+              modifierQuantities: {},
+            },
+          ]}
+          comboPriceCents={13_000}
+          removableOptions={
+            removableWithCaramelized
+          }
+          extraOptions={extras}
+          inventory={null}
+          maxCombosAvailable={5}
+          onAddBurger={vi.fn()}
+          onRemoveBurger={vi.fn()}
+          onSetModifierQuantities={
+            vi.fn()
+          }
+        />,
+      );
+
+    expect(removedHtml).not.toContain(
+      'data-preview-layer="caramelized-onion-1"',
+    );
+    expect(removedHtml).not.toContain(
+      'data-preview-ingredient="caramelized-onion"',
+    );
+  });
+
   it("compacta el preview sin reservar espacio para ingredientes en cero", () => {
     const compactHtml = renderToStaticMarkup(
       <BurgerBuilder
