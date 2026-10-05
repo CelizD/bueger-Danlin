@@ -6948,6 +6948,11 @@ svg.burger-preview-layer {
   transform-origin: 50% 50%;
 }
 
+.burger-preview-layer[data-preview-ingredient="sauce"] {
+  padding-inline: 16%;
+  transform-origin: 50% 50%;
+}
+
 .burger-preview-layer.is-active {
   opacity: 1;
   transform:
@@ -7026,6 +7031,10 @@ svg.burger-preview-layer {
 
   .burger-preview-layer[data-preview-ingredient="caramelized-onion"] {
     padding-inline: 12%;
+  }
+
+  .burger-preview-layer[data-preview-ingredient="sauce"] {
+    padding-inline: 15%;
   }
 }
 
