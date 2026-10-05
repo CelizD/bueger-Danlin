@@ -10,6 +10,7 @@ import { lettuceVisualProfile } from "./burger-preview-lettuce";
 import { tomatoVisualProfile } from "./burger-preview-tomato";
 import { whiteOnionVisualProfile } from "./burger-preview-white-onion";
 import { picklesVisualProfile } from "./burger-preview-pickles";
+import { caramelizedOnionVisualProfile } from "./burger-preview-caramelized-onion";
 import type {
   BurgerSelection,
   ModifierOption,
@@ -509,6 +510,30 @@ export function BurgerPreview({
       x: lettuceProfile.x,
     }));
 
+  const caramelizedOnionProfile =
+    caramelizedOnionVisualProfile(
+      caramelizedOnionCount,
+    );
+
+  const caramelizedOnionLayers =
+    caramelizedOnionCount > 0
+      ? [
+          {
+            key: "caramelized-onion-1",
+            src:
+              `${ASSET_ROOT}/cebollaacaramelizada.svg`,
+            active: true,
+            y:
+              caramelizedOnionY +
+              caramelizedOnionProfile.yOffset,
+            z: 60,
+            scale:
+              caramelizedOnionProfile.scale,
+            x: caramelizedOnionProfile.x,
+          } satisfies Layer,
+        ]
+      : [];
+
   const whiteOnionProfile =
     whiteOnionVisualProfile(
       whiteOnionCount,
@@ -628,19 +653,7 @@ export function BurgerPreview({
     ...meatLayers,
     ...cheeseLayers,
     ...baconLayers,
-    ...repeatedLayers({
-      key: "caramelized-onion",
-      asset: {
-        src:
-          `${ASSET_ROOT}/cebollaacaramelizada.svg`,
-      },
-      count:
-        caramelizedOnionCount,
-      y: caramelizedOnionY,
-      step: 8,
-      z: 60,
-      scale: 0.86,
-    }),
+    ...caramelizedOnionLayers,
     ...whiteOnionLayers,
     ...picklesLayers,
     ...tomatoLayers,
@@ -734,7 +747,11 @@ export function BurgerPreview({
                                     "pickles-",
                                   )
                                 ? "pickles"
-                                : undefined
+                                : layer.key.startsWith(
+                                      "caramelized-onion-",
+                                    )
+                                  ? "caramelized-onion"
+                                  : undefined
                 }
                 key={layer.key}
                 style={style}
@@ -786,7 +803,11 @@ export function BurgerPreview({
                                   "pickles-",
                                 )
                               ? "pickles"
-                              : undefined
+                              : layer.key.startsWith(
+                                    "caramelized-onion-",
+                                  )
+                                ? "caramelized-onion"
+                                : undefined
               }
               key={layer.key}
               src={layer.src}
