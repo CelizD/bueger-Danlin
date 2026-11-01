@@ -581,7 +581,7 @@ services:
         max-file: "3"
 
   loki:
-    image: grafana/loki:3.7.8
+    image: grafana/loki:3.7.9
     restart: unless-stopped
     profiles:
       - observability
